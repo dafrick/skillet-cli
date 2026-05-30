@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skillet — Ember &amp; Iris Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#160f0a;
+    --bg-grad:#1d140d;
+    --surface:#241a12;
+    --surface-2:#2c2017;
+    --line:#3a2c20;
+    --text:#f2e9df;
+    --muted:#a3917f;
+
+    /* ember */
+    --ember-300:#f6b080; --ember-400:#f0925a; --ember-500:#e8743b;
+    --ember-600:#c75a28; --ember-700:#9c441c;
+    /* iris */
+    --iris-300:#c4b5fd; --iris-400:#a78bfa; --iris-500:#8b5cf6;
+    --iris-600:#7c3aed; --iris-700:#6d28d9;
+    /* semantic */
+    --green-500:#2fb67c; --green-400:#4ade80;
+    --red-500:#e5484d;   --red-400:#ff6b6b;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:
+      radial-gradient(120% 80% at 85% -10%, rgba(232,116,59,.16), transparent 60%),
+      radial-gradient(90% 70% at 0% 110%, rgba(124,58,237,.14), transparent 55%),
+      linear-gradient(160deg, var(--bg), var(--bg-grad));
+    color:var(--text);
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    min-height:100vh;line-height:1.55;
+    padding:clamp(20px,5vw,72px) clamp(16px,5vw,80px) 96px;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:repeating-linear-gradient(0deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px);
+    mix-blend-mode:overlay;
+  }
+  .wrap{position:relative;z-index:1;max-width:980px;margin:0 auto}
+
+  /* header */
+  header{margin-bottom:18px;opacity:0;animation:rise .7s .05s forwards}
+  .badge{
+    display:inline-flex;align-items:center;gap:9px;font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ember-300);border:1px solid var(--line);
+    padding:6px 14px;border-radius:999px;background:rgba(0,0,0,.2);
+  }
+  .badge .dot{width:8px;height:8px;border-radius:50%;background:var(--ember-500);box-shadow:0 0 12px var(--ember-500)}
+  h1{
+    font-family:'Bricolage Grotesque', sans-serif;font-weight:800;
+    font-size:clamp(46px,10vw,112px);line-height:.9;letter-spacing:-.03em;margin:22px 0 16px;
+  }
+  h1 .e{color:var(--ember-500);text-shadow:0 0 36px rgba(232,116,59,.45)}
+  h1 .i{color:var(--iris-400);text-shadow:0 0 36px rgba(167,139,250,.4)}
+  h1 .amp{color:var(--muted);font-weight:400}
+  .lede{color:var(--muted);max-width:62ch;font-size:15px}
+  .lede b{color:var(--text);font-weight:500}
+
+  /* wordmark logo */
+  .logo-wrap{margin-top:24px;border:1px solid var(--line);border-radius:18px;
+    background:
+      radial-gradient(80% 120% at 50% 120%, rgba(232,116,59,.10), transparent 60%),
+      linear-gradient(180deg, rgba(255,255,255,.02), transparent 45%), #100b07;
+    box-shadow:0 26px 64px -36px rgba(0,0,0,.95);
+    padding:32px 22px 22px;overflow-x:auto;opacity:0;animation:rise .7s .08s forwards}
+  .logo-wrap pre{font-family:'JetBrains Mono',monospace;font-weight:700;
+    font-size:clamp(7px,1.9vw,13px);line-height:1.06;white-space:pre;margin:0 auto;
+    width:max-content;filter:drop-shadow(0 1px 0 rgba(0,0,0,.6)) drop-shadow(0 0 14px rgba(232,116,59,.4))}
+  .logo-cap{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:16px;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .logo-cap b{color:var(--ember-300);font-weight:500}
+
+  /* logo actions */
+  .logo-actions{display:flex;justify-content:center;gap:10px;margin-top:18px;flex-wrap:wrap}
+  .btn{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;
+    color:var(--text);background:var(--surface);border:1px solid var(--line);
+    padding:9px 16px;border-radius:10px;cursor:pointer;transition:.16s;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{border-color:var(--ember-600);transform:translateY(-2px)}
+  .btn.live{border-color:var(--ember-600);color:var(--ember-300)}
+  .btn.copied{border-color:var(--green-500);color:var(--green-400)}
+  .snippet{display:none;margin-top:16px;border:1px solid var(--line);border-radius:12px;
+    background:#0b0805;padding:14px 16px;overflow-x:auto}
+  .snippet.show{display:block}
+  .snippet pre{font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;
+    color:#cdbfae;white-space:pre;margin:0}
+  .snippet .c{color:#5c4d40}
+  .snippet .esc{color:var(--iris-400)}
+
+  /* terminal banner */
+  #termlogo{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:clamp(5.5px,1.5vw,9px);
+    line-height:1.05;white-space:pre;margin:0 0 12px;width:max-content;
+    filter:drop-shadow(0 0 8px rgba(232,116,59,.35))}
+
+  /* theory note */
+  .theory{
+    margin:30px 0 4px;display:flex;gap:14px;align-items:flex-start;
+    border:1px solid var(--line);border-left:3px solid var(--iris-500);
+    background:linear-gradient(90deg, rgba(124,58,237,.12), transparent 70%);
+    padding:16px 20px;border-radius:0 12px 12px 0;font-size:13.5px;
+    opacity:0;animation:rise .7s .12s forwards;
+  }
+  .theory .k{color:var(--iris-400);font-weight:700;white-space:nowrap}
+  .theory span{color:var(--muted)}
+  .theory b{color:var(--text);font-weight:500}
+
+  /* swatches */
+  .section-label{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    margin:54px 0 18px;display:flex;align-items:center;gap:12px}
+  .section-label::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;
+    opacity:0;animation:rise .7s .2s forwards}
+  .sw{
+    border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface);
+    cursor:pointer;transition:transform .18s ease,border-color .18s ease;position:relative;
+  }
+  .sw:hover{transform:translateY(-4px);border-color:var(--ember-600)}
+  .sw .chip{height:104px;display:flex;align-items:flex-end;padding:11px;position:relative}
+  .sw .role{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;
+    padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.34);backdrop-filter:blur(2px)}
+  .sw .meta{padding:12px 13px 14px}
+  .sw .name{font-size:13px;font-weight:500}
+  .sw .use{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}
+  .sw .hex{font-size:12px;color:var(--muted);margin-top:8px;text-transform:uppercase;
+    display:flex;align-items:center;gap:6px}
+  .sw .hex .copy{margin-left:auto;font-size:10px;color:var(--line);transition:color .15s}
+  .sw:hover .hex .copy{color:var(--ember-400)}
+  .sw.copied .hex .copy{color:var(--green-400)}
+
+  /* terminal */
+  .term{
+    margin-top:18px;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:#0d0907;box-shadow:0 22px 50px -28px rgba(0,0,0,.9);
+    opacity:0;animation:rise .7s .28s forwards;
+  }
+  .term-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:#171008;border-bottom:1px solid var(--line)}
+  .term-bar i{width:11px;height:11px;border-radius:50%;display:block}
+  .term-bar .t1{background:#ff5f56}.term-bar .t2{background:#ffbd2e}.term-bar .t3{background:#27c93f}
+  .term-bar .title{margin-left:8px;font-size:11.5px;color:var(--muted)}
+  .term-body{padding:18px 20px;font-size:12.5px;line-height:1.85;white-space:pre-wrap}
+  .term-body .pr{color:var(--ember-500)}
+  .term-body .se{color:var(--muted)}
+  .term-body .ok{color:var(--green-400);font-weight:500}
+  .term-body .er{color:var(--red-400);font-weight:500}
+  .term-body .ir{color:var(--iris-400);font-weight:500}
+  .term-body .dim{color:#5c4d40}
+
+  /* scale strip */
+  .scales{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px;
+    opacity:0;animation:rise .7s .34s forwards}
+  @media(max-width:620px){.scales{grid-template-columns:1fr}}
+  .scale h3{font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;margin-bottom:10px;display:flex;gap:8px;align-items:center}
+  .scale h3 .tag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'JetBrains Mono';font-weight:400}
+  .ramp{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .ramp div{flex:1;height:54px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;
+    font-size:9.5px;color:rgba(0,0,0,.55);font-weight:700}
+  .ramp div.lt{color:rgba(255,255,255,.7)}
+
+  /* ── CLI Output Pattern terminals ── */
+  .flow-label{
+    font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+    margin-top:28px;margin-bottom:0;display:flex;align-items:center;gap:10px;
+  }
+  .flow-label b{color:var(--ember-300);font-weight:500}
+  .flow-label::after{content:"";flex:1;height:1px;background:var(--line);opacity:.5}
+
+  .term.pattern{opacity:1;animation:none;margin-top:10px}
+  .term-bar .replay-btn{
+    margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    color:var(--muted);background:transparent;border:1px solid var(--line);
+    padding:3px 10px;border-radius:6px;cursor:pointer;transition:.15s;
+  }
+  .term-bar .replay-btn:hover{color:var(--ember-300);border-color:var(--ember-600)}
+  .term-bar .step-btn{
+    margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;
+    color:var(--ember-300);background:rgba(232,116,59,.08);
+    border:1px solid var(--ember-700);
+    padding:4px 14px;border-radius:6px;cursor:pointer;transition:.15s;white-space:nowrap;
+  }
+  .term-bar .step-btn:hover{background:rgba(232,116,59,.16);border-color:var(--ember-500);color:var(--ember-300)}
+  .term-bar .step-btn.done{color:var(--green-400);background:rgba(47,182,124,.08);border-color:var(--green-500)}
+
+  /* wordmark inside the pattern terminals */
+  .wm-sm{
+    font-family:'JetBrains Mono',monospace;font-weight:700;
+    font-size:clamp(4.5px,1.1vw,7.5px);line-height:1.05;white-space:pre;
+    filter:drop-shadow(0 0 6px rgba(232,116,59,.32));margin-bottom:4px;display:block;
+  }
+
+  /* chip badges in multi-select */
+  .chip-badge{
+    display:inline-block;background:var(--iris-600);color:#f0eaff;
+    font-size:10.5px;padding:1px 7px;border-radius:4px;margin-right:4px;
+  }
+
+  footer{margin-top:80px;text-align:center;color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding-top:28px}
+  footer b{color:var(--ember-400)}
+
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--surface-2);border:1px solid var(--ember-600);color:var(--text);
+    padding:10px 18px;border-radius:10px;font-size:12.5px;opacity:0;pointer-events:none;transition:.25s;z-index:20}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="badge"><span class="dot"></span>Skillet · Design System</span>
+    <h1><span class="e">Ember</span> <span class="amp">&amp;</span> <span class="i">Iris</span></h1>
+    <p class="lede">A <b>warm ember</b> primary paired with a <b>deep violet</b> interactive accent, plus semantic green and red. Tuned for legibility on a dark terminal background. <b>Click any swatch to copy its hex.</b></p>
+  </header>
+
+  <div class="section-label">The wordmark</div>
+  <div class="logo-wrap">
+    <pre id="logo"></pre>
+    <div class="logo-cap"><b>Heated iron</b> · vertical gradient #FBD2A0 → #9C441C · ANSI-shadow block</div>
+    <div class="logo-actions">
+      <button class="btn" id="copyBtn">⧉ Copy ANSI banner</button>
+      <button class="btn" id="viewBtn">&lt;/&gt; View snippet</button>
+    </div>
+    <div class="snippet" id="snippet"><pre id="snippetCode"></pre></div>
+  </div>
+
+  <div class="theory">
+    <span class="k">Why it works →</span>
+    <span>Amber sits at ~40° on the color wheel; its direct complement is blue (~220°). The two hues flanking that complement — cyan and <b>blue-violet</b> — are its <b>split-complementary</b> partners, giving strong contrast without the vibration of a true opposite. Cyan is the default terminal accent everyone uses, so <b>violet keeps the same color logic while making Skillet distinctive</b>, and bright violet maps cleanly to ANSI <b>magenta</b> in a terminal.</span>
+  </div>
+
+  <div class="section-label">The palette</div>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:var(--ember-500)"><span class="role">Primary</span></div><div class="meta"><div class="name">Ember</div><div class="use">Brand, wordmark, spinner, primary actions</div><div class="hex">#E8743B<span class="copy">copy</span></div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--ember-700)"><span class="role">Primary · deep</span></div><div class="meta"><div class="name">Ember Char</div><div class="use">Hover/pressed, borders, depth</div><div class="hex">#9C441C<span class="copy">copy</span></div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--iris-600)"><span class="role">Secondary</span></div><div class="meta"><div class="name">Iris</div><div class="use">Prompt prefix, focus, interactive state, selected chips</div><div class="hex">#7C3AED<span class="copy">copy</span></div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--iris-400)"><span class="role">Interactive</span></div><div class="meta"><div class="name">Iris Bright</div><div class="use">Cursor ›, highlighted choice, confirmed selections, keyboard hints</div><div class="hex">#A78BFA<span class="copy">copy</span></div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--green-500)"><span class="role">Success</span></div><div class="meta"><div class="name">Basil</div><div class="use">✔ completed, pristine, passing, healthy</div><div class="hex">#2FB67C<span class="copy">copy</span></div></div></div>
+    <div class="sw"><div class="chip" style="background:var(--red-500)"><span class="role">Error</span></div><div class="meta"><div class="name">Chili</div><div class="use">✘ failures, destructive, drift alerts</div><div class="hex">#E5484D<span class="copy">copy</span></div></div></div>
+  </div>
+
+  <div class="section-label">In a terminal</div>
+  <div class="term">
+    <div class="term-bar"><i class="t1"></i><i class="t2"></i><i class="t3"></i><span class="title">skillet build</span></div>
+    <div class="term-body"><pre id="termlogo"></pre><span class="pr">skillet ❯</span> build --target release
+<span class="dim">›</span> resolving <span class="ir">12 dependencies</span> <span class="se">from registry…</span>
+<span class="ok">✔ packaged</span>  app-core@2.4.1   <span class="se">(1.2 MB)</span>
+<span class="ok">✔ packaged</span>  ui-kit@0.9.0     <span class="se">(840 KB)</span>
+<span class="er">✘ failed</span>   legacy-net@1.0  <span class="se">— checksum mismatch</span>
+<span class="dim">›</span> run <span class="ir">skillet retry legacy-net</span> <span class="se">to re-fetch</span>
+<span class="pr">skillet ❯</span> <span class="se">_</span></div>
+  </div>
+
+  <div class="section-label">Tints &amp; shades</div>
+  <div class="scales">
+    <div class="scale">
+      <h3>Ember <span class="tag">primary ramp</span></h3>
+      <div class="ramp">
+        <div style="background:var(--ember-300)">300</div>
+        <div style="background:var(--ember-400)">400</div>
+        <div style="background:var(--ember-500)">500</div>
+        <div class="lt" style="background:var(--ember-600)">600</div>
+        <div class="lt" style="background:var(--ember-700)">700</div>
+      </div>
+    </div>
+    <div class="scale">
+      <h3>Iris <span class="tag">secondary ramp</span></h3>
+      <div class="ramp">
+        <div style="background:var(--iris-300)">300</div>
+        <div class="lt" style="background:var(--iris-400)">400</div>
+        <div class="lt" style="background:var(--iris-500)">500</div>
+        <div class="lt" style="background:var(--iris-600)">600</div>
+        <div class="lt" style="background:var(--iris-700)">700</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       CLI OUTPUT PATTERNS
+  ════════════════════════════════════════════════════ -->
+  <div class="section-label">CLI output patterns</div>
+
+  <!-- 1. Full header — install / update, interactive TTY -->
+  <div class="flow-label"><b>Full header</b> · install &amp; update · interactive TTY</div>
+  <div class="term pattern">
+    <div class="term-bar">
+      <i class="t1"></i><i class="t2"></i><i class="t3"></i>
+      <span class="title">npx my-skill install</span>
+      <button class="step-btn" id="stepFull">→ Target selection</button>
+    </div>
+    <div class="term-body" id="termFull" style="min-height:260px;font-size:12px;line-height:1.75"></div>
+  </div>
+
+  <!-- 2. Light header — list / uninstall, interactive TTY -->
+  <div class="flow-label" style="margin-top:32px"><b>Light header</b> · list &amp; uninstall · interactive TTY</div>
+  <div class="term pattern">
+    <div class="term-bar">
+      <i class="t1"></i><i class="t2"></i><i class="t3"></i>
+      <span class="title">npx my-skill list</span>
+    </div>
+    <div class="term-body" id="termLight" style="font-size:12px;line-height:1.75"></div>
+  </div>
+
+  <!-- 3. CI / non-interactive — no header, no spinner -->
+  <div class="flow-label" style="margin-top:32px"><b>Non-interactive</b> · CI / piped output · no header, no spinner</div>
+  <div class="term pattern">
+    <div class="term-bar">
+      <i class="t1"></i><i class="t2"></i><i class="t3"></i>
+      <span class="title">npx my-skill install --target claude --yes  [CI env / no TTY]</span>
+    </div>
+    <div class="term-body" id="termCI" style="font-size:12px;line-height:1.75"></div>
+  </div>
+
+  <!-- 4. Cooking verb reference -->
+  <div class="flow-label" style="margin-top:32px"><b>Cooking verbs</b> · spinner copy by command</div>
+  <div class="term pattern">
+    <div class="term-bar">
+      <i class="t1"></i><i class="t2"></i><i class="t3"></i>
+      <span class="title">verb reference</span>
+    </div>
+    <div class="term-body" style="font-size:12px;line-height:2">
+<span class="dim">command    active (spinner)                        done</span>
+<span class="dim">───────────────────────────────────────────────────────────────</span>
+<span class="ir">install  </span>  <span class="pr">⠙</span> Searing into <span class="ir">claude</span>…              <span class="ok">✔ Seared</span>
+<span class="ir">install  </span>  <span class="pr">⠙</span> Baking into <span class="ir">copilot</span>…              <span class="ok">✔ Baked</span>
+<span class="ir">install  </span>  <span class="pr">⠙</span> Frying into <span class="ir">agents</span>…               <span class="ok">✔ Fried</span>
+<span class="ir">install  </span>  <span class="pr">⠙</span> Grilling into <span class="ir">claude</span>…             <span class="ok">✔ Grilled</span>
+<span class="ir">install  </span>  <span class="pr">⠙</span> Roasting into <span class="ir">copilot</span>…            <span class="ok">✔ Roasted</span>
+<span class="dim">               ·</span>
+<span class="ir">update   </span>  <span class="pr">⠙</span> Reheating <span class="ir">claude</span>…                 <span class="ok">✔ Reheated</span>
+<span class="ir">update   </span>  <span class="pr">⠙</span> Seasoning <span class="ir">copilot</span>…                <span class="ok">✔ Seasoned</span>
+<span class="ir">update   </span>  <span class="pr">⠙</span> Basting <span class="ir">agents</span>…                   <span class="ok">✔ Basted</span>
+<span class="ir">update   </span>  <span class="pr">⠙</span> Sautéing <span class="ir">claude</span>…                  <span class="ok">✔ Sautéed</span>
+<span class="ir">update   </span>  <span class="pr">⠙</span> Tempering <span class="ir">copilot</span>…                <span class="ok">✔ Tempered</span>
+<span class="dim">               ·</span>
+<span class="ir">uninstall</span>  <span class="pr">⠙</span> Scraping <span class="ir">claude</span>…                  <span class="ok">✔ Scraped</span>
+<span class="ir">uninstall</span>  <span class="pr">⠙</span> Clearing <span class="ir">copilot</span>…                 <span class="ok">✔ Cleared</span>
+<span class="ir">uninstall</span>  <span class="pr">⠙</span> Scrubbing <span class="ir">agents</span>…                 <span class="ok">✔ Scrubbed</span>
+<span class="ir">uninstall</span>  <span class="pr">⠙</span> Scouring <span class="ir">claude</span>…                  <span class="ok">✔ Scoured</span>
+<span class="ir">uninstall</span>  <span class="pr">⠙</span> Degreasing <span class="ir">copilot</span>…               <span class="ok">✔ Degreased</span>
+<span class="dim">               ·</span>
+<span class="ir">detect   </span>  <span class="pr">⠙</span> Scoping the kitchen…               <span class="ok">✔ Found 2 targets</span>
+<span class="ir">detect   </span>  <span class="pr">⠙</span> Checking the pantry…               <span class="ok">✔ Found 1 target</span>
+<span class="ir">detect   </span>  <span class="pr">⠙</span> Lighting the stove…                <span class="ok">✔ Found 3 targets</span>
+<span class="ir">detect   </span>  <span class="pr">⠙</span> Surveying the mise en place…       <span class="ok">✔ Found 2 targets</span>
+<span class="ir">detect   </span>  <span class="pr">⠙</span> Preheating the oven…               <span class="ok">✔ Found 2 targets</span>
+<span class="dim">───────────────────────────────────────────────────────────────</span>
+<span class="se">one verb picked at random per invocation within each command's pool</span></div>
+  </div>
+
+  <!-- 5. Rotating taglines reference -->
+  <div class="flow-label" style="margin-top:32px"><b>Rotating taglines</b> · sample pool</div>
+  <div class="term pattern">
+    <div class="term-bar">
+      <i class="t1"></i><i class="t2"></i><i class="t3"></i>
+      <span class="title">tagline pool · one picked at random per invocation</span>
+    </div>
+    <div class="term-body" style="font-size:12px;line-height:2">
+<span class="dim">  "Mise en place for your agents."</span>
+<span class="dim">  "Cast iron. No flaking."</span>
+<span class="dim">  "Skills so hot they need an oven mitt."</span>
+<span class="dim">  "Season your agents. Properly."</span>
+<span class="dim">  "From raw to production heat."</span>
+<span class="dim">  "Hot skills. Zero compromise."</span>
+<span class="dim">  "Your skills, served fresh."</span>
+<span class="dim">  "Low and slow wins the deploy."</span>
+<span class="dim">  "Don't ship cold skills."</span>
+<span class="dim">  "Heat-treated. Battle-hardened."</span>
+<span class="dim">  "Sharp knife. Sharper agents."</span>
+<span class="dim">  "Your agent stack, properly seasoned."</span>
+<span class="dim">  "Well done. (Not the steak.)"</span>
+<span class="dim">  "No raw skills in production."</span>
+<span class="dim">  "Skills that don't stick."</span>
+<span class="dim">  "The secret ingredient is version control."</span>
+<span class="dim">  "Rendered fat-free, feature-rich."</span>
+<span class="dim">  "Fresh install, every time."</span>
+<span class="dim">  "Properly plated. Ready to serve."</span>
+<span class="dim">  "First rule: mise en place."</span></div>
+  </div>
+
+  <footer>Tap a swatch to copy · built for <b>Skillet</b> 🍳</footer>
+</div>
+
+<div id="toast">copied</div>
+
+<script>
+(function(){
+  /* ─── Wordmark renderer (heated-iron gradient) ─── */
+  const ART=[
+"███████╗██╗  ██╗██╗██╗     ██╗     ███████╗████████╗",
+"██╔════╝██║ ██╔╝██║██║     ██║     ██╔════╝╚══██╔══╝",
+"███████╗█████╔╝ ██║██║     ██║     █████╗     ██║   ",
+"╚════██║██╔═██╗ ██║██║     ██║     ██╔══╝     ██║   ",
+"███████║██║  ██╗██║███████╗███████╗███████╗   ██║   ",
+"╚══════╝╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝   ╚═╝   "
+  ];
+  const FACE="█", maxY=ART.length-1;
+  const h2r=h=>{h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16));};
+  const css=a=>`rgb(${a.map(Math.round).join(',')})`;
+  const mix=(c1,c2,t)=>c1.map((v,i)=>v+(c2[i]-v)*t);
+  const stops=["#FBD2A0","#F0925A","#E8743B","#C75A28","#9C441C"].map(h2r);
+  const ramp=t=>{ if(t<=0)return stops[0]; if(t>=1)return stops[stops.length-1];
+    const s=t*(stops.length-1), i=Math.floor(s); return mix(stops[i],stops[i+1],s-i); };
+  const dim=rgb=>rgb.map(v=>v*0.40);
+  const rkey=a=>a.map(Math.round).join(';');
+
+  function buildHTML(){
+    let html="";
+    ART.forEach((line,y)=>{
+      for(const ch of line){
+        if(ch===" "){ html+=" "; continue; }
+        let col=ramp(y/maxY); if(ch!==FACE) col=dim(col);
+        html+=`<span style="color:${css(col)}">${ch}</span>`;
+      }
+      html+="\n";
+    });
+    return html;
+  }
+  const logoHTML=buildHTML();
+  document.getElementById('logo').innerHTML=logoHTML;
+  const tl=document.getElementById('termlogo'); if(tl) tl.innerHTML=logoHTML;
+
+  /* ─── ANSI snippet builder ─── */
+  function rowSeq(line,y){
+    const face=ramp(y/maxY), shadow=dim(face);
+    let out="", cur=null;
+    for(const ch of line){
+      const col = (ch===FACE||ch===" ") ? face : shadow;
+      const k=rkey(col);
+      if(k!==cur){ out+="\\033[38;2;"+k+"m"; cur=k; }
+      out+=ch;
+    }
+    return out+"\\033[0m";
+  }
+  const rows=ART.map((l,y)=>"'"+rowSeq(l,y)+"\\n'");
+  const SNIPPET="# Skillet — \"heated iron\" banner (needs a truecolor terminal)\n"+
+                "printf '%b' \\\n"+rows.join(" \\\n");
+
+  const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const highlighted=esc(SNIPPET)
+      .replace(/^(#.*)$/m,'<span class="c">$1</span>')
+      .replace(/\\033\[[0-9;]*m/g,m=>'<span class="esc">'+m+'</span>');
+  document.getElementById('snippetCode').innerHTML=highlighted;
+
+  /* ─── Toast helper ─── */
+  const toast=document.getElementById('toast'); let tt;
+  function ping(msg){ toast.textContent=msg; toast.classList.add('show');
+    clearTimeout(tt); tt=setTimeout(()=>toast.classList.remove('show'),1400); }
+
+  /* ─── Wordmark buttons ─── */
+  const copyBtn=document.getElementById('copyBtn');
+  copyBtn.addEventListener('click',()=>{
+    navigator.clipboard?.writeText(SNIPPET).catch(()=>{});
+    copyBtn.classList.add('copied'); copyBtn.textContent='✓ Copied — paste in a terminal';
+    ping('ANSI banner copied');
+    setTimeout(()=>{copyBtn.classList.remove('copied');copyBtn.textContent='⧉ Copy ANSI banner';},1800);
+  });
+  const viewBtn=document.getElementById('viewBtn'), snip=document.getElementById('snippet');
+  viewBtn.addEventListener('click',()=>{
+    const open=snip.classList.toggle('show');
+    viewBtn.classList.toggle('live',open);
+    viewBtn.innerHTML = open ? '&lt;/&gt; Hide snippet' : '&lt;/&gt; View snippet';
+  });
+
+  /* ─── Swatch copy ─── */
+  document.querySelectorAll('.sw').forEach(sw=>{
+    sw.addEventListener('click',()=>{
+      const hex=sw.querySelector('.hex').textContent.replace('copy','').trim();
+      navigator.clipboard?.writeText(hex).catch(()=>{});
+      sw.classList.add('copied'); sw.querySelector('.copy').textContent='copied';
+      ping(hex+' copied');
+      setTimeout(()=>{sw.classList.remove('copied');sw.querySelector('.copy').textContent='copy';},1400);
+    });
+  });
+
+  /* ══════════════════════════════════════════════════════
+     CLI PATTERN TERMINALS
+  ══════════════════════════════════════════════════════ */
+
+  const TAGLINES = [
+    "Mise en place for your agents.",
+    "Cast iron. No flaking.",
+    "Skills so hot they need an oven mitt.",
+    "Season your agents. Properly.",
+    "From raw to production heat.",
+    "Hot skills. Zero compromise.",
+    "Your skills, served fresh.",
+    "Low and slow wins the deploy.",
+    "Don't ship cold skills.",
+    "Heat-treated. Battle-hardened.",
+    "Sharp knife. Sharper agents.",
+    "Your agent stack, properly seasoned.",
+    "Well done. (Not the steak.)",
+    "No raw skills in production.",
+    "Skills that don't stick.",
+    "The secret ingredient is version control.",
+    "Rendered fat-free, feature-rich.",
+    "Fresh install, every time.",
+    "Properly plated. Ready to serve.",
+    "First rule: mise en place.",
+  ];
+
+  const SPINNER = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
+
+  function randomTagline(){ return TAGLINES[Math.floor(Math.random()*TAGLINES.length)]; }
+
+  /* Build a small wordmark HTML for inside pattern terminals */
+  function buildSmallWM(){
+    const el = document.createElement('pre');
+    el.className = 'wm-sm';
+    el.innerHTML = logoHTML;
+    return el;
+  }
+
+  /* Helper: colored span */
+  function c(cls, txt){ return `<span class="${cls}">${txt}</span>`; }
+  function rgb(r,g,b,txt){ return `<span style="color:rgb(${r},${g},${b})">${txt}</span>`; }
+
+  /* ── 1. Full header terminal (install, interactive) — step-through ── */
+  (function(){
+    const container = document.getElementById('termFull');
+    const btn       = document.getElementById('stepFull');
+
+    const STEP_LABELS = [
+      '→ Choose scope',
+      '→ Choose targets',
+      '→ Confirm & install',
+      '→ First target done',
+      '→ Complete',
+      '↺ Restart',
+    ];
+
+    let step = 0;
+    let spinInterval = null;
+    let spinFrame = 0;
+    let scopeDiv  = null;
+    let targetDiv = null;
+    let spinDiv   = null;
+    let spin2Div  = null;
+
+    function clearSpin(){ if(spinInterval){ clearInterval(spinInterval); spinInterval=null; } }
+
+    function updateBtn(){
+      btn.textContent = STEP_LABELS[step];
+      btn.classList.toggle('done', step === STEP_LABELS.length - 1);
+    }
+
+    function init(){
+      clearSpin();
+      container.innerHTML = '';
+      scopeDiv = targetDiv = spinDiv = spin2Div = null;
+      step = 0;
+
+      const wm = buildSmallWM();
+      container.appendChild(wm);
+
+      const tag = document.createElement('div');
+      tag.innerHTML = `  ${c('dim', randomTagline())}`;
+      container.appendChild(tag);
+
+      const gap = document.createElement('div'); gap.textContent = ' ';
+      container.appendChild(gap);
+
+      updateBtn();
+    }
+
+    /* Step 1 — scope prompt (single-select) */
+    function step1(){
+      scopeDiv = document.createElement('div');
+      scopeDiv.innerHTML =
+        c('ir','?') + ' <strong>Which scope?</strong>\n' +
+        '\n' +
+        c('ir','›') + ' ' + c('ok','●') + ' ' + c('ir','user') + '      ' + c('dim','— installs to your home directory') + '\n' +
+        '  ' + c('dim','○') + ' project   ' + c('dim','— installs to this repository') + '\n';
+      container.appendChild(scopeDiv);
+    }
+
+    /* Step 2 — scope confirmed, show target multi-select */
+    function step2(){
+      if(scopeDiv){
+        scopeDiv.innerHTML = c('ok','✔') + ' <strong>Which scope?</strong> ' + c('ir','user') + '\n';
+      }
+      targetDiv = document.createElement('div');
+      targetDiv.innerHTML =
+        c('ir','?') + ' <strong>Which targets?</strong>\n' +
+        `  Selected: <span class="chip-badge">claude</span><span class="chip-badge">copilot</span>\n` +
+        `  Search: ${c('pr','[')}${c('dim','type to filter')}${c('pr',']')}\n` +
+        `  ${c('ir','↑↓')} navigate · ${c('ir','Space')} toggle · ${c('ir','Enter')} confirm\n` +
+        '\n' +
+        `${c('ir','›')} ${c('ok','◉')} ${c('ir','claude')}    ${c('dim','(detected)')}\n` +
+        `  ${c('ok','◉')} copilot   ${c('dim','(detected)')}\n` +
+        `  ${c('dim','○')} agents\n`;
+      container.appendChild(targetDiv);
+    }
+
+    /* Step 3 — targets confirmed, start spinner for claude */
+    function step3(){
+      if(targetDiv){
+        targetDiv.innerHTML =
+          c('ok','✔') + ' <strong>Which targets?</strong> ' +
+          c('ir','claude, copilot') + '\n';
+      }
+      const gap2 = document.createElement('div'); gap2.textContent = ' ';
+      container.appendChild(gap2);
+
+      spinDiv = document.createElement('div');
+      container.appendChild(spinDiv);
+      spinFrame = 0;
+      spinInterval = setInterval(()=>{
+        spinDiv.innerHTML = c('pr', SPINNER[spinFrame++ % SPINNER.length]) +
+          ' Searing skills into ' + c('ir','claude') + c('dim',' (user)') + '…';
+      }, 80);
+    }
+
+    /* Step 4 — claude done, start spinner for copilot */
+    function step4(){
+      clearSpin();
+      if(spinDiv) spinDiv.innerHTML = c('ok','✔ Seared') + '   claude    ' + c('dim','~/.claude/skills/my-skill/');
+
+      spin2Div = document.createElement('div');
+      container.appendChild(spin2Div);
+      spinFrame = 0;
+      spinInterval = setInterval(()=>{
+        spin2Div.innerHTML = c('pr', SPINNER[spinFrame++ % SPINNER.length]) +
+          ' Baking skills into ' + c('ir','copilot') + c('dim',' (project)') + '…';
+      }, 80);
+    }
+
+    /* Step 5 — copilot done, summary */
+    function step5(){
+      clearSpin();
+      if(spin2Div) spin2Div.innerHTML = c('ok','✔ Baked') + '     copilot   ' + c('dim','.github/copilot/my-skill/');
+
+      const gap3 = document.createElement('div'); gap3.textContent = ' ';
+      container.appendChild(gap3);
+      const summary = document.createElement('div');
+      summary.innerHTML = '  <strong>2 targets installed</strong> ' + c('dim','· 0.4s');
+      container.appendChild(summary);
+    }
+
+    const ACTIONS = [step1, step2, step3, step4, step5];
+
+    btn.addEventListener('click', ()=>{
+      if(step === STEP_LABELS.length - 1){ init(); return; }
+      ACTIONS[step]();
+      step++;
+      updateBtn();
+    });
+
+    init();
+  })();
+
+  /* ── 2. Light header terminal (list) ── */
+  (function(){
+    const container = document.getElementById('termLight');
+    const tagline = randomTagline();
+
+    const wm = document.createElement('div');
+    wm.innerHTML =
+      '<span style="color:var(--ember-500);font-weight:700;letter-spacing:.1em">SKILLET</span>' +
+      ' ' + c('dim','v0.1.0') + '  ' + c('dim','·') + ' ' +
+      c('se','Install agent skills across your AI tools') +
+      '\n' +
+      `  ${c('dim', tagline)}\n\n`;
+    container.appendChild(wm);
+
+    const rows = [
+      { target: 'claude (user)', path: '~/.claude/skills/my-skill/',   status: 'pristine' },
+      { target: 'copilot',       path: '.github/copilot/my-skill/',     status: 'pristine' },
+      { target: 'agents (user)', path: '~/.agents/skills/my-skill/',   status: 'modified'  },
+    ];
+
+    let rowsHTML = '';
+    for(const r of rows){
+      const st = r.status === 'pristine' ? c('ok','pristine') : c('er','modified');
+      rowsHTML +=
+        `  ${r.target.padEnd(18)}` +
+        c('dim', r.path.padEnd(38)) +
+        st + '   ' + c('dim','sha256:a1b2c3…') + '\n';
+    }
+    const table = document.createElement('div');
+    table.innerHTML = rowsHTML;
+    container.appendChild(table);
+  })();
+
+  /* ── 3. CI / non-interactive terminal ── */
+  (function(){
+    const container = document.getElementById('termCI');
+    container.innerHTML =
+      c('dim','$ npx my-skill install --target claude --yes') + '\n' +
+      c('dim','[my-skill]') + ' searing skills into ' + c('ir','claude (user)') + '…\n' +
+      c('dim','[my-skill]') + ' ' + c('ok','✔ seared') + ' — ' + c('dim','~/.claude/skills/my-skill/') + '\n' +
+      c('dim','[my-skill]') + ' <strong>1 target installed</strong>\n';
+  })();
+
+})();
+</script>
+</body>
+</html>
