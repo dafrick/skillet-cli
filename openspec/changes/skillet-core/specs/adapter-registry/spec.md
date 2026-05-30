@@ -36,7 +36,7 @@ Every adapter SHALL implement the following interface:
 - **WHEN** `detect(ctx)` is called on a machine where the target agent is not installed
 - **THEN** it returns an empty or `none` result indicating no detectable scope
 
-### Requirement: Three built-in v1 adapters registered by default
+### Requirement: Three built-in v0.1 adapters registered by default
 The library SHALL register `claude`, `copilot`, and `agents` adapters automatically when the package is imported.
 
 #### Scenario: claude adapter detected when ~/.claude exists
