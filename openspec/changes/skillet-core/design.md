@@ -2,7 +2,7 @@
 
 `@skillet/core` is a brand-new npm library — there is no existing codebase to migrate. The design must produce a stable, extensible foundation that skill authors depend on via `npm install`. Breaking changes to the author-facing API will require a major semver bump, so the architecture prioritises getting the abstractions right on the first release rather than iterating privately.
 
-The target runtime is Node 18+ with ES modules. The package is published under the `@skillet` npm scope. Three v1 targets are supported: Claude Code, GitHub Copilot (project-scoped only), and a generic `.agents/skills/` convention. All three are "Bucket A" (passthrough) — they consume the `SKILL.md` directory unchanged.
+The target runtime is Node 18+ with ES modules. The package is published under the `@skillet` npm scope. Three v0.1 targets are supported: Claude Code, GitHub Copilot (project-scoped only), and a generic `.agents/skills/` convention. All three are "Bucket A" (passthrough) — they consume the `SKILL.md` directory unchanged.
 
 Explicitly anticipated future targets that the architecture must not foreclose: Kiro (`.kiro/steering/` steering files, Bucket B), legacy Copilot instructions (`.github/copilot-instructions.md` or `*.prompt.md`, Bucket B), an `AGENTS.md` aggregator (Bucket B), and Cursor-specific extensions beyond the generic `.agents/` convention (Bucket A or B depending on their eventual format).
 
@@ -46,13 +46,13 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 ---
 
-### D3: Passthrough render in v1; abstract render step from the start
+### D3: Passthrough render in v0.1; abstract render step from the start
 
-**Decision**: All v1 adapters implement `render()` as a no-op (return `sourceDir` unchanged). The orchestration layer calls `render()` and copies whatever path it returns, not `sourceDir` directly.
+**Decision**: All v0.1 adapters implement `render()` as a no-op (return `sourceDir` unchanged). The orchestration layer calls `render()` and copies whatever path it returns, not `sourceDir` directly.
 
-**Rationale**: When Bucket B adapters land, the orchestration code changes nothing — only the adapter's `render()` does work. If we skipped the render step in v1, adding it later would require patching every call site and possibly the manifest schema.
+**Rationale**: When Bucket B adapters land, the orchestration code changes nothing — only the adapter's `render()` does work. If we skipped the render step in v0.1, adding it later would require patching every call site and possibly the manifest schema.
 
-**Alternative considered**: Hard-code passthrough in orchestration for v1, add render abstraction later. Rejected: migration cost is higher than the near-zero cost of calling a no-op function today.
+**Alternative considered**: Hard-code passthrough in orchestration for v0.1, add render abstraction later. Rejected: migration cost is higher than the near-zero cost of calling a no-op function today.
 
 ---
 
@@ -84,13 +84,13 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 **Rationale**: Comparing the live folder hash to `postInstallHash` cleanly detects any user edit without needing a separate "original files" snapshot.
 
-**Why not use `contentHash` directly?** In v1 they'd be equal, but a Bucket B adapter writes a *transformed* tree to disk that differs from the source. `postInstallHash` is always "what we actually wrote", regardless of adapter type.
+**Why not use `contentHash` directly?** In v0.1 they'd be equal, but a Bucket B adapter writes a *transformed* tree to disk that differs from the source. `postInstallHash` is always "what we actually wrote", regardless of adapter type.
 
 ---
 
-### D7: `renderHash` tracked from v1 despite being redundant
+### D7: `renderHash` tracked from v0.1 despite being redundant
 
-**Decision**: `renderHash = sha256(contentHash + "|" + adapterId + "|" + libVersion)` is stored in the manifest even though all v1 adapters are passthrough.
+**Decision**: `renderHash = sha256(contentHash + "|" + adapterId + "|" + libVersion)` is stored in the manifest even though all v0.1 adapters are passthrough.
 
 **Rationale**: When `@skillet/core` improves a Bucket B adapter's rendering logic, the `renderHash` change flags "this install is stale even though the source hasn't changed". Adding this field later requires a manifest migration; storing it now costs nothing.
 
@@ -181,7 +181,7 @@ Questions carried forward from the initial brief — documented so they are not 
 - **Skill validation.** Should the library offer a `validate` subcommand running lint-style checks (frontmatter completeness, suspiciously short descriptions, references to nonexistent files)? This is an authoring-tool concern rather than a runtime concern; deferred.
 - **Symlink installs.** For local development of a skill, an author might want the install to be a symlink to the source so edits are live. Could be opt-in via `--link`. Deferred.
 - **Dry run.** A `--dry-run` flag that prints what would be installed or changed without writing. Cheap to add; deferred until clearly needed.
-- **Telemetry.** Not in v1, probably not ever for a tool of this category. Explicitly: no telemetry.
+- **Telemetry.** Not in v0.1, probably not ever for a tool of this category. Explicitly: no telemetry.
 
 Open questions arising from implementation analysis:
 

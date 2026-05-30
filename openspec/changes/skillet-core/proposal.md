@@ -14,7 +14,7 @@ Skill authors publishing `SKILL.md`-based agent skills have no standard way to d
 - **Four CLI commands** — `install`, `update`, `uninstall`, `list` with interactive prompts and non-interactive (`--yes`, `--force`, `--target`) flags
 - **Hook system** — `transform`, `beforeInstall`, `afterInstall`, `extendProgram` hooks for author customization
 - **Update notifier** — passive npm version nudge on every CLI invocation (via `update-notifier`)
-- **Three v1 targets** — `claude` (user + project scope), `copilot` (project scope), `agents` (user + project scope, always offered)
+- **Three v0.1 targets** — `claude` (user + project scope), `copilot` (project scope), `agents` (user + project scope, always offered)
 - **Adapter interface** — extensible registry so future targets (Kiro, legacy Copilot formats, `AGENTS.md`) can be added without breaking the author API
 
 ## Capabilities
