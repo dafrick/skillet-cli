@@ -1,0 +1,35 @@
+{
+  "name": "@skillet/core",
+  "version": "0.0.1",
+  "description": "Core library for skillet skill installation",
+  "type": "module",
+  "private": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run --config vitest.config.ts",
+    "test:unit": "vitest run --config vitest.config.ts test/unit",
+    "test:integration": "vitest run --config vitest.config.ts test/integration",
+    "test:e2e": "vitest run --config vitest.config.e2e.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "@vitest/coverage-v8": "^4.1.7",
+    "cli-testing-library": "^3.0.1",
+    "vitest": "^4.1.7"
+  }
+}
