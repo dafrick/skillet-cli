@@ -2,7 +2,7 @@
 
 `@skillet/core` is a brand-new npm library — there is no existing codebase to migrate. The design must produce a stable, extensible foundation that skill authors depend on via `npm install`. Breaking changes to the author-facing API will require a major semver bump, so the architecture prioritises getting the abstractions right on the first release rather than iterating privately.
 
-The target runtime is Node 18+ with ES modules. The package is published under the `@skillet` npm scope. Three v0.1 targets are supported: Claude Code, GitHub Copilot (project-scoped only), and a generic `.agents/skills/` convention. All three are "Bucket A" (passthrough) — they consume the `SKILL.md` directory unchanged.
+The target runtime is Node 24+ with ES modules. The package is published under the `@skillet` npm scope. Three v0.1 targets are supported: Claude Code, GitHub Copilot (user + project scope), and a generic `.agents/skills/` convention. All three are "Bucket A" (passthrough) — they consume the `SKILL.md` directory unchanged.
 
 Explicitly anticipated future targets that the architecture must not foreclose: Kiro (`.kiro/steering/` steering files, Bucket B), legacy Copilot instructions (`.github/copilot-instructions.md` or `*.prompt.md`, Bucket B), an `AGENTS.md` aggregator (Bucket B), and Cursor-specific extensions beyond the generic `.agents/` convention (Bucket A or B depending on their eventual format).
 
@@ -12,7 +12,7 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 - Ship a working `run()` entrypoint that authors can invoke from a 3-line bin script
 - Provide a stable adapter interface so new targets can be added without touching author code
 - Implement the content-hash identity model so update logic is correct even when declared versions are not bumped
-- Implement per-install `.skill-meta.json` manifests and drift detection
+- Implement per-install `.skill-manifest.json` manifests and drift detection
 - Support interactive and non-interactive (CI) operation modes
 - Export lower-level primitives (`normalizeSkill`, `hashSkill`, `registry`, `registerAdapter`) for advanced consumers
 
@@ -68,7 +68,7 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 ---
 
-### D5: Per-install `.skill-meta.json` instead of a central index
+### D5: Per-install `.skill-manifest.json` instead of a central index
 
 **Decision**: Each installed skill directory contains its own manifest. No global index file.
 
@@ -152,7 +152,7 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 - **Patch** (`0.1.0` → `0.1.1`): bug fixes, no behaviour change.
 - **Minor** (`0.1.0` → `0.2.0`): new adapters, new optional hooks, new flags with safe defaults. Existing authors get these by bumping the dependency caret — no code changes required on their side.
-- **Major** (`0.x` → `1.0`, and beyond): changes to the author-facing API, the `.skill-meta.json` manifest schema, or the hash algorithm. Paired with migration notes.
+- **Major** (`0.x` → `1.0`, and beyond): changes to the author-facing API, the `.skill-manifest.json` manifest schema, or the hash algorithm. Paired with migration notes.
 
 The hash algorithm is a special case within this policy. Changing it would invalidate every existing install's stored `contentHash` and `postInstallHash`. Any future change therefore requires one of two approaches: (a) continue computing the old algorithm for comparison against existing manifests (identified by the `sha256:` prefix) while computing the new algorithm for new installs, or (b) a one-time migration command. The `sha256:` prefix in stored hashes exists precisely to make this future-safe — the algorithm is self-describing in the manifest.
 
@@ -185,6 +185,5 @@ Questions carried forward from the initial brief — documented so they are not 
 
 Open questions arising from implementation analysis:
 
-- **`~/.agents/skills/` user scope**: The `.agents/` convention is documented for project scope. Is user-scope (`~/.agents/skills/`) actually consumed by any agent today, or is it purely aspirational? Confirm before marking the `agents` adapter's user-scope path as tested.
 - **Copilot detection heuristic**: Detecting Copilot via the presence of `.github/` is coarse — any repo with GitHub Actions would match. Should the detector require `.github/copilot-instructions.md` or some other Copilot-specific marker instead? Needs validation against real Copilot installs.
 - **Backup naming**: The drift-prompt "backup and overwrite" option creates a timestamped sibling folder. Exact naming scheme not yet specified (e.g. `<name>.bak.20260530T120000Z/`). Agree on format before implementing.

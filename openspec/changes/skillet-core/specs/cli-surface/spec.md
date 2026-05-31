@@ -149,7 +149,7 @@ Shadow characters (`╗`, `╔`, `═`, `╝`, `╚`) are rendered at 40% bright
 
 ### Header System
 
-Both variants are **suppressed entirely** when `process.stdin.isTTY` is falsy or the `CI` environment variable is set. `NO_COLOR` suppresses color but not structure.
+Both variants are **suppressed entirely** when `process.stdout.isTTY` is falsy or the `CI` environment variable is set. `NO_COLOR` suppresses color but not structure.
 
 #### Full header — `install` and `update` only
 
@@ -288,7 +288,7 @@ Collapses to `✔ Which targets? claude, copilot` on confirm.
 ⠙ Searing skills into claude…
 ✔ Seared    claude   ~/.claude/skills/my-skill/
 ⠙ Baking skills into copilot…
-✔ Baked     copilot  .github/copilot/my-skill/
+✔ Baked     copilot  .github/skills/my-skill/
 
   2 targets installed · 0.4s
 ```
@@ -357,7 +357,7 @@ SKILLET v0.1.0  ·  Install agent skills across your AI tools
   Cast iron. No flaking.
 
   claude    ~/.claude/skills/my-skill/    pristine   sha256:a1b2c3…
-  copilot   .github/copilot/my-skill/    pristine   sha256:a1b2c3…
+  copilot   .github/skills/my-skill/    pristine   sha256:a1b2c3…
   agents    ~/.agents/skills/my-skill/   modified   sha256:f9e8d7…
 ```
 
@@ -380,7 +380,7 @@ Light header. Multi-select with all detected installs pre-selected.
   ↑↓ navigate · Space toggle · Enter confirm
 
 ›  ◉  claude    ~/.claude/skills/my-skill/
-   ◉  copilot   .github/copilot/my-skill/
+   ◉  copilot   .github/skills/my-skill/
    ◉  agents    ~/.agents/skills/my-skill/
 ```
 

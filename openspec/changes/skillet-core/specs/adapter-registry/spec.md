@@ -47,9 +47,13 @@ The library SHALL register `claude`, `copilot`, and `agents` adapters automatica
 - **WHEN** a `.claude/` directory exists in the current working directory
 - **THEN** the `claude` adapter's `detect()` includes project scope
 
-#### Scenario: copilot adapter detected when .github/ exists in cwd
+#### Scenario: copilot adapter detected (project) when .github/ exists in cwd
 - **WHEN** a `.github/` directory exists in the current working directory
 - **THEN** the `copilot` adapter's `detect()` returns a result indicating project scope is available
+
+#### Scenario: copilot adapter detected (user) when ~/.copilot/ exists
+- **WHEN** a `.copilot/` directory exists in the user's home directory
+- **THEN** the `copilot` adapter's `detect()` returns a result indicating user scope is available
 
 #### Scenario: agents adapter always available
 - **WHEN** `detect()` is called on the `agents` adapter regardless of environment
@@ -58,13 +62,21 @@ The library SHALL register `claude`, `copilot`, and `agents` adapters automatica
 ### Requirement: Adapters support user and/or project scope
 The library SHALL allow each adapter to declare which scopes it supports. An error SHALL be raised if a caller requests an unsupported scope for a given adapter.
 
-#### Scenario: copilot rejects user scope
+#### Scenario: copilot supports user scope
 - **WHEN** `copilot.supportsScope('user')` is called
-- **THEN** it returns `false`
+- **THEN** it returns `true`
 
 #### Scenario: claude supports both scopes
 - **WHEN** `claude.supportsScope('user')` and `claude.supportsScope('project')` are called
 - **THEN** both return `true`
+
+#### Scenario: copilot resolveInstallPath for project scope
+- **WHEN** `copilot.resolveInstallPath(skill, ctx)` is called with `scope: 'project'`
+- **THEN** it returns `.github/skills/<skill.name>/` relative to the current working directory
+
+#### Scenario: copilot resolveInstallPath for user scope
+- **WHEN** `copilot.resolveInstallPath(skill, ctx)` is called with `scope: 'user'`
+- **THEN** it returns `~/.copilot/skills/<skill.name>/`
 
 ### Requirement: Third-party adapters registerable via registerAdapter or registry.register
 The library SHALL allow consumers to register custom adapters beyond the built-in three using either `registerAdapter(adapter)` or `registry.register(adapter)`.

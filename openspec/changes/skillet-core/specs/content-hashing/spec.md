@@ -38,14 +38,14 @@ For each file in sorted order the library SHALL feed the relative POSIX path byt
 - **THEN** its bytes are fed into the hash without any line-ending transformation
 
 ### Requirement: Ignore set excludes noise files
-The library SHALL exclude `.git`, `node_modules`, `.DS_Store`, and `.skill-meta.json` from the hash computation by default.
+The library SHALL exclude `.git`, `node_modules`, `.DS_Store`, and `.skill-manifest.json` from the hash computation by default.
 
 #### Scenario: .git directory ignored
 - **WHEN** the skill directory contains a `.git/` subdirectory
 - **THEN** its contents do not affect the computed hash
 
-#### Scenario: .skill-meta.json ignored
-- **WHEN** `.skill-meta.json` is present in the skill directory
+#### Scenario: .skill-manifest.json ignored
+- **WHEN** `.skill-manifest.json` is present in the skill directory
 - **THEN** it is excluded from the hash so source and installed trees can be compared fairly
 
 ### Requirement: Custom ignore patterns via options

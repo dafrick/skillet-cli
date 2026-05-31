@@ -11,16 +11,16 @@ The library SHALL copy every file from the adapter's `render()` output path to t
 - **WHEN** a previous install exists and no local modifications are detected
 - **THEN** the install is overwritten silently
 
-### Requirement: .skill-meta.json written after every successful install
-The library SHALL write a `.skill-meta.json` file into the installed skill directory immediately after copying the tree. The manifest SHALL include: `name`, `description`, `source`, `declaredVersion`, `contentHash`, `renderHash`, `target`, `scope`, `libVersion`, `installedAt`, and `postInstallHash`.
+### Requirement: .skill-manifest.json written after every successful install
+The library SHALL write a `.skill-manifest.json` file into the installed skill directory immediately after copying the tree. The manifest SHALL include: `name`, `description`, `source`, `declaredVersion`, `contentHash`, `renderHash`, `adapterId`, `scope`, `libVersion`, `installedAt`, and `postInstallHash`.
 
 #### Scenario: Manifest fields populated on fresh install
 - **WHEN** `install` completes for a target
-- **THEN** the installed directory contains a `.skill-meta.json` with all required fields populated
+- **THEN** the installed directory contains a `.skill-manifest.json` with all required fields populated
 
 #### Scenario: postInstallHash reflects actual installed tree
 - **WHEN** the manifest is written
-- **THEN** `postInstallHash` equals the hash of the installed folder excluding `.skill-meta.json` itself
+- **THEN** `postInstallHash` equals the hash of the installed folder excluding `.skill-manifest.json` itself
 
 #### Scenario: installedAt is ISO 8601
 - **WHEN** the manifest is written
@@ -56,4 +56,4 @@ If hooks are provided, the library SHALL call `beforeInstall(skill, adapter, ctx
 
 #### Scenario: afterInstall called after manifest written
 - **WHEN** an `afterInstall` hook is registered
-- **THEN** it is invoked after `.skill-meta.json` is written
+- **THEN** it is invoked after `.skill-manifest.json` is written

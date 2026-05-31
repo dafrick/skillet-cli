@@ -40,11 +40,11 @@ No test SHALL call `process.chdir()` or mutate `process.env.HOME` / `process.env
 ### Requirement: Unit tests cover pure functions with no filesystem access
 `test/unit/` SHALL contain one test file per pure-function module. Unit tests SHALL NOT call `createSandbox()`, touch the filesystem, or set environment variables. The following modules SHALL have unit test coverage:
 
-- `hash.test.ts` — same content produces same hash; file rename changes hash; `\r\n` is normalised to `\n` before hashing; Windows backslash paths are normalised to forward slashes; `.skill-meta.json` is excluded from hash by default; custom ignore list excludes specified files
+- `hash.test.ts` — same content produces same hash; file rename changes hash; `\r\n` is normalised to `\n` before hashing; Windows backslash paths are normalised to forward slashes; `.skill-manifest.json` is excluded from hash by default; custom ignore list excludes specified files
 - `normalize.test.ts` — valid `SKILL.md` is parsed correctly; missing `name` throws a descriptive error; missing `description` throws a descriptive error; missing `SKILL.md` throws a descriptive error; optional `version` field is passed through; arbitrary extra frontmatter fields are passed through
 - `registry.test.ts` — `registry.register()` adds an adapter; `registry.get(id)` returns the registered adapter; `registry.list()` returns all adapters; registering a duplicate `id` throws; `registerAdapter` is an alias for `registry.register`
 - `adapter-claude.test.ts` — `detect()` returns true when `~/.claude/` exists (user scope) or `.claude/` exists in cwd (project scope); `supportsScope()` returns true for both `user` and `project`; `resolveInstallPath()` returns correct path per scope; `render()` is passthrough
-- `adapter-copilot.test.ts` — `detect()` returns true when `.github/` exists in cwd; `supportsScope('user')` returns false; `supportsScope('project')` returns true; `resolveInstallPath('project')` returns correct path; `render()` is passthrough
+- `adapter-copilot.test.ts` — `detect()` returns project scope when `.github/` exists in cwd; `detect()` returns user scope when `~/.copilot/` exists; `supportsScope('user')` returns true; `supportsScope('project')` returns true; `resolveInstallPath('project')` returns `.github/skills/<name>/`; `resolveInstallPath('user')` returns `~/.copilot/skills/<name>/`; `render()` is passthrough
 - `adapter-agents.test.ts` — `detect()` always returns true; `supportsScope()` returns true for both scopes; `resolveInstallPath()` returns `~/.agents/skills/<name>/` for user and `.agents/skills/<name>/` for project; `render()` is passthrough
 - `ui-colors.test.ts` — color token wrapper functions produce ANSI escape sequences when `process.stdout.isTTY` is mocked to `true`; produce plain strings when mocked to `false`
 - `ui-wordmark.test.ts` — returns a non-empty multi-line string containing ANSI codes when `isTTY` is `true`; returns an empty string when `isTTY` is `false`
@@ -58,9 +58,9 @@ No test SHALL call `process.chdir()` or mutate `process.env.HOME` / `process.env
 - **WHEN** `normalizeSkill()` is called on a directory with no `SKILL.md`
 - **THEN** it throws an error whose message includes the missing path
 
-#### Scenario: Copilot adapter rejects user scope
+#### Scenario: Copilot adapter supports user scope
 - **WHEN** `copilotAdapter.supportsScope('user')` is called
-- **THEN** it returns `false`
+- **THEN** it returns `true`
 
 ---
 
@@ -71,47 +71,47 @@ No test SHALL call `process.chdir()` or mutate `process.env.HOME` / `process.env
 |-----------|-----------|---------------------------|
 | `claude`  | `user`    | `.claude/skills`          |
 | `claude`  | `project` | `.claude/skills`          |
-| `copilot` | `project` | `.github/copilot/skills`  |
+| `copilot` | `user`    | `.copilot/skills`         |
+| `copilot` | `project` | `.github/skills`          |
 | `agents`  | `user`    | `.agents/skills`          |
 | `agents`  | `project` | `.agents/skills`          |
 
 The following scenarios SHALL be covered for each valid combination:
 
-- **Fresh install**: correct files written to `<expectedSubdir>/<skill-name>/`; `.skill-meta.json` contains all required fields with the formats defined below; `postInstallHash` matches a fresh re-hash of the installed folder (excluding `.skill-meta.json`)
+- **Fresh install**: correct files written to `<expectedSubdir>/<skill-name>/`; `.skill-manifest.json` contains all required fields with the formats defined below; `postInstallHash` matches a fresh re-hash of the installed folder (excluding `.skill-manifest.json`)
 
-**`.skill-meta.json` field formats for assertion:**
+**`.skill-manifest.json` field formats for assertion:**
 
 | Field | Type | Format | Source |
 |---|---|---|---|
 | `name` | string | matches SKILL.md `name` frontmatter | `NormalizedSkill.name` |
-| `version` | string \| undefined | semver string or absent if not in frontmatter | `NormalizedSkill.version` |
-| `source` | string | npm package name from `pkg.name` passed to `run()` (e.g. `"@skillet/hello"`) | `RunOptions.pkg.name` |
-| `sourceVersion` | string | semver string from `pkg.version` passed to `run()` (e.g. `"1.0.0"`) | `RunOptions.pkg.version` |
+| `description` | string | matches SKILL.md `description` frontmatter | `NormalizedSkill.description` |
+| `source` | string | `"npm:<pkg.name>@<pkg.version>"` (e.g. `"npm:@skillet/hello@1.0.0"`) | `RunOptions.pkg` |
+| `declaredVersion` | string \| undefined | semver string from SKILL.md frontmatter, or absent if not declared | `NormalizedSkill.declaredVersion` |
 | `contentHash` | string | `sha256:` prefix + 64-char lowercase hex digest | `hashSkill()` output |
 | `renderHash` | string | `sha256:` prefix + 64-char lowercase hex digest | `computeRenderHash()` output |
-| `postInstallHash` | string | `sha256:` prefix + 64-char lowercase hex digest | re-hash of installed folder |
 | `adapterId` | string | one of `'claude'`, `'copilot'`, `'agents'` | adapter `id` field |
 | `scope` | string | one of `'user'`, `'project'` | install call argument |
+| `libVersion` | string | semver string of `@skillet/core` used for the install | package version at install time |
 | `installedAt` | string | ISO 8601 UTC (`new Date().toISOString()` format, e.g. `"2026-05-31T12:00:00.000Z"`) | set at install time |
+| `postInstallHash` | string | `sha256:` prefix + 64-char lowercase hex digest | re-hash of installed folder |
 
 Tests asserting `installedAt` SHALL check that it is a valid ISO 8601 string (e.g. `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/`) rather than an exact value.
 - **Idempotent install**: running install twice on an unmodified install produces no changes and exits successfully
-- **Drift detection**: editing a file post-install causes `detectDrift()` to return `'modified'`; an unmodified install returns `'pristine'`; an install with no `.skill-meta.json` returns `'unknown'`
+- **Drift detection**: editing a file post-install causes `detectDrift()` to return `'modified'`; an unmodified install returns `'pristine'`; an install with no `.skill-manifest.json` returns `'unknown'`
 - **Stale detection**: `isStale()` returns `true` when the source skill has changed; returns `false` when source matches the stored `contentHash`
 - **Update pristine+stale**: overwrites silently without prompting
 - **Update drifted + `--force`**: overwrites without backup
 - **Update drifted without `--force`** (non-TTY): skips the install and reports the skip
 - **Uninstall**: removes the installed directory; subsequent `findExistingInstalls()` returns empty for that adapter/scope
-- **Hooks**: `beforeInstall` is called before files are copied; `afterInstall` is called after `.skill-meta.json` is written; both receive correct arguments
-- **Copilot user-scope rejection**: calling `performInstall` with the `copilot` adapter and `scope: 'user'` SHALL throw (or the orchestration layer SHALL skip/error before calling `performInstall`) because `copilotAdapter.supportsScope('user')` returns false; no files are written to the user home directory
-
+- **Hooks**: `beforeInstall` is called before files are copied; `afterInstall` is called after `.skill-manifest.json` is written; both receive correct arguments
 #### Scenario: Fresh install writes correct files
 - **WHEN** `performInstall(skill, adapter, 'user', {})` is called inside a sandbox with `~/.claude/` present
-- **THEN** all files from the fixture skill are present at `~/.claude/skills/hello-skill/` and `.skill-meta.json` exists with a valid `postInstallHash`
+- **THEN** all files from the fixture skill are present at `~/.claude/skills/hello-skill/` and `.skill-manifest.json` exists with a valid `postInstallHash`
 
 #### Scenario: postInstallHash matches re-hash
 - **WHEN** a fresh install completes
-- **THEN** calling `hashSkill(installPath, { ignore: ['.skill-meta.json'] })` returns a value equal to the `postInstallHash` in the written manifest
+- **THEN** calling `hashSkill(installPath, { ignore: ['.skill-manifest.json'] })` returns a value equal to the `postInstallHash` in the written manifest
 
 #### Scenario: Drift is detected after file edit
 - **WHEN** a file inside the installed skill directory is modified after install
@@ -119,11 +119,7 @@ Tests asserting `installedAt` SHALL check that it is a valid ISO 8601 string (e.
 
 #### Scenario: hooks fire in correct order
 - **WHEN** `performInstall` is called with `beforeInstall` and `afterInstall` hooks
-- **THEN** `beforeInstall` is called before any files are written and `afterInstall` is called after `.skill-meta.json` exists on disk
-
-#### Scenario: Copilot adapter rejects user scope install
-- **WHEN** an install is attempted with the `copilot` adapter and `scope: 'user'`
-- **THEN** the operation throws or returns an error before writing any files, and no files exist under `sandbox.home`
+- **THEN** `beforeInstall` is called before any files are written and `afterInstall` is called after `.skill-manifest.json` exists on disk
 
 ---
 

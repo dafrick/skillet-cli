@@ -115,7 +115,7 @@ Pure functions only. No filesystem access, no `HOME` manipulation.
 
 | File | What it covers |
 |---|---|
-| `hash.test.ts` | Same content → same hash; rename changes hash; `\r\n` normalised to `\n`; backslash paths normalised; `.skill-meta.json` excluded; custom ignore list |
+| `hash.test.ts` | Same content → same hash; rename changes hash; `\r\n` normalised to `\n`; backslash paths normalised; `.skill-manifest.json` excluded; custom ignore list |
 | `normalize.test.ts` | Valid SKILL.md; missing `name`; missing `description`; missing file; optional `version`; frontmatter passthrough |
 | `registry.test.ts` | `register`/`get`/`list`; duplicate ID throws; `registerAdapter` alias works |
 | `adapter-claude.test.ts` | `detect()`, `supportsScope()`, `resolveInstallPath()`, `render()` — HOME set inline |
@@ -143,14 +143,14 @@ test.each([
   // seed detection markers (e.g. mkdir .claude for claude adapter)
   // call performInstall(...)
   // assert files exist at correct path
-  // assert .skill-meta.json fields
+  // assert .skill-manifest.json fields
   // assert postInstallHash matches re-hash of installed folder
 })
 ```
 
 Key scenarios covered:
 
-- **Fresh install** — correct files written; `.skill-meta.json` populated with all required fields; `postInstallHash` matches re-hash of installed folder
+- **Fresh install** — correct files written; `.skill-manifest.json` populated with all required fields; `postInstallHash` matches re-hash of installed folder
 - **Idempotent install** — running install twice on a pristine install is a no-op
 - **Drift detection** — edit a file post-install → `detectDrift()` returns `'modified'`; unmodified → `'pristine'`; no manifest → `'unknown'`
 - **Stale detection** — `isStale()` returns true when source has changed, false when current

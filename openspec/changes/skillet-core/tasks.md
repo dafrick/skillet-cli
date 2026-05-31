@@ -1,42 +1,42 @@
 ## 1. Project Setup
 
-- [ ] 1.1 Initialise `packages/core/` directory with `package.json` (`@skillet/core`, `"type": "module"`, Node 18 engine, exports map)
+- [ ] 1.1 Initialise `packages/core/` directory with `package.json` (`@skillet/core`, `"type": "module"`, Node 24 engine, exports map)
 - [ ] 1.2 Add runtime dependencies: `commander`, `gray-matter`, `update-notifier`, `@inquirer/prompts`, `@inquirer/core` (custom prompt primitives), `chalk` (v5, ESM-native; required for all Ember/Iris/Basil/Chili color output)
 - [ ] 1.3 Add dev dependencies: `typescript`, `vitest`, `@types/node`
-- [ ] 1.4 Configure `tsconfig.json` for ESM output targeting Node 18
+- [ ] 1.4 Configure `tsconfig.json` for ESM output targeting Node 24
 - [ ] 1.5 Add `vitest.config.ts` and a passing smoke test to confirm the test harness works
-- [ ] 1.6 Define shared TypeScript interfaces in `src/types.ts`: `Scope` (`'user' | 'project'`), `SkillManifest` (all `.skill-meta.json` fields: `name`, `version`, `source`, `sourceVersion`, `contentHash`, `renderHash`, `postInstallHash`, `adapterId`, `scope`, `installedAt`), `InstallRecord` (`adapter`, `scope`, `installPath`, `manifest`), `RunOptions` (`skillDir`, `pkg: { name, version }`, `argv?`, `hooks?: { transform?, beforeInstall?, afterInstall?, extendProgram? }`); export all from `src/index.ts`
+- [ ] 1.6 Define shared TypeScript interfaces in `src/types.ts`: `Scope` (`'user' | 'project'`), `SkillManifest` (all `.skill-manifest.json` fields: `name`, `description`, `source`, `declaredVersion`, `contentHash`, `renderHash`, `adapterId`, `scope`, `libVersion`, `installedAt`, `postInstallHash`), `InstallRecord` (`adapter`, `scope`, `installPath`, `manifest`), `RunOptions` (`skillDir`, `pkg: { name, version }`, `argv?`, `hooks?: { transform?, beforeInstall?, afterInstall?, extendProgram? }`); export all from `src/index.ts`
 
 ## 2. Skill Normalization
 
 - [ ] 2.1 Implement `normalizeSkill(skillDir: string): NormalizedSkill` — resolve path, read `SKILL.md`, parse with `gray-matter` to extract `{ data, content }`, call `hashSkill` and attach result as `contentHash`
 - [ ] 2.2 Validate required fields (`name`, `description`); throw descriptive errors on missing fields or missing `SKILL.md`
 - [ ] 2.3 Export `NormalizedSkill` TypeScript interface
-- [ ] 2.4 Unit-test: valid file, missing name, missing description, missing file, optional `version` field, custom frontmatter passthrough, relative path resolution
+- [ ] 2.4 Unit-test: valid file, missing name, missing description, missing file, optional `version` field, custom frontmatter passthrough, relative path resolution, `contentHash` present and starts with `sha256:`, `contentHash` changes when a file is edited
 
 ## 3. Content Hashing
 
 - [ ] 3.1 Implement `hashSkill(skillDir: string, opts?: { ignore?: string[] }): Promise<string>` using Node `crypto` SHA-256
-- [ ] 3.2 Implement recursive file listing with default ignore set (`.git`, `node_modules`, `.DS_Store`, `.skill-meta.json`)
+- [ ] 3.2 Implement recursive file listing with default ignore set (`.git`, `node_modules`, `.DS_Store`, `.skill-manifest.json`)
 - [ ] 3.3 Sort files by relative POSIX path; normalise Windows backslashes to forward slashes
 - [ ] 3.4 For each file: feed `relPath\0content\0`; detect text files (no NUL bytes) and normalise `\r\n`→`\n`
 - [ ] 3.5 Return hex digest prefixed with `sha256:`
-- [ ] 3.6 Unit-test: same content = same hash across path-separator styles; rename changes hash; edit changes hash; Windows line endings match Unix; custom ignore; `.skill-meta.json` excluded
+- [ ] 3.6 Unit-test: same content = same hash across path-separator styles; rename changes hash; edit changes hash; Windows line endings match Unix; custom ignore; `.skill-manifest.json` excluded; `.git` directory excluded; result starts with `sha256:` prefix; filesystem iteration order does not affect result; binary files (NUL bytes) hashed without line-ending normalisation
 
 ## 4. Adapter Registry
 
 - [ ] 4.1 Define `Adapter` TypeScript interface (`id`, `label`, `detect`, `supportsScope`, `resolveInstallPath`, `render`)
 - [ ] 4.2 Implement `registry` object with `registry.register(adapter)`, `registry.get(id)`, `registry.list()`; throw on duplicate `id`; export top-level `registerAdapter` as alias for `registry.register`
 - [ ] 4.3 Implement `claude` adapter: detect `~/.claude/` (user scope) and `.claude/` in cwd (project scope); `resolveInstallPath` returns correct path per scope; `render` is passthrough
-- [ ] 4.4 Implement `copilot` adapter: detect `.github/` in cwd for project scope only; `supportsScope('user')` returns false; `render` is passthrough
+- [ ] 4.4 Implement `copilot` adapter: detect `.github/` in cwd (project scope) and `~/.copilot/` (user scope); `resolveInstallPath` returns `.github/skills/<name>/` (project) or `~/.copilot/skills/<name>/` (user); `supportsScope` returns true for both scopes; `render` is passthrough
 - [ ] 4.5 Implement `agents` adapter: always returns both scopes as available; `resolveInstallPath` returns `~/.agents/skills/<name>/` (user) or `.agents/skills/<name>/` (project); `render` is passthrough
 - [ ] 4.6 Register all three built-in adapters in the package entry point
 - [ ] 4.7 Unit-test each adapter's `detect`, `supportsScope`, `resolveInstallPath`, and `render`; test registry duplicate rejection and `listAdapters`
 
 ## 5. Install Orchestration
 
-- [ ] 5.1 Implement `performInstall(skill, adapter, scope, opts)`: call `adapter.render()`, copy tree to resolved path (creating parents), write `.skill-meta.json`
-- [ ] 5.2 Implement manifest writer: populate all required `.skill-meta.json` fields including `renderHash`, `postInstallHash`, `installedAt`
+- [ ] 5.1 Implement `performInstall(skill, adapter, scope, opts)`: call `adapter.render()`, copy tree to resolved path (creating parents), write `.skill-manifest.json`
+- [ ] 5.2 Implement manifest writer: populate all required `.skill-manifest.json` fields including `renderHash`, `postInstallHash`, `installedAt`
 - [ ] 5.3 Implement `computeRenderHash(contentHash, adapterId, libVersion): string`
 - [ ] 5.4 Implement tree copy utility that mirrors full directory structure (including nested subdirs) to destination
 - [ ] 5.5 Call `beforeInstall` hook before copy and `afterInstall` hook after manifest write (when hooks provided)
@@ -45,13 +45,13 @@
 ## 6. Drift Detection
 
 - [ ] 6.1 Implement `detectDrift(installPath: string): Promise<'pristine' | 'modified' | 'unknown'>` — read manifest, hash current folder, compare to `postInstallHash`
-- [ ] 6.2 Handle missing `.skill-meta.json` → return `'unknown'`
+- [ ] 6.2 Handle missing `.skill-manifest.json` → return `'unknown'`
 - [ ] 6.3 Implement `isStale(installPath, currentContentHash): boolean` — compare manifest `contentHash` to current source hash
-- [ ] 6.4 Unit-test: unmodified install is pristine; editing a file is modified; `.skill-meta.json`-only change is pristine; no manifest is unknown; stale detection
+- [ ] 6.4 Create `test/unit/drift.test.ts`; unit-test: unmodified install is pristine; editing a file is modified; `.skill-manifest.json`-only change is pristine; no manifest is unknown; stale detection
 
 ## 7. Update Flow
 
-- [ ] 7.1 Implement `findExistingInstalls(skill): InstallRecord[]` — scan all registered adapter × scope combinations for `.skill-meta.json` presence
+- [ ] 7.1 Implement `findExistingInstalls(skill): InstallRecord[]` — scan all registered adapter × scope combinations for `.skill-manifest.json` presence
 - [ ] 7.2 Implement update decision logic: skip if render hash unchanged and pristine; overwrite silently if pristine but stale; prompt if drifted; honor `--force`
 - [ ] 7.3 Implement three-way drift prompt (backup and overwrite / overwrite / skip) using `@inquirer/prompts`; show `⚠` warning in Ember 400 before the prompt; create timestamped sibling backup directory on "backup" choice using ISO8601Z naming (`<skill-name>.bak.<ISO8601Z>/`); `--force` bypasses prompt and overwrites without backup
 - [ ] 7.4 Implement `--add-new` logic: after reconciling existing installs, detect newly available targets and offer them via the same install flow
@@ -67,7 +67,8 @@
 - [ ] 8.5 Implement `uninstall` command handler: `findExistingInstalls` → multi-select prompt (all selected by default) → remove chosen directories
 - [ ] 8.6 Implement `list` command handler: `findExistingInstalls` → `detectDrift` + `isStale` for each → print formatted table
 - [ ] 8.7 Implement `transform` hook call between `normalizeSkill` and adapter dispatch
-- [ ] 8.8 End-to-end test: `install --target agents --scope user --yes` installs correct files; `list` shows pristine; edit a file; `list` shows modified; `update --force` restores pristine
+- [ ] 8.8 Create `packages/core/bin/cli.js` as the test fixture CLI entry point: a 3-line ESM script that calls `run({ skillDir: '../fixtures/hello-skill', pkg })` — this file is what the E2E helper spawns; also add a `"bin"` field to `package.json` pointing to `bin/cli.js` so it is published and symlinked
+- [ ] 8.9 End-to-end test: `install --target agents --scope user --yes` installs correct files; `list` shows pristine; edit a file; `list` shows modified; `update --force` restores pristine
 
 ## 9. CLI Design System
 

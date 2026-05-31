@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Detect local modifications by comparing folder hash to postInstallHash
-The library SHALL compute the current hash of the installed skill folder (excluding `.skill-meta.json`) and compare it to the `postInstallHash` stored in the manifest. If they differ, the install is considered locally modified (drifted).
+The library SHALL compute the current hash of the installed skill folder (excluding `.skill-manifest.json`) and compare it to the `postInstallHash` stored in the manifest. If they differ, the install is considered locally modified (drifted).
 
 #### Scenario: Pristine install returns clean status
 - **WHEN** no files in the installed directory have been changed since install
@@ -11,15 +11,15 @@ The library SHALL compute the current hash of the installed skill folder (exclud
 - **WHEN** a user edits any file in the installed skill directory after install
 - **THEN** drift detection reports the install as locally modified
 
-#### Scenario: .skill-meta.json excluded from drift check
-- **WHEN** `.skill-meta.json` is the only changed file (e.g. a tool updated it externally)
+#### Scenario: .skill-manifest.json excluded from drift check
+- **WHEN** `.skill-manifest.json` is the only changed file (e.g. a tool updated it externally)
 - **THEN** drift detection does not report the install as locally modified
 
 ### Requirement: Missing manifest treated as unknown state
-If `.skill-meta.json` does not exist in an installed directory, the library SHALL treat the install as having an unknown prior state, not as pristine.
+If `.skill-manifest.json` does not exist in an installed directory, the library SHALL treat the install as having an unknown prior state, not as pristine.
 
 #### Scenario: Directory without manifest is flagged as unknown
-- **WHEN** a skill directory exists at the install path but contains no `.skill-meta.json`
+- **WHEN** a skill directory exists at the install path but contains no `.skill-manifest.json`
 - **THEN** drift detection returns an `unknown` state
 
 ### Requirement: Drift status exposed to list command

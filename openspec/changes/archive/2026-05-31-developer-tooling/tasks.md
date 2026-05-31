@@ -6,7 +6,7 @@
 
 ## 2. Core Package Scaffold
 
-- [x] 2.1 Create `packages/core/package.json` with `"name": "@skillet/core"`, `"type": "module"`, `"engines": { "node": ">=18" }`, `"private": false`, and placeholder `version`, `description`, `exports`, `files`, `scripts` fields
+- [x] 2.1 Create `packages/core/package.json` with `"name": "@skillet/core"`, `"type": "module"`, `"engines": { "node": ">=24" }`, `"private": false`, and placeholder `version`, `description`, `exports`, `files`, `scripts` fields
 - [x] 2.2 Create `packages/core/tsconfig.json` targeting ESNext modules, `NodeNext` module resolution, `outDir: "dist"`, `declaration: true`, `strict: true`, `lib: ["ESNext"]` — the `ESNext` lib is required for `Symbol.asyncDispose` and the `await using` pattern used in `createSandbox()`
 - [x] 2.3 Create `packages/core/src/` directory with a placeholder `index.ts` that exports nothing (allows build to succeed from the start)
 - [x] 2.4 Run `pnpm -F @skillet/core build` and confirm `dist/` is produced with no errors
@@ -37,7 +37,7 @@
 
 - [x] 6.1 Add `vitest` and `@vitest/coverage-v8` as dev dependencies in `packages/core/` (`pnpm add -D vitest @vitest/coverage-v8`)
 - [x] 6.2 Create `packages/core/vitest.config.ts` with: `pool: 'forks'`, include patterns for `test/unit/**/*.test.ts` and `test/integration/**/*.test.ts` only (NOT e2e), coverage config excluding `test/`, `fixtures/`, `dist/`, and config files
-- [x] 6.3 Create a separate `packages/core/vitest.config.e2e.ts` that extends the base config, adds `test/e2e/**/*.test.ts` to includes, and references a `globalSetup` file that runs `pnpm -F @skillet/core build` before tests; the `test:e2e` script SHALL use `vitest run --config vitest.config.e2e.ts` so the pre-build only runs when E2E is explicitly invoked
+- [x] 6.3 Create a separate `packages/core/vitest.config.e2e.ts` using `defineConfig` (NOT `mergeConfig` — `mergeConfig` concatenates `include` arrays, causing unit/integration tests to run under the E2E suite); include only `test/e2e/**/*.test.ts`, set `pool: 'forks'`, and reference a `globalSetup` file that runs `pnpm -F @skillet/core build` before tests; the `test:e2e` script SHALL use `vitest run --config vitest.config.e2e.ts` so the pre-build only runs when E2E is explicitly invoked
 - [x] 6.4 Add scripts to `packages/core/package.json`: `test`, `test:unit`, `test:integration`, `test:e2e`, `test:coverage`
 - [x] 6.5 Create `test/unit/.gitkeep`, `test/integration/helpers/.gitkeep`, `test/e2e/helpers/.gitkeep` to scaffold the directory tree
 - [x] 6.6 Write a smoke test at `test/unit/smoke.test.ts` that asserts `1 + 1 === 2` and run `pnpm test:unit` to confirm the test harness works end-to-end
@@ -50,7 +50,7 @@
 
 ## 8. Unit Tests
 
-- [x] 8.1 Write `test/unit/hash.test.ts` (all scenarios from spec): deterministic hash, rename detection, `\r\n` normalisation, backslash normalisation, `.skill-meta.json` exclusion, custom ignore list — mark all tests as `todo` initially (red phase), then implement once `hashSkill` is built
+- [x] 8.1 Write `test/unit/hash.test.ts` (all scenarios from spec): deterministic hash, rename detection, `\r\n` normalisation, backslash normalisation, `.skill-manifest.json` exclusion, custom ignore list — mark all tests as `todo` initially (red phase), then implement once `hashSkill` is built
 - [x] 8.2 Write `test/unit/normalize.test.ts` (all scenarios from spec): valid parse, missing name, missing description, missing file, optional version, frontmatter passthrough — mark as `todo` initially
 - [x] 8.3 Write `test/unit/registry.test.ts` (all scenarios from spec): register/get/list, duplicate rejection, `registerAdapter` alias — mark as `todo` initially
 - [x] 8.4 Write `test/unit/adapter-claude.test.ts`, `adapter-copilot.test.ts`, `adapter-agents.test.ts` (all scenarios from spec) — mark as `todo` initially
@@ -60,8 +60,8 @@
 ## 9. Integration Test Scaffolding
 
 - [x] 9.1 Add `cli-testing-library` (the `crutchcorn` variant — https://github.com/crutchcorn/cli-testing-library) as a dev dependency in `packages/core/` (`pnpm add -D cli-testing-library`); verify the installed package exports `render`, `findByText`, and `userEvent` before proceeding
-- [x] 9.2 Write `test/integration/install.test.ts` with `test.each` parameterized across all 5 adapter × scope combinations (claude/user, claude/project, copilot/project, agents/user, agents/project); cover: fresh install, idempotent install, drift detection, stale detection, update flows, uninstall, hook ordering — mark all as `todo` initially
-- [x] 9.3 Write `test/integration/manifest.test.ts` covering: all required `.skill-meta.json` fields present, `postInstallHash` matches re-hash of installed folder — mark as `todo` initially
+- [x] 9.2 Write `test/integration/install.test.ts` with `test.each` parameterized across all 6 adapter × scope combinations (claude/user, claude/project, copilot/user, copilot/project, agents/user, agents/project); cover: fresh install, idempotent install, drift detection, stale detection, update flows, uninstall, hook ordering — mark all as `todo` initially
+- [x] 9.3 Write `test/integration/manifest.test.ts` covering: all required `.skill-manifest.json` fields present, `postInstallHash` matches re-hash of installed folder — mark as `todo` initially
 - [x] 9.4 Run `pnpm test:integration` and confirm all todo tests are listed as pending
 
 ## 10. E2E Test Scaffolding

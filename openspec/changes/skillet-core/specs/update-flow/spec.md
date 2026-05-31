@@ -41,14 +41,14 @@ If the install folder is locally modified (drift detected), the library SHALL pr
 - **THEN** the install is left unchanged
 
 ### Requirement: Unknown-state installs prompt with an unrecognized-state warning
-If `update` encounters an install directory that has no `.skill-meta.json` (a pre-skillet or manually placed install), the library SHALL prompt using the same three-way dialog (backup and overwrite / overwrite / skip) but SHALL additionally display a warning that the prior state of the install is unrecognized and cannot be diffed.
+If `update` encounters an install directory that has no `.skill-manifest.json` (a pre-skillet or manually placed install), the library SHALL prompt using the same three-way dialog (backup and overwrite / overwrite / skip) but SHALL additionally display a warning that the prior state of the install is unrecognized and cannot be diffed.
 
 #### Scenario: Missing manifest triggers warning on update
-- **WHEN** `update` finds a directory at a known install path that contains no `.skill-meta.json`
+- **WHEN** `update` finds a directory at a known install path that contains no `.skill-manifest.json`
 - **THEN** the library prints a warning stating the prior state is unrecognized and presents the backup/overwrite/skip prompt
 
 #### Scenario: --force with missing manifest overwrites without prompt
-- **WHEN** `update --force` runs and an install has no `.skill-meta.json`
+- **WHEN** `update --force` runs and an install has no `.skill-manifest.json`
 - **THEN** the install is overwritten without a prompt (matching --force behavior for drifted installs)
 
 ### Requirement: --force bypasses drift prompt and overwrites
