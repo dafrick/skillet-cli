@@ -36,7 +36,7 @@
 ## 6. Vitest Configuration
 
 - [x] 6.1 Add `vitest` and `@vitest/coverage-v8` as dev dependencies in `packages/core/` (`pnpm add -D vitest @vitest/coverage-v8`)
-- [x] 6.2 Create `packages/core/vitest.config.ts` with: `pool: 'forks'`, `maxWorkers: 4`, include patterns for `test/unit/**/*.test.ts` and `test/integration/**/*.test.ts` only (NOT e2e), coverage config excluding `test/`, `fixtures/`, `dist/`, and config files
+- [x] 6.2 Create `packages/core/vitest.config.ts` with: `pool: 'forks'`, include patterns for `test/unit/**/*.test.ts` and `test/integration/**/*.test.ts` only (NOT e2e), coverage config excluding `test/`, `fixtures/`, `dist/`, and config files
 - [x] 6.3 Create a separate `packages/core/vitest.config.e2e.ts` that extends the base config, adds `test/e2e/**/*.test.ts` to includes, and references a `globalSetup` file that runs `pnpm -F @skillet/core build` before tests; the `test:e2e` script SHALL use `vitest run --config vitest.config.e2e.ts` so the pre-build only runs when E2E is explicitly invoked
 - [x] 6.4 Add scripts to `packages/core/package.json`: `test`, `test:unit`, `test:integration`, `test:e2e`, `test:coverage`
 - [x] 6.5 Create `test/unit/.gitkeep`, `test/integration/helpers/.gitkeep`, `test/e2e/helpers/.gitkeep` to scaffold the directory tree
@@ -77,18 +77,18 @@
   - `unit` job: `ubuntu-latest`, runs `pnpm test:unit`
   - `integration` job: matrix `[ubuntu-latest, macos-latest, windows-latest]`, `fail-fast: false`, sets `LEFTHOOK: 0`, runs `pnpm test:integration`
   - `e2e` job: matrix `[ubuntu-latest, macos-latest, windows-latest]`, `fail-fast: false`, sets `LEFTHOOK: 0`, runs `pnpm test:e2e`
-  - Node 20 and pnpm 9 pinned in all jobs via `actions/setup-node` and `pnpm/action-setup`
+  - Node 24 and pnpm 11 pinned in all jobs via `actions/setup-node` and `pnpm/action-setup`
 - [x] 11.2 Set `LEFTHOOK: 0` as an env var in all CI jobs to prevent Lefthook from writing git hooks during `pnpm install`
 - [ ] 11.3 Push to a test branch and confirm `quality` and `unit` jobs pass; integration and e2e jobs run on all 3 platforms with `fail-fast: false`
 
 ## 12. GitHub Actions Release
 
 - [x] 12.1 Create `.github/workflows/release.yml` triggered on tags `v*`; job steps: `pnpm install`, `pnpm -F @skillet/core build`, `pnpm -F @skillet/core prepublishOnly`, `npm publish --access public`; read `NPM_TOKEN` from repository secrets
-- [x] 12.2 Add `prepublishOnly` script to `packages/core/package.json` that runs `pnpm build && pnpm test`
+- [x] 12.2 Add `prepublishOnly` script to `packages/core/package.json` that runs `pnpm build` only — tests are enforced by the CI gate (`workflow_run: conclusion == 'success'`) before the release workflow fires, so running them again in `prepublishOnly` would be redundant; the publish step uses `pnpm -F @skillet/core publish --access public --no-git-checks`
 - [x] 12.3 Add `files` field to `packages/core/package.json` excluding `src/`, `test/`, `fixtures/`, and dev config files from the published artifact
 - [x] 12.4 Verify `release.yml` YAML is valid by running `actionlint` or equivalent locally
 
 ## 13. CONTRIBUTING.md
 
-- [x] 13.1 Write `CONTRIBUTING.md` at the repo root covering: prerequisites (Node 20+, pnpm 9+ with install links), setup steps (`pnpm install && lefthook install`), all scripts table (test, test:unit, test:integration, test:e2e, test:coverage, lint, format, build, typecheck), single-file test invocation example, conventional commits format with allowed prefixes and example, release process (version bump → commit → tag → auto-publish)
+- [x] 13.1 Write `CONTRIBUTING.md` at the repo root covering: prerequisites (Node 24+, pnpm 11+ with install links), setup steps (`pnpm install && lefthook install`), all scripts table (test, test:unit, test:integration, test:e2e, test:coverage, lint, format, build, typecheck), single-file test invocation example, conventional commits format with allowed prefixes and example, release process (version bump → commit → tag → auto-publish)
 - [x] 13.2 Verify all scripts listed in `CONTRIBUTING.md` exist in `packages/core/package.json` and the root `package.json`
