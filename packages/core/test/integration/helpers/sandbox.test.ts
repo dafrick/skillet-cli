@@ -5,6 +5,7 @@ import { createSandbox, type Sandbox } from './sandbox.js';
 describe('createSandbox', () => {
   const originalHome = process.env.HOME;
   const originalUserProfile = process.env.USERPROFILE;
+  const originalCwd = process.cwd();
   let sandbox: Sandbox;
 
   beforeEach(async () => {
@@ -57,6 +58,6 @@ describe('createSandbox', () => {
   it('cleanup restores process.cwd()', async () => {
     expect(process.cwd()).toBe(sandbox.cwd);
     await sandbox[Symbol.asyncDispose]();
-    expect(process.cwd()).not.toBe(sandbox.cwd);
+    expect(process.cwd()).toBe(originalCwd);
   });
 });

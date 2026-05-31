@@ -4,8 +4,8 @@
 
 Before setting up the repo, install the following tools:
 
-- **Node.js 20+** — [nodejs.org/en/download](https://nodejs.org/en/download)
-- **pnpm 9+** — [pnpm.io/installation](https://pnpm.io/installation)
+- **Node.js 24+** — [nodejs.org/en/download](https://nodejs.org/en/download)
+- **pnpm 11+** — [pnpm.io/installation](https://pnpm.io/installation)
 
 ## Setup
 
