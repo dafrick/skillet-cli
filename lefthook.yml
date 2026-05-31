@@ -4,7 +4,7 @@ pre-commit:
       run: pnpm exec biome check --write {staged_files}
       glob: "*.{js,ts,jsx,tsx,json}"
     - name: typecheck
-      run: pnpm exec tsc --noEmit -p packages/core/tsconfig.json
+      run: pnpm -F @skillet/core typecheck
 
 commit-msg:
   jobs:
