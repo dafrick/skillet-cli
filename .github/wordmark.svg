@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 144">
+  <rect width="480" height="144" rx="8" fill="#1A1A1A"/>
+  <text
+    font-family="'Courier New', Consolas, 'Lucida Console', monospace"
+    font-size="14"
+    xml:space="preserve"
+    x="20"
+    y="34"
+  >
+    <tspan fill="#FBD2A0">███████<tspan fill="#645440">╗</tspan>██<tspan fill="#645440">╗</tspan>  ██<tspan fill="#645440">╗</tspan>██<tspan fill="#645440">╗</tspan>██<tspan fill="#645440">╗</tspan>     ██<tspan fill="#645440">╗</tspan>     ███████<tspan fill="#645440">╗</tspan>████████<tspan fill="#645440">╗</tspan></tspan>
+    <tspan x="20" dy="17" fill="#F0925A">██<tspan fill="#603A24">╔════╝</tspan>██<tspan fill="#603A24">║</tspan> ██<tspan fill="#603A24">╔╝</tspan>██<tspan fill="#603A24">║</tspan>██<tspan fill="#603A24">║</tspan>     ██<tspan fill="#603A24">║</tspan>     ██<tspan fill="#603A24">╔════╝╚══</tspan>██<tspan fill="#603A24">╔══╝</tspan></tspan>
+    <tspan x="20" dy="17" fill="#E8743B">███████<tspan fill="#5D2E18">╗</tspan>█████<tspan fill="#5D2E18">╔╝</tspan> ██<tspan fill="#5D2E18">║</tspan>██<tspan fill="#5D2E18">║</tspan>     ██<tspan fill="#5D2E18">║</tspan>     █████<tspan fill="#5D2E18">╗</tspan>     ██<tspan fill="#5D2E18">║</tspan>   </tspan>
+    <tspan x="20" dy="17" fill="#C75A28"><tspan fill="#502410">╚════</tspan>██<tspan fill="#502410">║</tspan>██<tspan fill="#502410">╔═</tspan>██<tspan fill="#502410">╗</tspan> ██<tspan fill="#502410">║</tspan>██<tspan fill="#502410">║</tspan>     ██<tspan fill="#502410">║</tspan>     ██<tspan fill="#502410">╔══╝</tspan>     ██<tspan fill="#502410">║</tspan>   </tspan>
+    <tspan x="20" dy="17" fill="#9C441C">███████<tspan fill="#3E1B0B">║</tspan>██<tspan fill="#3E1B0B">║</tspan>  ██<tspan fill="#3E1B0B">╗</tspan>██<tspan fill="#3E1B0B">║</tspan>███████<tspan fill="#3E1B0B">╗</tspan>███████<tspan fill="#3E1B0B">╗</tspan>███████<tspan fill="#3E1B0B">╗</tspan>   ██<tspan fill="#3E1B0B">║</tspan>   </tspan>
+    <tspan x="20" dy="17" fill="#9C441C"><tspan fill="#3E1B0B">╚══════╝╚═╝</tspan>  <tspan fill="#3E1B0B">╚═╝╚═╝╚══════╝╚══════╝╚══════╝</tspan>   <tspan fill="#3E1B0B">╚═╝</tspan>   </tspan>
+  </text>
+</svg>
