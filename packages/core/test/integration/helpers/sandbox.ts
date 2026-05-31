@@ -10,7 +10,9 @@ export interface Sandbox {
 }
 
 export async function createSandbox(): Promise<Sandbox> {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'skillet-'));
+  // realpath resolves macOS symlinks (e.g. /var → /private/var) so that
+  // sandbox paths match what process.cwd() returns after process.chdir().
+  const root = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'skillet-')));
   const home = path.join(root, 'home');
   const cwd = path.join(root, 'project');
 
