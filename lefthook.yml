@@ -1,0 +1,12 @@
+pre-commit:
+  jobs:
+    - name: biome
+      run: pnpm exec biome check --write {staged_files}
+      glob: "*.{js,ts,jsx,tsx,json}"
+    - name: typecheck
+      run: pnpm exec tsc --noEmit -p packages/core/tsconfig.json
+
+commit-msg:
+  jobs:
+    - name: conventional-commits
+      run: "head -1 {1} | grep -qE '^(feat|fix|chore|test|docs|refactor|perf|ci|build|spec)(\\([^)]+\\))?: \\S' || (echo 'Commit message does not follow conventional commits format' && exit 1)"
