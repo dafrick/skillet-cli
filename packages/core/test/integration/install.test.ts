@@ -507,6 +507,9 @@ describe.each(COMBINATIONS)('install: $adapterId/$scope', ({
       });
 
       expect(result.action).toBe('skipped');
+
+      // Drifted file must be preserved — the install was not modified
+      expect(await fs.readFile(skillMdPath, 'utf8')).toContain('locally modified');
     } finally {
       await sandbox[Symbol.asyncDispose]();
     }
@@ -584,6 +587,13 @@ describe.each(COMBINATIONS)('install: $adapterId/$scope', ({
       const entries = await fs.readdir(parentDir);
       const backups = entries.filter((e) => e.includes('.bak.'));
       expect(backups).toHaveLength(0);
+
+      // Overwrite should have removed the local edit
+      const freshContent = await fs.readFile(
+        path.join(result.record.installPath, 'SKILL.md'),
+        'utf8',
+      );
+      expect(freshContent).not.toContain('locally modified');
     } finally {
       await sandbox[Symbol.asyncDispose]();
     }
