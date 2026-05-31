@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { registry } from '../../src/adapters/index.js';
 import { hashSkill } from '../../src/hash.js';
@@ -7,7 +8,7 @@ import { LIB_VERSION, performInstall } from '../../src/install.js';
 import { normalizeSkill } from '../../src/normalize.js';
 import { createSandbox } from './helpers/sandbox.js';
 
-const helloSkillDir = new URL('../../fixtures/hello-skill', import.meta.url).pathname;
+const helloSkillDir = fileURLToPath(new URL('../../fixtures/hello-skill', import.meta.url));
 
 // Use claude/user as a representative combination for manifest tests
 const adapterId = 'claude';

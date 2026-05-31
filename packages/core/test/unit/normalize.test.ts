@@ -1,10 +1,11 @@
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { normalizeSkill } from '../../src/normalize.js';
 
-const helloSkillDir = new URL('../../fixtures/hello-skill', import.meta.url).pathname;
+const helloSkillDir = fileURLToPath(new URL('../../fixtures/hello-skill', import.meta.url));
 
 describe('normalizeSkill', () => {
   it('valid SKILL.md is parsed correctly', async () => {
