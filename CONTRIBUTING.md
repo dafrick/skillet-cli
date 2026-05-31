@@ -6,6 +6,7 @@ Before setting up the repo, install the following tools:
 
 - **Node.js 24+** — [nodejs.org/en/download](https://nodejs.org/en/download)
 - **pnpm 11+** — [pnpm.io/installation](https://pnpm.io/installation)
+- **lefthook** — [lefthook.dev](https://lefthook.dev) (git hooks manager)
 
 ## Setup
 
