@@ -26,6 +26,7 @@ export async function createSandbox(): Promise<Sandbox> {
     home,
     cwd,
     async [Symbol.asyncDispose]() {
+      process.chdir(os.tmpdir());
       await fs.rm(root, { recursive: true, force: true });
     },
   };
