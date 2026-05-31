@@ -1,5 +1,6 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { registry } from '../../src/adapters/index.js';
 import { detectDrift, isStale } from '../../src/drift.js';
@@ -10,7 +11,7 @@ import type { Scope } from '../../src/types.js';
 import { applyUpdate, removeInstall } from '../../src/update.js';
 import { createSandbox } from './helpers/sandbox.js';
 
-const helloSkillDir = new URL('../../fixtures/hello-skill', import.meta.url).pathname;
+const helloSkillDir = fileURLToPath(new URL('../../fixtures/hello-skill', import.meta.url));
 
 const COMBINATIONS = [
   { adapterId: 'claude', scope: 'user' as Scope, expectedSubdir: '.claude/skills' },
