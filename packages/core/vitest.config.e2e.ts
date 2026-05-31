@@ -1,12 +1,15 @@
-import { defineConfig, mergeConfig } from 'vitest/config';
-import baseConfig from './vitest.config.js';
+import { defineConfig } from 'vitest/config';
 
-export default mergeConfig(
-  baseConfig,
-  defineConfig({
-    test: {
-      include: ['test/e2e/**/*.test.ts'],
-      globalSetup: ['test/e2e/globalSetup.ts'],
+export default defineConfig({
+  test: {
+    pool: 'forks',
+    maxWorkers: 4,
+    include: ['test/e2e/**/*.test.ts'],
+    globalSetup: ['test/e2e/globalSetup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: ['test/**', 'fixtures/**', 'dist/**', '*.config.*'],
     },
-  }),
-);
+  },
+});
