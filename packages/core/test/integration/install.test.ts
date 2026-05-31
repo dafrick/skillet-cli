@@ -460,4 +460,132 @@ describe.each(COMBINATIONS)('install: $adapterId/$scope', ({
       await sandbox[Symbol.asyncDispose]();
     }
   });
+
+  it('update up-to-date pristine: skips without prompting', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const skill = await normalizeSkill(helloSkillDir);
+      const adapter = registry.get(adapterId)!;
+      const pkg = { name: 'test-pkg', version: '1.0.0' };
+
+      await performInstall(skill, adapter, scope, { pkg });
+
+      // Records fetched fresh: renderHash correct, install unmodified
+      const records = await findExistingInstalls(skill);
+      const record = records.find((r) => r.adapter.id === adapterId && r.scope === scope)!;
+
+      const onDrift = vi.fn();
+      const result = await applyUpdate(record, skill, { pkg, isTTY: false, onDrift });
+
+      expect(result.action).toBe('skipped');
+      expect(onDrift).not.toHaveBeenCalled();
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+
+  it('update drifted (isTTY, onDrift → skip): skips', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const skill = await normalizeSkill(helloSkillDir);
+      const adapter = registry.get(adapterId)!;
+      const pkg = { name: 'test-pkg', version: '1.0.0' };
+
+      const installPath = await performInstall(skill, adapter, scope, { pkg });
+
+      const skillMdPath = path.join(installPath, 'SKILL.md');
+      const original = await fs.readFile(skillMdPath, 'utf8');
+      await fs.writeFile(skillMdPath, `${original}\n\n<!-- locally modified -->`, 'utf8');
+
+      const records = await findExistingInstalls(skill);
+      const record = records.find((r) => r.adapter.id === adapterId && r.scope === scope)!;
+
+      const result = await applyUpdate(record, skill, {
+        pkg,
+        isTTY: true,
+        onDrift: async () => 'skip',
+      });
+
+      expect(result.action).toBe('skipped');
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+
+  it('update drifted (isTTY, onDrift → backup_and_overwrite): backs up and reinstalls', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const skill = await normalizeSkill(helloSkillDir);
+      const adapter = registry.get(adapterId)!;
+      const pkg = { name: 'test-pkg', version: '1.0.0' };
+
+      const installPath = await performInstall(skill, adapter, scope, { pkg });
+
+      const skillMdPath = path.join(installPath, 'SKILL.md');
+      const original = await fs.readFile(skillMdPath, 'utf8');
+      await fs.writeFile(skillMdPath, `${original}\n\n<!-- locally modified -->`, 'utf8');
+
+      const records = await findExistingInstalls(skill);
+      const record = records.find((r) => r.adapter.id === adapterId && r.scope === scope)!;
+
+      const result = await applyUpdate(record, skill, {
+        pkg,
+        isTTY: true,
+        onDrift: async () => 'backup_and_overwrite',
+      });
+
+      expect(result.action).toBe('backed_up_and_updated');
+      expect(result.backupPath).toBeDefined();
+
+      // Backup dir exists and contains the drifted file
+      const backupStat = await fs.stat(result.backupPath!);
+      expect(backupStat.isDirectory()).toBe(true);
+      const backupContent = await fs.readFile(path.join(result.backupPath!, 'SKILL.md'), 'utf8');
+      expect(backupContent).toContain('locally modified');
+
+      // Fresh install does NOT contain the local edit
+      const freshContent = await fs.readFile(
+        path.join(result.record.installPath, 'SKILL.md'),
+        'utf8',
+      );
+      expect(freshContent).not.toContain('locally modified');
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+
+  it('update drifted (isTTY, onDrift → overwrite): overwrites without backup', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const skill = await normalizeSkill(helloSkillDir);
+      const adapter = registry.get(adapterId)!;
+      const pkg = { name: 'test-pkg', version: '1.0.0' };
+
+      const installPath = await performInstall(skill, adapter, scope, { pkg });
+
+      const skillMdPath = path.join(installPath, 'SKILL.md');
+      const original = await fs.readFile(skillMdPath, 'utf8');
+      await fs.writeFile(skillMdPath, `${original}\n\n<!-- locally modified -->`, 'utf8');
+
+      const records = await findExistingInstalls(skill);
+      const record = records.find((r) => r.adapter.id === adapterId && r.scope === scope)!;
+
+      const result = await applyUpdate(record, skill, {
+        pkg,
+        isTTY: true,
+        onDrift: async () => 'overwrite',
+      });
+
+      expect(result.action).toBe('updated');
+      expect(result.backupPath).toBeUndefined();
+
+      // No .bak. directory created
+      const parentDir = path.dirname(installPath);
+      const entries = await fs.readdir(parentDir);
+      const backups = entries.filter((e) => e.includes('.bak.'));
+      expect(backups).toHaveLength(0);
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
 });
