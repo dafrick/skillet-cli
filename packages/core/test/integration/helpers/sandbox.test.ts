@@ -1,5 +1,4 @@
 import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createSandbox, type Sandbox } from './sandbox.js';
 
@@ -13,16 +12,7 @@ describe('createSandbox', () => {
   });
 
   afterEach(async () => {
-    if (originalHome === undefined) {
-      delete process.env.HOME;
-    } else {
-      process.env.HOME = originalHome;
-    }
-    if (originalUserProfile === undefined) {
-      delete process.env.USERPROFILE;
-    } else {
-      process.env.USERPROFILE = originalUserProfile;
-    }
+    await sandbox[Symbol.asyncDispose]();
   });
 
   it('creates the root directory', async () => {
@@ -42,8 +32,7 @@ describe('createSandbox', () => {
   });
 
   it('sandbox home is not the real home directory', () => {
-    const realHome = os.tmpdir();
-    expect(sandbox.home).not.toBe(realHome);
+    expect(sandbox.home).not.toBe(originalHome);
     expect(sandbox.home).toContain('skillet-');
   });
 
