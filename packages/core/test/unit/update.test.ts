@@ -133,3 +133,37 @@ describe('decideUpdate', () => {
     expect(result).toBe('drifted_skip');
   });
 });
+
+describe('backupInstall', () => {
+  it('moves the install dir to a sibling path containing .bak.', async () => {
+    const installPath = nodePath.join(tmpDir, 'my-skill');
+    await mkdir(installPath, { recursive: true });
+    await writeFile(nodePath.join(installPath, 'SKILL.md'), '# My Skill');
+
+    const backupPath = await backupInstall(installPath);
+
+    // Original no longer exists
+    await expect(stat(installPath)).rejects.toThrow();
+
+    // Backup exists as a directory
+    const backupStat = await stat(backupPath);
+    expect(backupStat.isDirectory()).toBe(true);
+
+    // Backup is a sibling of the original
+    expect(nodePath.dirname(backupPath)).toBe(nodePath.dirname(installPath));
+
+    // Backup name matches: <skill-name>.bak.<ISO8601Z>
+    expect(nodePath.basename(backupPath)).toMatch(/^my-skill\.bak\.\d{8}T\d{6}Z$/);
+  });
+
+  it('backup directory contains the original files', async () => {
+    const installPath = nodePath.join(tmpDir, 'my-skill');
+    await mkdir(installPath, { recursive: true });
+    await writeFile(nodePath.join(installPath, 'SKILL.md'), '# Original Content');
+
+    const backupPath = await backupInstall(installPath);
+
+    const content = await readFile(nodePath.join(backupPath, 'SKILL.md'), 'utf8');
+    expect(content).toBe('# Original Content');
+  });
+});
