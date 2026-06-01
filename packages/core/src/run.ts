@@ -250,7 +250,7 @@ async function runUpdate(
     return;
   }
 
-  const _verb =
+  const verb =
     verbMode === 'standard' ? pickStandardVerb('update', isTTY) : pickVerb('update', isTTY);
   let updatedCount = 0;
 
@@ -270,7 +270,8 @@ async function runUpdate(
       if (isTTY) {
         console.log(`✔ ${result.record.adapter.id}   ${result.record.installPath}`);
       } else {
-        console.log(`[${pkg.name}] ✔ updated — ${result.record.installPath}`);
+        console.log(`[${pkg.name}] ${verb.active} ${result.record.installPath}…`);
+        console.log(`[${pkg.name}] ✔ ${verb.done} — ${result.record.installPath}`);
       }
     } else if (result.action === 'drifted_skipped') {
       const warning = `⚠  ${record.adapter.id} has local modifications (use --force to overwrite)`;
@@ -313,7 +314,8 @@ async function runUpdate(
           }
         } else {
           const installPath = await performInstall(skill, adapter, scope, { pkg });
-          console.log(`[${pkg.name}] ✔ installed — ${installPath}`);
+          console.log(`[${pkg.name}] ${installVerb.active} ${installPath}…`);
+          console.log(`[${pkg.name}] ✔ ${installVerb.done} — ${installPath}`);
           updatedCount++;
         }
       }
