@@ -54,10 +54,12 @@
     "@inquirer/prompts": "^7.5.2",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
+    "figlet": "^1.8.0",
     "gray-matter": "^4.0.3",
     "update-notifier": "^7.3.1"
   },
   "devDependencies": {
+    "@types/figlet": "^1.7.0",
     "@types/node": "^25.9.1",
     "@types/update-notifier": "^6.0.8",
     "@vitest/coverage-v8": "^4.1.7",
