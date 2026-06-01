@@ -13,6 +13,17 @@ export { detectDrift, isStale };
 
 export const LIB_VERSION = '0.1.0';
 
+/**
+ * Strip the `npm:` prefix and the `@version` suffix from a source string,
+ * preserving scoped package names (e.g. `@scope/name`).
+ * Examples:
+ *   "npm:my-pkg@1.0.0"  → "my-pkg"
+ *   "npm:@scope/pkg@2"  → "@scope/pkg"
+ */
+function extractSourcePkgName(source: string): string {
+  return source.replace(/^npm:/, '').replace(/@[^@/][^/]*$/, '');
+}
+
 export interface InstallOptions {
   pkg: { name: string; version: string };
   /** The npm package name of the top-level package performing this install. */
@@ -122,21 +133,17 @@ export async function performInstall(
       skipCopy = true;
     } else {
       // Different content — same-source update path (Task 3.4)
-      const sourcePkgName = existingManifest.source
-        .replace(/^npm:/, '')
-        .replace(/@[^@/][^/]*$/, '');
+      const sourcePkgName = extractSourcePkgName(existingManifest.source);
       const newSource = `npm:${opts.pkg.name}@${opts.pkg.version}`;
       if (sourcePkgName === opts.pkg.name) {
         // Same source package name, but different content (version skew) — Task 3.9
         if (existingManifest.source !== newSource) {
+          // Warning should say who ALREADY has this installed, not who is trying to install
           const existingRequestors = Array.isArray(existingManifest.requestedBy)
             ? existingManifest.requestedBy
             : [];
-          const allRequestors = opts.requestorRoot
-            ? Array.from(new Set([...existingRequestors, opts.requestorRoot]))
-            : existingRequestors;
           console.warn(
-            `[skillet] Version conflict: skill "${skill.name}" is installed from ${existingManifest.source} (requested by ${allRequestors.join(', ')}) but ${opts.pkg.name} requires ${newSource}`,
+            `[skillet] Version conflict: skill "${skill.name}" is installed from ${existingManifest.source} (requested by ${existingRequestors.join(', ') || 'unknown'}) but ${opts.requestorRoot ?? opts.pkg.name} is installing ${newSource}`,
           );
         }
         // Same source package, new content — overwrite if pristine, skip if drifted
@@ -186,8 +193,7 @@ export async function performInstall(
   // Only inherit existing requestedBy when the existing install is from the SAME source package.
   // For a different-source collision, start fresh to avoid inheriting unrelated requestors.
   const isSameSource =
-    existingManifest !== null &&
-    existingManifest.source.replace(/^npm:/, '').replace(/@[^@/][^/]*$/, '') === opts.pkg.name;
+    existingManifest !== null && extractSourcePkgName(existingManifest.source) === opts.pkg.name;
   const existingRequestedBy: string[] =
     isSameSource && existingManifest !== null && Array.isArray(existingManifest.requestedBy)
       ? existingManifest.requestedBy

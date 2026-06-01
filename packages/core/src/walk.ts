@@ -81,39 +81,20 @@ export async function resolveSkillPackageClosure(
   const visited = new Set<string>();
   const seenSkillDirs = new Set<string>();
 
-  async function getPackageName(pkgRoot: string): Promise<string> {
-    const pkgJsonPath = path.join(pkgRoot, 'package.json');
-    try {
-      const raw = await fs.readFile(pkgJsonPath, 'utf8');
-      const pkg = JSON.parse(raw) as Record<string, unknown>;
-      if (typeof pkg.name === 'string' && pkg.name.length > 0) {
-        return pkg.name;
-      }
-    } catch {
-      // fall through
-    }
-    return path.basename(pkgRoot);
-  }
-
   async function walk(pkgRoot: string, skillDirs: string[], depth: number): Promise<void> {
     if (visited.has(pkgRoot)) return;
     visited.add(pkgRoot);
 
-    const packageName = await getPackageName(pkgRoot);
-
-    // Read dependencies (not devDependencies) from package.json
-    const pkgJsonPath = path.join(pkgRoot, 'package.json');
+    // Read once, extract both name and dependencies
+    let packageName = path.basename(pkgRoot);
     let dependencies: Record<string, string> = {};
     try {
-      const raw = await fs.readFile(pkgJsonPath, 'utf8');
-      const pkg = JSON.parse(raw) as Record<string, unknown>;
-      if (
-        pkg.dependencies !== null &&
-        typeof pkg.dependencies === 'object' &&
-        !Array.isArray(pkg.dependencies)
-      ) {
-        dependencies = pkg.dependencies as Record<string, string>;
-      }
+      const pkgJson = JSON.parse(
+        await fs.readFile(path.join(pkgRoot, 'package.json'), 'utf8'),
+      ) as Record<string, unknown>;
+      packageName =
+        typeof pkgJson.name === 'string' && pkgJson.name ? pkgJson.name : path.basename(pkgRoot);
+      dependencies = (pkgJson.dependencies as Record<string, string> | undefined) ?? {};
     } catch {
       // If we can't read package.json, proceed with no deps
     }

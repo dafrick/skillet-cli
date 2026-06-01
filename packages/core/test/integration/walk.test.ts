@@ -6,7 +6,6 @@
  * identically to production, including npm's hoisting and nesting behaviour.
  */
 import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { registry } from '../../src/adapters/index.js';
@@ -97,16 +96,13 @@ describe('findPackageRoot', () => {
 
 describe('resolveSkillPackageClosure', () => {
   let sandbox: Sandbox;
-  let skillTmpDir: string;
 
   beforeEach(async () => {
     sandbox = await createSandbox();
-    skillTmpDir = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), 'skillet-walk-test-')));
   });
 
   afterEach(async () => {
     await sandbox[Symbol.asyncDispose]();
-    await fs.rm(skillTmpDir, { recursive: true, force: true });
   });
 
   it('2.9: no marked dependencies — only invoked package own skills returned', async () => {
@@ -286,6 +282,13 @@ describe('resolveSkillPackageClosure', () => {
     const packageNames = closure.map((e) => e.packageName);
     expect(packageNames).toContain('good-dep');
     expect(packageNames).toContain('invoker-pkg');
+
+    const goodDepEntry = closure.find((e) => e.packageName === 'good-dep');
+    expect(goodDepEntry).toBeDefined();
+    expect(goodDepEntry!.skillDir).toBeTruthy();
+    // Verify the skill directory actually exists
+    const { access } = await import('node:fs/promises');
+    await expect(access(goodDepEntry!.skillDir)).resolves.toBeUndefined();
 
     warnSpy.mockRestore();
   });
