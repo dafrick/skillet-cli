@@ -1,32 +1,5 @@
 ## MODIFIED Requirements
 
-### Requirement: Unit tests cover pure functions with no filesystem access
-`test/unit/` SHALL contain one test file per pure-function module. Unit tests SHALL NOT call `createSandbox()`, touch the filesystem, or set environment variables. The following modules SHALL have unit test coverage:
-
-- `hash.test.ts` — same content produces same hash; file rename changes hash; `\r\n` is normalised to `\n` before hashing; Windows backslash paths are normalised to forward slashes; `.skill-manifest.json` is excluded from hash by default; custom ignore list excludes specified files
-- `normalize.test.ts` — valid `SKILL.md` is parsed correctly; missing `name` throws a descriptive error; missing `description` throws a descriptive error; missing `SKILL.md` throws a descriptive error; optional `version` field is passed through; arbitrary extra frontmatter fields are passed through
-- `registry.test.ts` — `registry.register()` adds an adapter; `registry.get(id)` returns the registered adapter; `registry.list()` returns all adapters; registering a duplicate `id` throws; `registerAdapter` is an alias for `registry.register`
-- `adapter-claude.test.ts` — `detect()` returns true when `~/.claude/` exists (user scope) or `.claude/` exists in cwd (project scope); `supportsScope()` returns true for both `user` and `project`; `resolveInstallPath()` returns correct path per scope; `render()` is passthrough
-- `adapter-copilot.test.ts` — `detect()` returns project scope when `.github/` exists in cwd; `detect()` returns user scope when `~/.copilot/` exists; `supportsScope('user')` returns true; `supportsScope('project')` returns true; `resolveInstallPath('project')` returns `.github/skills/<name>/`; `resolveInstallPath('user')` returns `~/.copilot/skills/<name>/`; `render()` is passthrough
-- `adapter-agents.test.ts` — `detect()` always returns true; `supportsScope()` returns true for both scopes; `resolveInstallPath()` returns `~/.agents/skills/<name>/` for user and `.agents/skills/<name>/` for project; `render()` is passthrough
-- `ui-colors.test.ts` — color token wrapper functions produce ANSI escape sequences when `process.stdout.isTTY` is mocked to `true`; produce plain strings when mocked to `false`
-- `ui-wordmark.test.ts` — returns a non-empty multi-line string containing ANSI codes when `isTTY` is `true`; returns an empty string when `isTTY` is `false`
-- `ui-verbs.test.ts` — `pickVerb('install')` returns a pair from the install verb pool; verbs are sentence-case when `isTTY` is `true`; verbs are lowercase when `isTTY` is `false`
-
-#### Scenario: Hash is deterministic across platforms
-- **WHEN** `hashSkill()` is called on the same content with POSIX paths on Linux and Windows-style backslash paths
-- **THEN** the returned hash strings are identical
-
-#### Scenario: Missing SKILL.md throws descriptively
-- **WHEN** `normalizeSkill()` is called on a directory with no `SKILL.md`
-- **THEN** it throws an error whose message includes the missing path
-
-#### Scenario: Copilot adapter supports user scope
-- **WHEN** `copilotAdapter.supportsScope('user')` is called
-- **THEN** it returns `true`
-
----
-
 ### Requirement: Integration tests cover library functions across adapter × scope combinations
 `test/integration/` SHALL use `createSandbox()` for every test. Tests SHALL be parameterized with `test.each` across all valid adapter × scope combinations:
 
@@ -117,9 +90,9 @@ The following scenarios SHALL be covered:
 - **WHEN** `renderCli(['install'])` is used with keyboard input to select a scope and target
 - **THEN** `findByText` locates the done cooking verb (e.g. `Sautéed`) in stdout and the installed files exist on disk
 
-#### Scenario: Non-TTY install writes Skilletize files
+#### Scenario: Non-TTY install produces prefixed log lines
 - **WHEN** the CLI is spawned with stdin closed (not a TTY) and args `['install', '--target', 'agents', '--scope', 'user', '--yes']`
-- **THEN** stdout lines match the pattern `[<pkg-name>] <verb> agents…` / `[<pkg-name>] ✔ <done> — <path>` and `SKILL.md` exists at `~/.agents/skills/skilletize/SKILL.md`
+- **THEN** stdout lines match the pattern `[<pkg-name>] <verb> agents…` / `[<pkg-name>] ✔ <done> — <path>`, contain no ANSI codes, and `SKILL.md` exists at `~/.agents/skills/skilletize/SKILL.md`
 
 #### Scenario: NO_COLOR suppresses ANSI output
 - **WHEN** the CLI is spawned with `env.NO_COLOR = '1'`

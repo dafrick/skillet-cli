@@ -52,15 +52,15 @@ Keeping `hello-skill` and adding `skilletize` alongside it leaves dead code and 
 
 [`SKILL.md` content quality] → Skilletize's instructions need to be genuinely useful (not just placeholder text) for the demo to have value. This requires careful skill authoring, not just scaffolding.
 
-[Fixture used by normalize unit test which checks `name` and `description` frontmatter] → The new `SKILL.md` must retain valid frontmatter; the exact `name` value in tests will need updating to `skilletize`.
+[Fixture used by normalize unit test which checks `name` and `description` frontmatter] → Tests will be refactored (task 0) to assert structural correctness rather than fixture-specific values, so no assertion literals need updating when the fixture content changes.
 
 ## Migration Plan
 
+0. Decouple test assertions from fixture-specific values (refactor before renaming anything)
 1. Create `packages/core/fixtures/skilletize/` with all new content
-2. Delete `packages/core/fixtures/hello-skill/`
-3. Update `packages/core/bin/cli.js` fixture path
-4. Update test files: `normalize.test.ts`, `install.test.ts` (unit + integration), `manifest.test.ts`, `install.test.ts` (e2e)
-5. Add delta specs for `monorepo-setup` and `test-infrastructure`
-6. Run full test suite to confirm no missed references
+2. Delete `packages/core/fixtures/hello-skill/`; update `packages/core/bin/cli.js` fixture path; rename `bin` field in `packages/core/package.json` from `"hello-skill"` to `"skilletize"`
+3. Update fixture path constants in test files: `normalize.test.ts`, `install.test.ts` (integration), `manifest.test.ts`, `install.test.ts` (e2e)
+4. Delta specs for `monorepo-setup` and `test-infrastructure` — **already done in this PR**
+5. Run full test suite to confirm no missed references
 
 Rollback: revert the rename; no data migration or external state involved.
