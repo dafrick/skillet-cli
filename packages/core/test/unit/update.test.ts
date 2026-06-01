@@ -58,6 +58,7 @@ async function makeInstall(opts: {
     libVersion: LIB_VERSION,
     installedAt: new Date().toISOString(),
     postInstallHash,
+    requestedBy: [],
   };
 
   await writeFile(

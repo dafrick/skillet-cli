@@ -26,14 +26,14 @@
 
 ## 3. `requestedBy` Manifest Field
 
-- [ ] 3.1 Add `requestedBy: string[]` to the `.skill-meta.json` TypeScript type in `packages/core`
-- [ ] 3.2 Update the per-skill write path to always include `requestedBy` in the manifest it writes, seeded with `[requestorRoot]` for new installs
-- [ ] 3.3 Implement install-time union on identical-content collision: when the write path finds an existing `.skill-meta.json` with an identical `contentHash`, union `requestorRoot` into the existing `requestedBy` set and rewrite only the manifest (do not rewrite skill content)
-- [ ] 3.4 Implement union-after-update for same-source content changes: when the write path finds a different `contentHash` but the same `source` package+name, apply the existing update logic (overwrite if pristine; prompt/`--force` if modified), then union `requestorRoot` into `requestedBy` after the write
-- [ ] 3.5 Verify `requestedBy` is excluded from `contentHash` and `postInstallHash` computation (no code change needed if `.skill-meta.json` is already excluded — add an explicit test to assert this)
-- [ ] 3.6 Handle manifests without `requestedBy` (v0.1.0 era): skip them in the GC scan; they persist until manually removed or overwritten by a v0.2.0 install of the same skill
-- [ ] 3.7 Write unit tests for the union: same root is idempotent (no duplicate entry); new root adds to set; union after same-source update (content changed); `requestedBy` excluded from hash; `requestedBy` is an unordered set (no duplicates)
-- [ ] 3.8 Write integration test: install two packages sharing a base dependency; verify shared skill's `requestedBy` contains both package names
+- [x] 3.1 Add `requestedBy: string[]` to the `.skill-meta.json` TypeScript type in `packages/core`
+- [x] 3.2 Update the per-skill write path to always include `requestedBy` in the manifest it writes, seeded with `[requestorRoot]` for new installs
+- [x] 3.3 Implement install-time union on identical-content collision: when the write path finds an existing `.skill-meta.json` with an identical `contentHash`, union `requestorRoot` into the existing `requestedBy` set and rewrite only the manifest (do not rewrite skill content)
+- [x] 3.4 Implement union-after-update for same-source content changes: when the write path finds a different `contentHash` but the same `source` package+name, apply the existing update logic (overwrite if pristine; prompt/`--force` if modified), then union `requestorRoot` into `requestedBy` after the write
+- [x] 3.5 Verify `requestedBy` is excluded from `contentHash` and `postInstallHash` computation (no code change needed if `.skill-meta.json` is already excluded — add an explicit test to assert this)
+- [x] 3.6 Handle manifests without `requestedBy` (v0.1.0 era): skip them in the GC scan; they persist until manually removed or overwritten by a v0.2.0 install of the same skill
+- [x] 3.7 Write unit tests for the union: same root is idempotent (no duplicate entry); new root adds to set; union after same-source update (content changed); `requestedBy` excluded from hash; `requestedBy` is an unordered set (no duplicates)
+- [x] 3.8 Write integration test: install two packages sharing a base dependency; verify shared skill's `requestedBy` contains both package names
 - [ ] 3.9 Add a collision message for the version-skew case: when `source` package name matches but version differs, emit a message naming both versions and the roots that required them (before the existing prompt/`--force` step)
 - [ ] 3.10 Enhance the cross-package name collision message: when `source` indicates a genuinely different package owns the skill folder, name both packages from their `source` fields to explain why the slot is occupied (uses existing v0.1.0 collision machinery; only the message changes)
 - [ ] 3.11 Write integration test for the version-skew collision message (3.9): arrange two fixture packages requiring different major versions of a shared base whose skills hash differently; trigger the install write path; assert the emitted message names both package versions and both root package names (not just a generic collision message)

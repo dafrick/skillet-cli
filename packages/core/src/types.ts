@@ -17,4 +17,5 @@ export interface SkillManifest {
   libVersion: string;
   installedAt: string;
   postInstallHash: string;
+  requestedBy: string[];
 }

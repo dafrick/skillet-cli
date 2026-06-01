@@ -599,3 +599,80 @@ describe.each(COMBINATIONS)('install: $adapterId/$scope', ({
     }
   });
 });
+
+describe('requestedBy — two packages sharing a base dependency (Task 3.8)', () => {
+  // Use a single adapter/scope for these cross-package tests
+  const adapterId = 'claude';
+  const scope: Scope = 'user';
+
+  it('3.8: first install with requestorRoot seeds requestedBy correctly', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const skill = await normalizeSkill(helloSkillDir);
+      const adapter = registry.get(adapterId)!;
+      const pkg = { name: 'superpowers-base', version: '1.0.0' };
+
+      const installPath = await performInstall(skill, adapter, scope, {
+        pkg,
+        requestorRoot: 'travel-planner',
+      });
+
+      const raw = await fs.readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+      const manifest = JSON.parse(raw);
+
+      expect(manifest.requestedBy).toEqual(['travel-planner']);
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+
+  it('3.8: second install with different requestorRoot unions into requestedBy', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const skill = await normalizeSkill(helloSkillDir);
+      const adapter = registry.get(adapterId)!;
+      const pkg = { name: 'superpowers-base', version: '1.0.0' };
+
+      await performInstall(skill, adapter, scope, { pkg, requestorRoot: 'travel-planner' });
+      const installPath = await performInstall(skill, adapter, scope, {
+        pkg,
+        requestorRoot: 'recipe-planner',
+      });
+
+      const raw = await fs.readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+      const manifest = JSON.parse(raw);
+
+      // Both package names must appear in requestedBy
+      const sorted = [...manifest.requestedBy].sort();
+      expect(sorted).toEqual(['recipe-planner', 'travel-planner']);
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+
+  it('3.8: re-install with same requestorRoot is idempotent (no duplicates)', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const skill = await normalizeSkill(helloSkillDir);
+      const adapter = registry.get(adapterId)!;
+      const pkg = { name: 'superpowers-base', version: '1.0.0' };
+
+      await performInstall(skill, adapter, scope, { pkg, requestorRoot: 'travel-planner' });
+      await performInstall(skill, adapter, scope, { pkg, requestorRoot: 'recipe-planner' });
+      // Install travel-planner again — must remain idempotent
+      const installPath = await performInstall(skill, adapter, scope, {
+        pkg,
+        requestorRoot: 'travel-planner',
+      });
+
+      const raw = await fs.readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+      const manifest = JSON.parse(raw);
+
+      // Still exactly two entries — no duplicates
+      const sorted = [...manifest.requestedBy].sort();
+      expect(sorted).toEqual(['recipe-planner', 'travel-planner']);
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+});

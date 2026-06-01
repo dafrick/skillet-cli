@@ -37,6 +37,7 @@ function makeManifest(postInstallHash: string, contentHash: string): SkillManife
     libVersion: '0.1.0',
     installedAt: new Date().toISOString(),
     postInstallHash,
+    requestedBy: [],
   };
 }
 

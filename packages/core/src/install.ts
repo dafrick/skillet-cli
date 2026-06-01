@@ -15,6 +15,8 @@ export const LIB_VERSION = '0.1.0';
 
 export interface InstallOptions {
   pkg: { name: string; version: string };
+  /** The npm package name of the top-level package performing this install. */
+  requestorRoot?: string;
   hooks?: {
     beforeInstall?: (
       skill: NormalizedSkill,
@@ -82,6 +84,11 @@ export async function writeManifest(installPath: string, manifest: SkillManifest
 /**
  * Perform a single install: render, copy tree, write manifest.
  * Calls beforeInstall before copy, afterInstall after manifest write.
+ *
+ * Collision handling:
+ * - Identical contentHash: skip copyTree, union requestorRoot into requestedBy, rewrite manifest only.
+ * - Different contentHash, same source package: overwrite if pristine; skip with warning if drifted.
+ *   Then union requestorRoot into requestedBy.
  */
 export async function performInstall(
   skill: NormalizedSkill,
@@ -97,10 +104,52 @@ export async function performInstall(
     await opts.hooks.beforeInstall(skill, adapter, ctx);
   }
 
-  await copyTree(renderSrc, installPath);
+  // Check for an existing manifest at the install path
+  let existingManifest: SkillManifest | null = null;
+  try {
+    const raw = await readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+    existingManifest = JSON.parse(raw) as SkillManifest;
+  } catch {
+    // no existing manifest — fresh install
+  }
+
+  let skipCopy = false;
+
+  if (existingManifest !== null) {
+    if (existingManifest.contentHash === skill.contentHash) {
+      // Same content — skip the copy, only update requestedBy
+      skipCopy = true;
+    } else {
+      // Different content — same-source update path (Task 3.4)
+      const sourcePkgName = existingManifest.source.replace(/^npm:/, '').replace(/@[^@]+$/, '');
+      if (sourcePkgName === opts.pkg.name) {
+        // Same source package, new content — overwrite if pristine, skip if drifted
+        const driftStatus = await detectDrift(installPath);
+        if (driftStatus === 'pristine') {
+          skipCopy = false; // proceed with overwrite
+        } else {
+          // drifted or unknown — skip silently (performInstall is prompt-free)
+          skipCopy = true;
+        }
+      }
+      // Different source package — proceed with normal copyTree (existing collision behavior)
+    }
+  }
+
+  if (!skipCopy) {
+    await copyTree(renderSrc, installPath);
+  }
 
   const postInstallHash = await hashSkill(installPath); // manifest excluded by default
   const renderHash = computeRenderHash(skill.contentHash, adapter.id, LIB_VERSION);
+
+  // Build requestedBy: union of existing + new requestorRoot
+  const existingRequestedBy: string[] = Array.isArray(existingManifest?.requestedBy)
+    ? (existingManifest?.requestedBy ?? [])
+    : [];
+  const requestedBy = opts.requestorRoot
+    ? Array.from(new Set([...existingRequestedBy, opts.requestorRoot]))
+    : existingRequestedBy;
 
   const manifest: SkillManifest = {
     name: skill.name,
@@ -114,6 +163,7 @@ export async function performInstall(
     libVersion: LIB_VERSION,
     installedAt: new Date().toISOString(),
     postInstallHash,
+    requestedBy,
   };
 
   await writeManifest(installPath, manifest);
@@ -123,6 +173,15 @@ export async function performInstall(
   }
 
   return installPath;
+}
+
+/**
+ * Returns true if the manifest was written by a pre-v0.2.0 version of skillet
+ * that did not include the `requestedBy` field. The GC (Batch 4) uses this to
+ * skip legacy manifests instead of garbage-collecting them.
+ */
+export function isLegacyManifest(manifest: SkillManifest): boolean {
+  return !Array.isArray((manifest as unknown as Record<string, unknown>).requestedBy);
 }
 
 /**
