@@ -107,6 +107,13 @@ describe('readSkilletMarker', () => {
       warnSpy.mockRestore();
     }
   });
+
+  it('skillet key present but value is not an object (e.g. true) → returns skillsDirs: ["skills"]', async () => {
+    await writePackageJson(tmpDir, { name: 'test-pkg', skillet: true });
+    const result = await readSkilletMarker(tmpDir);
+    expect(result).not.toBeNull();
+    expect(result?.skillsDirs).toEqual(['skills']);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
