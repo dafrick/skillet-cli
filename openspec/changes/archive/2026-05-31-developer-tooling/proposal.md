@@ -4,7 +4,7 @@
 
 ## What Changes
 
-- **New monorepo layout** — pnpm workspace root at `skillet/` with `packages/core/` as the first package; scaffolded for future packages (`@skillet/cli`, fixture packages, etc.)
+- **New monorepo layout** — pnpm workspace root at `skillet/` with `packages/core/` as the first package; scaffolded for future packages (`@skillet-cli/cli`, fixture packages, etc.)
 - **New Biome configuration** — single `biome.json` at repo root enforcing formatting, import hygiene, and the critical `noConsole` rule (all CLI output must go through the design system, not raw `console.log`)
 - **New Lefthook hooks** — `pre-commit` runs Biome check + `tsc --noEmit` on staged files; `commit-msg` validates conventional commits format
 - **New three-layer test architecture** — unit (pure functions), integration (direct function calls with `HOME`-overridden sandbox), and E2E (`cli-testing-library` with real pty for TTY and interactive prompt coverage)

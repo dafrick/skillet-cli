@@ -206,7 +206,7 @@ Runs on version tags (`v*`), gated on `ci.yml` passing:
 1. `pnpm install`
 2. `pnpm -F @skillet-cli/core build`
 3. `pnpm -F @skillet-cli/core prepublishOnly` (runs build + tests)
-4. `npm publish --access public` to the `@skillet` scope
+4. `npm publish --access public` to the `@skillet-cli` scope
 
 ---
 

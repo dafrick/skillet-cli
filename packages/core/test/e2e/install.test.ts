@@ -64,7 +64,7 @@ describe('install command (E2E)', () => {
 
       expect(result.status).toBe(0);
       // Non-TTY output: prefixed lines
-      expect(result.stdout).toContain('@skillet/core');
+      expect(result.stdout).toContain('@skillet-cli/core');
       expect(result.stdout).toContain('agents');
       // No ANSI escape sequences — CI mode disables chalk
       expect(result.stdout).not.toContain('[');

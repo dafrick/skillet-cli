@@ -2,7 +2,7 @@
 
 `@skillet-cli/core` is a brand-new npm library — there is no existing codebase to migrate. The design must produce a stable, extensible foundation that skill authors depend on via `npm install`. Breaking changes to the author-facing API will require a major semver bump, so the architecture prioritises getting the abstractions right on the first release rather than iterating privately.
 
-The target runtime is Node 24+ with ES modules. The package is published under the `@skillet` npm scope. Three v0.1 targets are supported: Claude Code, GitHub Copilot (user + project scope), and a generic `.agents/skills/` convention. All three are "Bucket A" (passthrough) — they consume the `SKILL.md` directory unchanged.
+The target runtime is Node 24+ with ES modules. The package is published under the `@skillet-cli` npm scope. Three v0.1 targets are supported: Claude Code, GitHub Copilot (user + project scope), and a generic `.agents/skills/` convention. All three are "Bucket A" (passthrough) — they consume the `SKILL.md` directory unchanged.
 
 Explicitly anticipated future targets that the architecture must not foreclose: Kiro (`.kiro/steering/` steering files, Bucket B), legacy Copilot instructions (`.github/copilot-instructions.md` or `*.prompt.md`, Bucket B), an `AGENTS.md` aggregator (Bucket B), and Cursor-specific extensions beyond the generic `.agents/` convention (Bucket A or B depending on their eventual format).
 
@@ -130,7 +130,7 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 `registry` is exported as an **object with methods**: `registry.register(adapter)`, `registry.get(id)`, `registry.list()`. The top-level `registerAdapter(adapter)` export is a convenience alias for `registry.register(adapter)`, matching the brief's explicit enumeration while keeping the registry object as the primary API for reads.
 
-**Rationale**: Advanced consumers (e.g. a `@skillet/cli` meta-package) need access to internals without forking the library. The object-with-methods shape for `registry` is cleaner for consumers who want to inspect or enumerate adapters — they import one thing and call methods on it rather than importing multiple flat functions.
+**Rationale**: Advanced consumers (e.g. a `@skillet-cli/cli` meta-package) need access to internals without forking the library. The object-with-methods shape for `registry` is cleaner for consumers who want to inspect or enumerate adapters — they import one thing and call methods on it rather than importing multiple flat functions.
 
 ---
 

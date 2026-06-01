@@ -85,7 +85,7 @@ The following scenarios SHALL be covered for each valid combination:
 |---|---|---|---|
 | `name` | string | matches SKILL.md `name` frontmatter | `NormalizedSkill.name` |
 | `version` | string \| undefined | semver string or absent if not in frontmatter | `NormalizedSkill.version` |
-| `source` | string | npm package name from `pkg.name` passed to `run()` (e.g. `"@skillet/hello"`) | `RunOptions.pkg.name` |
+| `source` | string | npm package name from `pkg.name` passed to `run()` (e.g. `"@skillet-cli/hello"`) | `RunOptions.pkg.name` |
 | `sourceVersion` | string | semver string from `pkg.version` passed to `run()` (e.g. `"1.0.0"`) | `RunOptions.pkg.version` |
 | `contentHash` | string | `sha256:` prefix + 64-char lowercase hex digest | `hashSkill()` output |
 | `renderHash` | string | `sha256:` prefix + 64-char lowercase hex digest | `computeRenderHash()` output |
