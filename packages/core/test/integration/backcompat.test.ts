@@ -117,7 +117,7 @@ describe('5.1/requestorRoot: direct run() install records requestedBy with packa
     const installPath = path.join(sandbox.home, '.claude', 'skills', 'hello-skill');
     const manifest = await readManifest(installPath);
 
-    // requestorRoot is read from process.cwd()/package.json name, which is pkgName
+    // requestorRoot comes from the pkg argument passed to run(), which is pkgName
     expect(Array.isArray(manifest.requestedBy)).toBe(true);
     expect(manifest.requestedBy).toContain(pkgName);
   });
@@ -157,6 +157,8 @@ describe('5.2: single-skill package with no marked dependencies', () => {
     await createSkillTree(skillsDir, 'solo-skill');
 
     const ownSkillDirs = [path.join(skillsDir, 'solo-skill')];
+    // Calls the walk + install directly to test the library functions;
+    // Task 5.1 covers the full run() path end-to-end.
     const closure = await resolveSkillPackageClosure(pkgRoot!, ownSkillDirs);
 
     // Walk produces exactly one entry (own skill, no transitive dependencies)
