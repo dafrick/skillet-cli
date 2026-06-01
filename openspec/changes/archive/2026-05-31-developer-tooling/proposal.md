@@ -1,6 +1,6 @@
 ## Why
 
-`@skillet/core` is a brand-new library with no existing codebase. Before a single line of implementation is written, the repo needs the tooling and test infrastructure that makes TDD possible from day one: a consistent code quality baseline, pre-commit safety nets, and a test architecture capable of verifying skill installation correctness across different agents, scopes (user vs project), and operating systems.
+`@skillet-cli/core` is a brand-new library with no existing codebase. Before a single line of implementation is written, the repo needs the tooling and test infrastructure that makes TDD possible from day one: a consistent code quality baseline, pre-commit safety nets, and a test architecture capable of verifying skill installation correctness across different agents, scopes (user vs project), and operating systems.
 
 ## What Changes
 

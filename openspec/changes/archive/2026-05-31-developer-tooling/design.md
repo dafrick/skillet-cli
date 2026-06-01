@@ -1,6 +1,6 @@
 ## Context
 
-`@skillet/core` is a brand-new TypeScript ESM package with no prior codebase. The repo is structured as a monorepo (`packages/core/`) anticipating future packages (`@skillet/cli`, fixture packages, a docs site). Because this is a library that installs skill directories into agent-specific filesystem paths — `~/.claude/`, `.github/`, `.agents/` — the test infrastructure must never touch a developer's real home directory. The CLI also has two distinct output modes: an interactive TTY mode (colors, gradients, spinners, `@inquirer/prompts` multi-select) and a non-TTY/CI mode with plain prefixed log lines. Both modes must be exercised by tests. All tooling must be in place before implementation begins to enable TDD from the first task.
+`@skillet-cli/core` is a brand-new TypeScript ESM package with no prior codebase. The repo is structured as a monorepo (`packages/core/`) anticipating future packages (`@skillet/cli`, fixture packages, a docs site). Because this is a library that installs skill directories into agent-specific filesystem paths — `~/.claude/`, `.github/`, `.agents/` — the test infrastructure must never touch a developer's real home directory. The CLI also has two distinct output modes: an interactive TTY mode (colors, gradients, spinners, `@inquirer/prompts` multi-select) and a non-TTY/CI mode with plain prefixed log lines. Both modes must be exercised by tests. All tooling must be in place before implementation begins to enable TDD from the first task.
 
 ## Goals / Non-Goals
 

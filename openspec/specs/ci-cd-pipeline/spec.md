@@ -61,13 +61,13 @@ The integration test sandbox helper SHALL set both `process.env.HOME` and `proce
 ---
 
 ### Requirement: Release workflow publishes to npm on version tags
-`.github/workflows/release.yml` SHALL trigger via `workflow_run` on the `CI` workflow completing with `conclusion: success` on branches/tags matching `v*`. This is the correct gating mechanism: because `ci.yml` is configured to also run on tag pushes, `workflow_run` will fire after CI passes for the tag commit. The release job SHALL include an explicit condition `if: github.event.workflow_run.conclusion == 'success'` to prevent publishing on CI failure. The job steps SHALL: run `pnpm install`, build `@skillet/core`, run `prepublishOnly` (which executes build + tests), and publish to npm with `--access public` under the `@skillet` scope. The npm auth token SHALL be read from the `NPM_TOKEN` repository secret.
+`.github/workflows/release.yml` SHALL trigger via `workflow_run` on the `CI` workflow completing with `conclusion: success` on branches/tags matching `v*`. This is the correct gating mechanism: because `ci.yml` is configured to also run on tag pushes, `workflow_run` will fire after CI passes for the tag commit. The release job SHALL include an explicit condition `if: github.event.workflow_run.conclusion == 'success'` to prevent publishing on CI failure. The job steps SHALL: run `pnpm install`, build `@skillet-cli/core`, run `prepublishOnly` (which executes build + tests), and publish to npm with `--access public` under the `@skillet` scope. The npm auth token SHALL be read from the `NPM_TOKEN` repository secret.
 
 **Do not use** a tag-triggered `on: push: tags` approach with a `needs` dependency on another job — that creates a separate workflow run that cannot transitively depend on `ci.yml`.
 
 #### Scenario: Tag triggers release workflow
 - **WHEN** a tag `v0.1.0` is pushed to the repository
-- **THEN** `release.yml` starts and, upon successful completion, `@skillet/core@0.1.0` is visible on npm
+- **THEN** `release.yml` starts and, upon successful completion, `@skillet-cli/core@0.1.0` is visible on npm
 
 #### Scenario: Release is gated on CI passing
 - **WHEN** a version tag is pushed but the CI pipeline is failing
@@ -75,7 +75,7 @@ The integration test sandbox helper SHALL set both `process.env.HOME` and `proce
 
 #### Scenario: Release uses correct npm scope
 - **WHEN** the release workflow publishes
-- **THEN** the package appears on npm as `@skillet/core` (scoped, public)
+- **THEN** the package appears on npm as `@skillet-cli/core` (scoped, public)
 
 ---
 

@@ -1,13 +1,13 @@
 # Developer Tooling & Test Infrastructure Design
 
 **Date:** 2026-05-31
-**Scope:** `@skillet/core` monorepo — linting, formatting, pre-commit hooks, unit/integration/E2E test infrastructure, CI/CD, contributor documentation
+**Scope:** `@skillet-cli/core` monorepo — linting, formatting, pre-commit hooks, unit/integration/E2E test infrastructure, CI/CD, contributor documentation
 
 ---
 
 ## Context
 
-`@skillet/core` is a brand-new TypeScript ESM package with no prior codebase. This document specifies the developer tooling and test infrastructure to be set up before implementation begins, enabling TDD from the first task.
+`@skillet-cli/core` is a brand-new TypeScript ESM package with no prior codebase. This document specifies the developer tooling and test infrastructure to be set up before implementation begins, enabling TDD from the first task.
 
 The library installs skill directories into agent-specific paths (`~/.claude/`, `.github/`, `.agents/`) and manipulates the filesystem directly. Test infrastructure must isolate tests from real home directories. The CLI has an interactive TTY mode (colors, spinners, prompts) and a non-TTY/CI mode; both must be testable.
 
@@ -27,7 +27,7 @@ skillet/
 │       ├── ci.yml
 │       └── release.yml
 └── packages/
-    └── core/                           ← @skillet/core
+    └── core/                           ← @skillet-cli/core
         ├── package.json
         ├── tsconfig.json
         ├── vitest.config.ts
@@ -204,8 +204,8 @@ Runs on every PR and push to `main`.
 
 Runs on version tags (`v*`), gated on `ci.yml` passing:
 1. `pnpm install`
-2. `pnpm -F @skillet/core build`
-3. `pnpm -F @skillet/core prepublishOnly` (runs build + tests)
+2. `pnpm -F @skillet-cli/core build`
+3. `pnpm -F @skillet-cli/core prepublishOnly` (runs build + tests)
 4. `npm publish --access public` to the `@skillet` scope
 
 ---

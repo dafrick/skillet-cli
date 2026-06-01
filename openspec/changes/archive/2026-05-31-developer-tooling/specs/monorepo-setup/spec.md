@@ -14,11 +14,11 @@ The repo root SHALL contain a `package.json` with `"private": true` and no `name
 ---
 
 ### Requirement: Core package lives at packages/core
-The `@skillet/core` package SHALL live at `packages/core/` with its own `package.json` (`"name": "@skillet/core"`, `"type": "module"`, `"engines": { "node": ">=18" }`), `tsconfig.json`, and `vitest.config.ts`. The `tsconfig.json` SHALL include `"lib": ["ESNext"]` to make `Symbol.asyncDispose` and the `await using` disposal pattern available — both are required by the `createSandbox()` test helper.
+The `@skillet-cli/core` package SHALL live at `packages/core/` with its own `package.json` (`"name": "@skillet-cli/core"`, `"type": "module"`, `"engines": { "node": ">=18" }`), `tsconfig.json`, and `vitest.config.ts`. The `tsconfig.json` SHALL include `"lib": ["ESNext"]` to make `Symbol.asyncDispose` and the `await using` disposal pattern available — both are required by the `createSandbox()` test helper.
 
 #### Scenario: Package is scoped correctly
 - **WHEN** `packages/core/package.json` is read
-- **THEN** `name` is `@skillet/core` and `type` is `module`
+- **THEN** `name` is `@skillet-cli/core` and `type` is `module`
 
 #### Scenario: Node engine constraint is declared
 - **WHEN** `packages/core/package.json` is read
