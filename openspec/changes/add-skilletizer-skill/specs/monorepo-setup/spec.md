@@ -10,3 +10,12 @@ A multi-file skill directory (`fixtures/skilletize/`) SHALL live at `packages/co
 #### Scenario: Old hello-skill fixture is removed
 - **WHEN** `packages/core/fixtures/` is listed
 - **THEN** `hello-skill/` does not exist and `skilletize/` does exist
+
+---
+
+### Requirement: Core package bin field exposes the skilletize binary
+The `bin` field in `packages/core/package.json` SHALL map `"skilletize"` to `"bin/cli.js"`. The old `"hello-skill"` key SHALL be removed.
+
+#### Scenario: Binary is named skilletize
+- **WHEN** `packages/core/package.json` is read
+- **THEN** `bin["skilletize"]` equals `"bin/cli.js"` and `bin["hello-skill"]` does not exist
