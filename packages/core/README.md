@@ -29,14 +29,13 @@ Add a `"bin"` field to your `package.json` pointing to that file, publish to npm
 |---|---|---|
 | `skillDir` | `string` | Path to the directory containing your skill files |
 | `pkg` | `{ name: string; version: string }` | Your package's name and version (used by the update notifier) |
-| `hooks.transform` | `(skill) => skill` | Modify the normalized skill before adapter dispatch |
-| `hooks.beforeInstall` | `(skill, adapter, ctx) => void` | Run before each adapter install |
-| `hooks.afterInstall` | `(skill, adapter, ctx) => void` | Run after each adapter install |
-| `hooks.extendProgram` | `(program, ctx) => void` | Add custom subcommands to the CLI |
+| `hooks.transform` | `(skill: NormalizedSkill) => NormalizedSkill` | Modify the normalized skill before adapter dispatch; may be async |
+| `hooks.beforeInstall` | `(skill: NormalizedSkill, adapter: Adapter, ctx: Context) => void` | Run before each adapter install; may be async |
+| `hooks.afterInstall` | `(skill: NormalizedSkill, adapter: Adapter, ctx: Context) => void` | Run after each adapter install; may be async |
+| `hooks.extendProgram` | `(program: Command, ctx: Record<string, unknown>) => void` | Add custom subcommands to the CLI (`Command` is from `commander`) |
 
-All `hooks` fields are optional.
+All `hooks` fields are optional. `NormalizedSkill`, `Adapter`, and `Context` are TypeScript types exported from `@skillet-cli/core`.
 
 ## Further Reading
 
 - [GitHub repository](https://github.com/dafrick/skillet) — full docs, contributing guide, and issue tracker
-- [npm package page](https://www.npmjs.com/package/@skillet-cli/core)

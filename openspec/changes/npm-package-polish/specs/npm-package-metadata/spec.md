@@ -54,7 +54,7 @@ The `directory` key SHALL be present because this is a monorepo package, allowin
 ---
 
 ### Requirement: package.json includes a keywords field
-`packages/core/package.json` SHALL include a `"keywords"` array containing at minimum: `"ai"`, `"agents"`, `"skills"`, `"claude"`, `"copilot"`, `"cli"`, `"installer"`. Keywords SHALL be lowercase strings.
+`packages/core/package.json` SHALL include a `"keywords"` array containing at minimum: `"ai"`, `"agents"`, `"skills"`, `"claude"`, `"copilot"`, `"cli"`, `"skill-installer"`. Keywords SHALL be lowercase strings.
 
 #### Scenario: Package appears in npm search for "ai skills"
 - **WHEN** a developer searches npm for "ai skills"

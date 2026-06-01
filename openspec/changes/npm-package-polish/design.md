@@ -39,7 +39,7 @@ npm automatically includes `README.md`, `LICENSE`, and `CHANGELOG.md` in publish
 | `repository` | `{ type: "git", url: "..." }` | Object form is preferred; enables `npm repo` command |
 | `homepage` | GitHub repo URL | Landing page for the project |
 | `bugs` | GitHub issues URL | Standard for npm; enables `npm bugs` command |
-| `keywords` | `["ai", "agents", "skills", "claude", "copilot", "cli", "installer"]` | Terms a skill author would search on npm |
+| `keywords` | `["ai", "agents", "skills", "claude", "copilot", "cli", "skill-installer"]` | Terms a skill author would search on npm |
 
 ## Risks / Trade-offs
 

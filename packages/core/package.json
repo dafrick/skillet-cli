@@ -19,7 +19,7 @@
     "claude",
     "copilot",
     "cli",
-    "installer"
+    "skill-installer"
   ],
   "type": "module",
   "private": false,
