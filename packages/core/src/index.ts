@@ -3,6 +3,8 @@
 export { registerAdapter, registry } from './adapters/index.js';
 export type { Adapter, Context, DetectResult } from './adapters/types.js';
 export { detectDrift, isStale } from './drift.js';
+export type { InstalledSkill } from './gc.js';
+export { gcUninstall, scanInstalledSkills } from './gc.js';
 export { hashSkill } from './hash.js';
 export type { InstallOptions, InstallRecord } from './install.js';
 export { computeRenderHash, findExistingInstalls, LIB_VERSION, performInstall } from './install.js';
