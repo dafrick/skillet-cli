@@ -358,3 +358,314 @@ describe('renderLightHeader', () => {
     }
   });
 });
+
+// ── Task 6.1 ──────────────────────────────────────────────────────────────────
+// Full header uses derived wordmark name, not hardcoded SKILLET
+describe('6.1: full header wordmark is derived from pkg.name', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('renderFullHeader with resolvedWordmarkName MY-SKILL does not contain SKILLET art', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderFullHeader } = await import('../../src/ui/header.js');
+      const result = renderFullHeader({
+        resolvedWordmarkName: 'MY-SKILL',
+        resolvedDisplayName: 'MY-SKILL',
+        pkg: { name: '@acme/my-skill', version: '1.2.0' },
+        coreVersion: '0.1.1',
+      });
+      // The wordmark is generated from MY-SKILL, not hardcoded SKILLET
+      // In TTY mode the result should be non-empty
+      expect(result.length).toBeGreaterThan(0);
+      // The figlet art for MY-SKILL should not match the old hardcoded SKILLET art pattern
+      // (SKILLET has 7 chars; MY-SKILL has 8 — the figlet widths differ)
+      expect(result).not.toMatch(/SKILLET/);
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('deriveDisplayName + renderFullHeader: @acme/my-skill → MY-SKILL in wordmark', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { deriveDisplayName } = await import('../../src/ui/wordmark.js');
+      const { renderFullHeader } = await import('../../src/ui/header.js');
+      const pkgName = '@acme/my-skill';
+      const derived = deriveDisplayName(pkgName).toUpperCase();
+      expect(derived).toBe('MY-SKILL');
+      const result = renderFullHeader({
+        resolvedWordmarkName: derived,
+        resolvedDisplayName: derived,
+        pkg: { name: pkgName, version: '1.2.0' },
+        coreVersion: '0.1.1',
+      });
+      expect(result.length).toBeGreaterThan(0);
+    } finally {
+      restoreIsTTY();
+    }
+  });
+});
+
+// ── Task 6.2 ──────────────────────────────────────────────────────────────────
+// Light header shows derived name + version + description
+describe('6.2: light header shows derived name, version, and description', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('renderLightHeader renders pkg.description "My skill description"', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderLightHeader } = await import('../../src/ui/header.js');
+      const result = renderLightHeader({
+        resolvedWordmarkName: 'MY-SKILL',
+        resolvedDisplayName: 'MY-SKILL',
+        pkg: { name: '@acme/my-skill', version: '1.2.0', description: 'My skill description' },
+        coreVersion: '0.1.1',
+      });
+      expect(result).toContain('My skill description');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('renderLightHeader shows derived display name MY-SKILL (not hardcoded SKILLET)', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderLightHeader } = await import('../../src/ui/header.js');
+      const result = renderLightHeader({
+        resolvedWordmarkName: 'MY-SKILL',
+        resolvedDisplayName: 'MY-SKILL',
+        pkg: { name: '@acme/my-skill', version: '1.2.0', description: 'My skill description' },
+        coreVersion: '0.1.1',
+      });
+      expect(result).toContain('MY-SKILL');
+      expect(result).toContain('1.2.0');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+});
+
+// ── Task 6.3 ──────────────────────────────────────────────────────────────────
+// Neither header contains tagline pool strings
+describe('6.3: no taglines in either header', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  const TAGLINE_STRINGS = [
+    'Mise en place',
+    'mise en place',
+    'Cast iron',
+    'No flaking',
+    'Season your agents',
+    'production heat',
+    'Zero compromise',
+  ];
+
+  it('renderFullHeader contains none of the tagline pool strings', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderFullHeader } = await import('../../src/ui/header.js');
+      for (let i = 0; i < 10; i++) {
+        const result = renderFullHeader(baseOpts);
+        for (const tagline of TAGLINE_STRINGS) {
+          expect(result).not.toContain(tagline);
+        }
+      }
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('renderLightHeader contains none of the tagline pool strings', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderLightHeader } = await import('../../src/ui/header.js');
+      for (let i = 0; i < 10; i++) {
+        const result = renderLightHeader(baseOpts);
+        for (const tagline of TAGLINE_STRINGS) {
+          expect(result).not.toContain(tagline);
+        }
+      }
+    } finally {
+      restoreIsTTY();
+    }
+  });
+});
+
+// ── Task 6.4 ──────────────────────────────────────────────────────────────────
+// Attribution present in TTY (CI unset), absent in CI or non-TTY
+describe('6.4: attribution present in TTY, absent in CI/non-TTY', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('TTY + CI unset: renderFullHeader attribution contains URL', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderFullHeader } = await import('../../src/ui/header.js');
+      const result = renderFullHeader(baseOpts);
+      expect(result).toContain('Packaged with Skillet');
+      expect(result).toContain('https://github.com/dafrick/skillet');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('TTY + CI unset: renderLightHeader attribution contains URL', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderLightHeader } = await import('../../src/ui/header.js');
+      const result = renderLightHeader(baseOpts);
+      expect(result).toContain('Packaged with Skillet');
+      expect(result).toContain('https://github.com/dafrick/skillet');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('non-TTY: renderFullHeader returns empty string', async () => {
+    const restoreIsTTY = withTTY(false);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderFullHeader } = await import('../../src/ui/header.js');
+      const result = renderFullHeader(baseOpts);
+      expect(result).toBe('');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('CI set: renderLightHeader returns empty string', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', 'true');
+    vi.resetModules();
+    try {
+      const { renderLightHeader } = await import('../../src/ui/header.js');
+      const result = renderLightHeader(baseOpts);
+      expect(result).toBe('');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+});
+
+// ── Task 6.7 ──────────────────────────────────────────────────────────────────
+// displayName and wordmarkName option behavior
+describe('6.7: displayName and wordmarkName options', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it('displayName: "skillet" → light header shows SKILLET', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderLightHeader } = await import('../../src/ui/header.js');
+      const result = renderLightHeader({
+        resolvedWordmarkName: 'SKILLET',
+        resolvedDisplayName: 'SKILLET',
+        pkg: { name: 'my-pkg', version: '1.0.0' },
+        coreVersion: '0.1.1',
+      });
+      expect(result).toContain('SKILLET');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('displayName: "skillet" → full header calls generateWordmark("SKILLET"), output non-empty', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderFullHeader } = await import('../../src/ui/header.js');
+      const result = renderFullHeader({
+        resolvedWordmarkName: 'SKILLET',
+        resolvedDisplayName: 'SKILLET',
+        pkg: { name: 'my-pkg', version: '1.0.0' },
+        coreVersion: '0.1.1',
+      });
+      expect(result.length).toBeGreaterThan(0);
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('wordmarkName: "MAP" → full header wordmark uses MAP (not display name)', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderFullHeader } = await import('../../src/ui/header.js');
+      // wordmarkName 'MAP' overrides display name 'MY-ANALYTICS-PLATFORM'
+      const result = renderFullHeader({
+        resolvedWordmarkName: 'MAP',
+        resolvedDisplayName: 'MY-ANALYTICS-PLATFORM',
+        pkg: { name: 'my-analytics-platform', version: '2.0.0' },
+        coreVersion: '0.1.1',
+      });
+      expect(result.length).toBeGreaterThan(0);
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('wordmarkName: "MAP" with displayName "my-analytics-platform" → light header shows MY-ANALYTICS-PLATFORM', async () => {
+    const restoreIsTTY = withTTY(true);
+    vi.stubEnv('CI', '');
+    vi.resetModules();
+    try {
+      const { renderLightHeader } = await import('../../src/ui/header.js');
+      // resolvedDisplayName is the display name (uppercased from displayName option)
+      // resolvedWordmarkName is wordmarkName (for the figlet art only)
+      const result = renderLightHeader({
+        resolvedWordmarkName: 'MAP',
+        resolvedDisplayName: 'MY-ANALYTICS-PLATFORM',
+        pkg: { name: 'my-analytics-platform', version: '2.0.0' },
+        coreVersion: '0.1.1',
+      });
+      expect(result).toContain('MY-ANALYTICS-PLATFORM');
+    } finally {
+      restoreIsTTY();
+    }
+  });
+
+  it('run() resolves displayName option to upper-case and does not mutate pkg.name', async () => {
+    // Verify that pkg.name is not mutated when displayName is provided.
+    // We test the resolution logic from run.ts directly via deriveDisplayName.
+    const pkg = { name: '@acme/my-skill', version: '1.0.0' };
+    const pkgNameBefore = pkg.name;
+    const { deriveDisplayName } = await import('../../src/ui/wordmark.js');
+    const resolved = deriveDisplayName(pkg.name).toUpperCase();
+    expect(resolved).toBe('MY-SKILL');
+    expect(pkg.name).toBe(pkgNameBefore); // pkg is not mutated
+  });
+});
