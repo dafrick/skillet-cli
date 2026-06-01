@@ -42,6 +42,8 @@ All of the v0.1.0 per-skill pipeline (hash, render, copy, manifest write, collis
 
 **Rationale:** The separation would not protect the invariant it was intended to protect. v0.1.0's invariant is "core operates within one package." But dependency resolution *by definition* reads another package's `node_modules` and metadata; there is no way to follow `travel-planner` → `superpowers-base` without crossing the package boundary. A wrapper package would move the boundary-crossing code one import-level away but not eliminate it or its effects. The invariant is already spent the instant the feature exists; wrapping buys nothing for it. Folding is also free in practice because the behavior is opt-in via the marker — a non-composing author sees no new code on their critical path.
 
+The resulting property is the one originally asked for: "If you have core, you have dependency management available if you want it." Composition is something a maintainer opts into by adding a dependency to `package.json`, not something that requires a different installer.
+
 ### Decision 2 — One marker, `skillet` key in `package.json`, serving both multi-skill discovery and dependency-walk discovery
 
 **Choice:** One shared marker, with `skills` accepting string or string[].
@@ -95,11 +97,13 @@ The package is the unit of dependency. Core stays blind to what happens inside o
 4. *Requestor always knowable without lookup.* Uninstall (like install) is invoked through a package's own CLI, so the invoking root's identity is in hand at the call site. No shared registry is needed to know who is removing what.
 5. *Cross-install scan is read-only.* The GC scan at uninstall walks a bounded set of known target directories to find manifests listing `P`. It reads and rewrites individual manifests in-place; it does not write to any shared location and builds no persistent global state.
 
-### Decision 6 — `requestedBy` stores package *name*, not `name@version`
+### Decision 6 — `requestedBy` stores package *name*, not `name@version`; refcount is per target and per scope for free
 
-**Choice:** Name only.
+**Choice:** Name only; no extra structure for multi-target refcounting.
 
 **Rationale:** The refcount answers "does any currently installed package still need this dependency?" Upgrading `travel-planner` from 1.0 to 1.1 must not fork the refcount into two phantom entries. The name is the stable identity of a consumer; the version is not. The `source` field (which records the content's provenance) retains the version; `requestedBy` (which records consumers) does not.
+
+Because `.skill-meta.json` manifests are already written per-install-per-target, the requestor set is **per target and per scope for free** — no extra structure is needed to refcount independently at `~/.claude/skills/...` versus `.agents/skills/...`. Each manifest tracks its own set of requestors for its own install location.
 
 ### Decision 7 — Write `requestedBy` from the first v0.2.0 release, including for direct installs
 
@@ -152,7 +156,7 @@ The following components are unchanged from v0.1.0:
 ## Migration Plan
 
 1. **Bump `@skillet-cli/core` to v0.2.0.** No breaking changes to the public API or `bin/cli.js` surface.
-2. **Existing skill-packages** work exactly as before. Authors who want to participate in composition add the `skillet` marker to their `package.json` and publish a new version. No `bin/cli.js` changes required.
+2. **Existing skill-packages** work exactly as before. Authors who want to participate in composition add the `skillet` marker to their `package.json` and list their base packages in `dependencies`. The author writes no resolution code, no walk, no refcount logic — the three-line `bin/cli.js` is unchanged.
 3. **Existing on-disk installs (v0.1.0 manifests):** Uninstall and reinstall all skill packages after upgrading. v0.2.0 has not launched publicly, so no formal migration of old manifests is required. Old manifests without `requestedBy` are skipped by the GC and persist harmlessly until overwritten.
 
 ## Open Questions
@@ -160,7 +164,7 @@ The following components are unchanged from v0.1.0:
 - **Shared-dependency version skew: what is the correct behavior?** If `travel-planner` requires `superpowers-base@^1` and `recipe-planner` requires `superpowers-base@^2`, npm may place two copies on disk; both walks reach skills with the same folder name, triggering the version-conflict collision path. v0.2.0 handles this mechanically (prompt/`--force` with an explicit message) but leaves the design question open: should composed skills be allowed to pin different major versions of a shared base, and if so, what is the intended user experience? Likely interacts with the `peerDependencies` question below.
 - **`peerDependencies` for the base layer.** Should the shared base declare itself as a peer dependency so the whole tree dedups onto one version? npm peer-dependency handling is complex. Deferred until version skew is observed in practice.
 - **`optionalDependencies` semantics.** v0.2.0 reads `dependencies` only. What should happen if a skill-package marks a dependency as optional? Deferred.
-- **Maintainer verify / conflict tooling.** The dangling-reference check and closure-collision check belong in authoring-time tooling (e.g. `skillet verify`), not in the runtime. What is the right CLI shape and output format? Deferred.
-- **Scaffolding (`create-skillet-skill`).** `npm create skillet-skill <name>` pattern for boilerplate generation. Authoring-time, separate package. Deferred.
+- **Maintainer verify / conflict tooling.** Also authoring-time, and — unlike the runtime — permitted to be skill-aware. This is the correct home for the dangling-reference check deliberately kept out of the runtime: a tool that reads skill bodies, notices a skill instructs the agent to use some other skill, and warns the maintainer if nothing in the declared closure provides it. Likewise a conflict check (two skills in a closure colliding on a name). The clean architectural principle: **agnostic runtime (core), opinionated dev tools (create + verify), and they never touch the installer's critical path.** What is the right CLI shape and output format? Deferred.
+- **Scaffolding (`create-skillet-skill`).** A package invoked as `npm create skillet-skill <name>` which by npm convention downloads and runs it once and discards it. It would emit the boilerplate an author should not hand-write: a `package.json` (core dependency, `bin`, `files`, `type: module`, and the `skillet` marker), the three-line `cli.js`, and a starter `skills/<name>/SKILL.md` with valid frontmatter. It belongs *out* of core for the mirror-image of the reasons dependency management belongs *in*: it runs once at authoring time before the package exists, it is never a dependency of anything (so it never ships to a user's machine), and the dependency arrow points only one way — the scaffolder must know about core; core must never know about the scaffolder. Not scheduled.
 - **System-wide listing.** A command that scans all target directories and lists every installed skill from any source. GC does not require it. Deferred.
 - **Partial install failure semantics.** If the GC walk completes step 1–3 for some installs and then errors, is there a rollback strategy? v0.1.0 does not address partial install failure; v0.2.0 inherits that omission. Flagged for future consideration.

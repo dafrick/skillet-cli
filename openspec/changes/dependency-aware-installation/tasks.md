@@ -20,6 +20,7 @@
 - [ ] 2.9 Write unit tests for the walk: no marked dependencies (only own skills installed), one marked dependency, transitive marked dependency (A→B→C), diamond graph (A→B→D and A→C→D, D installed once), `devDependency` is skipped, unresolvable dependency produces warning and continues
 - [ ] 2.10 Write integration test: install a composed package; verify both the invoked package's skills and the dependency's skills appear in the target directory
 - [ ] 2.11 Add a collision message for the version-skew case: when `source` package name matches but version differs, emit a message naming both versions and the roots that required them (before the existing prompt/`--force` step)
+- [ ] 2.12 Enhance the cross-package name collision message: when `source` indicates a genuinely different package owns the skill folder, name both packages from their `source` fields to explain why the slot is occupied (uses existing v0.1.0 collision machinery; only the message changes)
 
 ## 3. `requestedBy` Manifest Field
 
@@ -38,7 +39,7 @@
 - [ ] 4.2 Implement `gcUninstall(packageName: string, target: string, scope: string, force: boolean): void` — removes `packageName` from `requestedBy` on every skill in the scan result; garbage-collects skills whose set becomes empty; rewrites manifests for kept skills
 - [ ] 4.3 Apply the modified-content guardrail in the GC delete step: compare current content hash to `postInstallHash`; prompt in TTY mode, require `--force` in CI mode, record warning and skip if CI and no `--force`
 - [ ] 4.4 Wire `gcUninstall` into the existing uninstall command path (runs after the current own-skills removal logic, or replaces it using the unified `requestedBy` model)
-- [ ] 4.5 Write unit tests for `gcUninstall`: last requestor removed → skill deleted; one of many requestors removed → manifest rewritten, skill kept; skill not listing `P` → untouched; manifest without `requestedBy` (v0.1.0 era) → skipped, not removed; modified skill in CI without `--force` → warning, not deleted; modified skill with `--force` → deleted
+- [ ] 4.5 Write unit tests for `gcUninstall`: last requestor removed and skill is pristine → deleted without prompt; last requestor removed and skill is modified (TTY) → prompted; last requestor removed and skill is modified (CI, no `--force`) → warning, not deleted; last requestor removed and skill is modified (CI, `--force`) → deleted; one of many requestors removed → manifest rewritten, skill kept; skill not listing `P` → untouched; manifest without `requestedBy` (v0.1.0 era) → skipped, not removed
 - [ ] 4.6 Write integration test for the two-roots scenario: install `travel-planner` and `recipe-planner` (both depending on `superpowers-base`); uninstall `travel-planner`; assert `superpowers-base` skills remain; uninstall `recipe-planner`; assert `superpowers-base` skills are removed
 - [ ] 4.7 Write integration test for GC matching on recorded `requestedBy`: install `P` (which depends on `superpowers-base`); modify `P`'s `package.json` to drop the dependency without reinstalling; uninstall `P`; assert `superpowers-base` skills are still GC'd (because `requestedBy` was recorded at install time)
 

@@ -22,8 +22,8 @@ Core SHALL walk entries in the `dependencies` field of each package's `package.j
 - **WHEN** a marked package appears in `dependencies` of the invoked package
 - **THEN** core installs that package's skills as part of the closure
 
-### Requirement: Dependency location is resolved via Node's standard module resolution
-Core SHALL locate each dependency's on-disk directory using Node's standard module resolution (equivalent to `require.resolve('<pkg>/package.json')` or `import.meta.resolve`). This reflects npm's hoisting and deduplication and requires no npm CLI invocation.
+### Requirement: Dependency location is resolved via `createRequire` and walk-up
+Core SHALL locate each dependency's on-disk directory by: (1) creating a `require` function rooted at the walking package's directory using `createRequire` from `node:module`; (2) resolving the dependency's main entry point (which is always exported, unlike `./package.json` which may be restricted by an `exports` field); (3) walking parent directories from that entry point until a `package.json` is found. This reflects npm's hoisting and deduplication and requires no npm CLI invocation and no new library dependency.
 
 #### Scenario: Dependency is installed and resolvable
 - **WHEN** a dependency named in `dependencies` is present in `node_modules` (hoisted or nested)
@@ -138,6 +138,14 @@ When the per-skill write path finds an existing skill at the target where the `s
 - **WHEN** `brainstorming` is already installed from `npm:superpowers-base@1.0.0` (placed by `travel-planner`)
 - **AND** a new install attempts to write `brainstorming` from `npm:superpowers-base@2.0.0` (reached via `recipe-planner`)
 - **THEN** core shows a message indicating that `travel-planner` and `recipe-planner` require different versions of `superpowers-base`, and prompts or requires `--force` before overwriting
+
+### Requirement: Cross-package name collision shows a source-field-aware message
+When the per-skill write path finds an existing skill at the target where the `source` field names a *different* package entirely (a name collision between two unrelated packages' skills — e.g. two independent packages both ship a skill called `brainstorming`), core SHALL use the existing v0.1.0 collision/drift machinery (backup / overwrite / skip) and SHALL enhance the collision message to identify both packages by name from their `source` fields, explaining that an unrelated package already occupies this skill name. Dependency installation makes this case fire more often than in v0.1.0, since more packages contribute skills in one operation.
+
+#### Scenario: Two unrelated packages ship skills with the same folder name
+- **WHEN** `brainstorming` is already installed with `source: "npm:superpowers-base@1.0.0"`
+- **AND** a new install attempts to write a skill also named `brainstorming` but with `source: "npm:acme-skills@1.0.0"` (a genuinely different package)
+- **THEN** core uses the v0.1.0 collision machinery (prompt or `--force`) and shows a message that names both `superpowers-base` and `acme-skills`, making clear that a different package already owns this skill name
 
 ### Requirement: CI safety is preserved for the dependency walk and union step
 In non-TTY (CI) mode, the dependency walk and `requestedBy` union SHALL complete without prompting. The union step on an identical-content collision does not modify skill content and therefore SHALL NOT trigger a modified-content prompt. A content-differing collision in CI mode follows v0.1.0 CI safety rules unchanged.

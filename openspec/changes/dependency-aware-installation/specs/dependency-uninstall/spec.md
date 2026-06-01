@@ -32,6 +32,13 @@ After removing `P` from a skill's `requestedBy`, if the resulting set is empty, 
 - **AND** `travel-planner` is uninstalled
 - **THEN** `brainstorming`'s `requestedBy` becomes `["recipe-planner"]`, the manifest is rewritten, and the skill folder is kept
 
+### Requirement: Pristine installs with empty `requestedBy` are removed without prompting
+If a skill whose `requestedBy` becomes empty has content that matches its `postInstallHash` (pristine — not locally modified), core SHALL delete the skill folder and manifest without any prompt.
+
+#### Scenario: Pristine skill with empty `requestedBy` is removed silently
+- **WHEN** the last requestor is removed from a skill whose content has NOT drifted from its `postInstallHash`
+- **THEN** core deletes the skill folder and manifest without prompting, in both TTY and non-TTY modes
+
 ### Requirement: Modified installs require `--force` before deletion
 If a skill whose `requestedBy` becomes empty has locally modified content (drift, as defined by v0.1.0 §5.7), core SHALL NOT silently delete it. In interactive (TTY) mode, core SHALL prompt the user. In non-TTY (CI) mode, core SHALL require the `--force` flag; without it, the skill is not deleted and core records a warning.
 
