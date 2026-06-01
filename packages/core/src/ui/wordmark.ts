@@ -1,4 +1,13 @@
 import { Chalk } from 'chalk';
+import figlet from 'figlet';
+import { ember500 } from './colors.js';
+
+// Strips @scope/ prefix and uppercases the result
+export function deriveDisplayName(pkgName: string): string {
+  const slashIndex = pkgName.indexOf('/');
+  const base = slashIndex !== -1 ? pkgName.slice(slashIndex + 1) : pkgName;
+  return base.toUpperCase();
+}
 
 // Use level 3 (true color) when rendering — the TTY guard in renderWordmark()
 // ensures we only call this on actual terminals. Forcing level avoids chalk
@@ -38,6 +47,32 @@ function renderLine(line: string, rowColor: [number, number, number]): string {
   return [...line]
     .map((char) => (SHADOW_CHARS.has(char) ? shadowColor(char) : mainColor(char)))
     .join('');
+}
+
+// Generates an ASCII art wordmark for the given name using figlet ANSI Shadow.
+// Applies the ember gradient unless NO_COLOR is set.
+// Falls back to plain (bold) text if the figlet output exceeds terminal width.
+export function generateWordmark(name: string): string {
+  const noColor = process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== '';
+  const maxWidth = process.stdout.columns ?? 120;
+
+  // Generate figlet art
+  const art = figlet.textSync(name, { font: 'ANSI Shadow' });
+  const artLines = art.split('\n');
+
+  // Check if figlet output fits in terminal width
+  const maxLineWidth = Math.max(...artLines.map((l) => l.length));
+  if (maxLineWidth > maxWidth) {
+    // Overflow fallback — plain text
+    if (noColor) return name;
+    return ember500.bold(name);
+  }
+
+  // Apply gradient row-by-row (or return plain if NO_COLOR)
+  if (noColor) return art;
+
+  const lastColor = ROW_COLORS[ROW_COLORS.length - 1] as [number, number, number];
+  return artLines.map((line, i) => renderLine(line, ROW_COLORS[i] ?? lastColor)).join('\n');
 }
 
 // Returns the rendered wordmark string, or empty string when no TTY
