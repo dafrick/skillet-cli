@@ -34,7 +34,7 @@ Core SHALL locate each dependency's on-disk directory by: (1) creating a `requir
 - **THEN** core records a warning (identifying the missing package) and continues the walk; core does NOT invoke npm or any package manager to fix the gap
 
 ### Requirement: Non-marked dependencies are skipped; marked dependencies are recursed into
-For each dependency resolved on disk, core SHALL read its `package.json`. If the `skillet` key is absent, core SHALL ignore the package and SHALL NOT recurse into its own dependencies. If the `skillet` key is present, core SHALL collect its skill trees and recurse into its own `dependencies` field (applying the same rule).
+For each dependency resolved on disk, core SHALL read its `package.json`. If the `skillet` key is absent, core SHALL ignore the package and SHALL NOT recurse into its own dependencies. If the `skillet` key is present, core SHALL collect its skill trees and recurse into its own `dependencies` field (applying the same rule). Cycle detection is delegated to npm: core assumes the resolved `node_modules` graph is acyclic, as npm enforces this during installation.
 
 #### Scenario: Ordinary library in `dependencies`
 - **WHEN** a dependency has no `skillet` key in its `package.json`
