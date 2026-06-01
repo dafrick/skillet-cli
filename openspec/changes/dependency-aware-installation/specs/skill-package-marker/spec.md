@@ -34,6 +34,14 @@ The value of `skillet.skills` SHALL be either a string or an array of strings. E
 - **WHEN** `skillet.skills` is `["skills/core", "skills/empty"]` and `skills/empty` has no subdirectories with `SKILL.md`
 - **THEN** core installs skill trees from `skills/core` only; no error is raised for the empty directory
 
+#### Scenario: `skillet.skills` names a directory that does not exist on disk
+- **WHEN** `skillet.skills` is a string or array entry naming a path that does not exist on disk
+- **THEN** core records a warning (identifying the missing path), treats that entry as contributing zero skill trees, and does not throw an error
+
+#### Scenario: `skillet.skills` has an invalid type
+- **WHEN** `skillet.skills` is present but is not a string or string array (e.g., a number, `null`, or an object)
+- **THEN** core records a warning and falls back to the default `"skills"` directory as if the sub-key were absent
+
 ### Requirement: `skillet.skills` defaults to `"skills"` when omitted
 If the `skillet` key is present in `package.json` but the `skills` sub-key is absent, core SHALL behave as if `skillet.skills` were set to `"skills"`.
 
@@ -75,3 +83,14 @@ This is a normative authoring constraint, not a runtime enforcement. Core SHALL 
 #### Scenario: Dependency without marker is skipped, no error
 - **WHEN** the dependency walk reaches a package whose `package.json` has no `skillet` key
 - **THEN** core records no error and continues the walk, treating the package as an ordinary library
+
+### Requirement: Invoked package name is read from `package.json` and used as `requestorRoot`
+Core SHALL determine the `requestorRoot` for all skills installed in a given invocation by reading the `name` field from the invoked package's own `package.json`. This value is written into `requestedBy` for every skill in the closure — both the invoked package's own skills and every skill reached via the dependency walk. If the `name` field is absent, core SHALL record a warning and fall back to the directory basename of the invoked package root.
+
+#### Scenario: Invoked package has a `name` field
+- **WHEN** the invoked package's `package.json` contains a `name` field (e.g., `"travel-planner"`)
+- **THEN** that name is used as `requestorRoot` for all skills installed in this operation
+
+#### Scenario: Invoked package has no `name` field
+- **WHEN** the invoked package's `package.json` does not contain a `name` field
+- **THEN** core records a warning and falls back to using the directory basename of the invoked package root as `requestorRoot`

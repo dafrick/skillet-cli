@@ -2,10 +2,12 @@
 
 - [ ] 1.1 Define the `skillet` key schema in `packages/core` (TypeScript type for `package.json` `skillet` field: `{ skills?: string | string[] }`)
 - [ ] 1.2 Implement `readSkilletMarker(packageRoot: string): { skillsDirs: string[] } | null` — reads `package.json`, returns null if `skillet` key absent; normalizes the `skills` field: string → `[value]`, string[] → as-is, missing → `["skills"]`
-- [ ] 1.3 Implement `discoverSkillTrees(parentDir: string): string[]` — scans immediate subdirectories of a single parent directory for `SKILL.md`, returns paths of matching skill trees; call once per entry in `skillsDirs` and union results
+- [ ] 1.3 Implement `discoverSkillTrees(parentDir: string): string[]` — scans immediate subdirectories of a single parent directory for `SKILL.md`, returns paths of matching skill trees; if `parentDir` does not exist, records a warning and returns `[]`; call once per entry in `skillsDirs` and union results
 - [ ] 1.4 Update `run()` to use `readSkilletMarker` as a fallback when `skillDir` is not passed, and use `discoverSkillTrees` (for each `skillsDirs` entry) to enumerate skill trees for the invoked package
-- [ ] 1.5 Write unit tests for `readSkilletMarker`: present key with string, present key with string[], absent key, absent `skills` sub-key (defaults to `["skills"]`), extra unknown fields ignored
-- [ ] 1.6 Write unit tests for `discoverSkillTrees`: directory with multiple skill trees, subdirectory lacking `SKILL.md` is skipped, empty directory returns empty array, called once per entry in a multi-entry `skillsDirs`
+- [ ] 1.5 Write unit tests for `readSkilletMarker`: present key with string, present key with string[], absent key, absent `skills` sub-key (defaults to `["skills"]`), extra unknown fields ignored, `skills` with invalid type (number/null/object) → warning + default `["skills"]`
+- [ ] 1.6 Write unit tests for `discoverSkillTrees`: directory with multiple skill trees, subdirectory lacking `SKILL.md` is skipped, empty directory returns empty array, called once per entry in a multi-entry `skillsDirs`, non-existent directory returns empty array with warning
+- [ ] 1.7 Implement `readPackageName(packageRoot: string): string` — reads the `name` field from `package.json`; records a warning and falls back to `path.basename(packageRoot)` if the field is absent; this value is passed as `requestorRoot` to all install and walk operations in a given invocation
+- [ ] 1.8 Write unit tests for `readPackageName`: name field present, name field absent → warning + directory basename
 
 ## 2. Dependency Walk — Closure Resolution
 
