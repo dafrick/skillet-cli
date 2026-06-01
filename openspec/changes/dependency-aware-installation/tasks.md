@@ -52,12 +52,12 @@
 
 ## 5. `run()` API and Back-Compatibility
 
-- [ ] 5.1 Confirm `run({ skillDir })` still works for the invoked package: when `skillDir` is provided, use it and skip the marker fallback
-- [ ] 5.2 Confirm single-skill packages with no marked dependencies behave identically to the v0.1.0 path (regression test using an existing fixture, no behavior delta expected)
-- [ ] 5.3 Add integration test for a `skillDir`-only dependency (no marker): walk reaches it, it is skipped, no error, walk continues
+- [x] 5.1 Confirm `run({ skillDir })` still works for the invoked package: when `skillDir` is provided, use it and skip the marker fallback
+- [x] 5.2 Confirm single-skill packages with no marked dependencies behave identically to the v0.1.0 path (regression test using an existing fixture, no behavior delta expected)
+- [x] 5.3 Add integration test for a `skillDir`-only dependency (no marker): walk reaches it, it is skipped, no error, walk continues
 
 ## 6. Documentation and Author Guidance
 
-- [ ] 6.1 Update `packages/core` README with the `skillet` marker schema and a minimal example `package.json` for a composable skill-package
-- [ ] 6.2 Document the author constraint: packages intended to be depended upon must carry the `skillet` marker; `skillDir`-only packages are not discoverable as skill dependencies
-- [ ] 6.3 Add a changelog entry for v0.2.0 covering: `skillet` marker (string and array forms), dependency walk, `requestedBy` manifest field, GC uninstall, v0.1.0 manifest handling, and what is unchanged from v0.1.0
+- [x] 6.1 Update `packages/core` README with the `skillet` marker schema and a minimal example `package.json` for a composable skill-package
+- [x] 6.2 Document the author constraint: packages intended to be depended upon must carry the `skillet` marker; `skillDir`-only packages are not discoverable as skill dependencies
+- [x] 6.3 Add a changelog entry for v0.2.0 covering: `skillet` marker (string and array forms), dependency walk, `requestedBy` manifest field, GC uninstall, v0.1.0 manifest handling, and what is unchanged from v0.1.0
