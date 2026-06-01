@@ -9,6 +9,9 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { registry } from '../../src/adapters/index.js';
+import { performInstall } from '../../src/install.js';
+import { normalizeSkill } from '../../src/normalize.js';
 import { findPackageRoot, resolveSkillPackageClosure } from '../../src/walk.js';
 import { installFixturePackages } from './helpers/fixture-packages.js';
 import type { Sandbox } from './helpers/sandbox.js';
@@ -59,6 +62,32 @@ describe('findPackageRoot', () => {
     const result = await findPackageRoot('non-existent-package-xyz', sandbox.cwd);
 
     expect(result).toBeNull();
+  });
+
+  it('2.8: resolves a package when fromDir is set to a nested package directory', async () => {
+    // Install pkg-a which depends on pkg-b.
+    // Then call findPackageRoot('pkg-b', <pkg-a's installed dir>) to exercise
+    // the fromDir parameter — resolution must work when initiated from WITHIN
+    // a package's own installed location rather than from the project root.
+    await installFixturePackages(sandbox, [
+      { name: 'pkg-b', version: '1.0.0' },
+      { name: 'pkg-a', version: '1.0.0', deps: ['pkg-b'] },
+    ]);
+
+    const pkgAInstalledDir = path.join(sandbox.cwd, 'node_modules', 'pkg-a');
+
+    // Verify pkg-a is actually installed where we expect it
+    const pkgAManifest = JSON.parse(
+      await fs.readFile(path.join(pkgAInstalledDir, 'package.json'), 'utf8'),
+    );
+    expect(pkgAManifest.name).toBe('pkg-a');
+
+    // Resolve pkg-b starting from within pkg-a's installed directory
+    const result = await findPackageRoot('pkg-b', pkgAInstalledDir);
+
+    expect(result).not.toBeNull();
+    const pkgBManifest = JSON.parse(await fs.readFile(path.join(result!, 'package.json'), 'utf8'));
+    expect(pkgBManifest.name).toBe('pkg-b');
   });
 });
 
@@ -341,5 +370,83 @@ describe('resolveSkillPackageClosure', () => {
     expect(byPkg['depth-a'].depth).toBe(0);
     expect(byPkg['depth-b'].depth).toBe(1);
     expect(byPkg['depth-c'].depth).toBe(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// End-to-end: performInstall over a full composed closure (task 2.10)
+// ---------------------------------------------------------------------------
+
+describe('composed install: performInstall over full closure', () => {
+  let sandbox: Sandbox;
+
+  beforeEach(async () => {
+    sandbox = await createSandbox();
+  });
+
+  afterEach(async () => {
+    await sandbox[Symbol.asyncDispose]();
+  });
+
+  it('2.10: both invoked package and dependency skills appear in the target directory', async () => {
+    // Set up two marked packages: superpowers-base (dep) and travel-planner (invoked).
+    // Each has its own skills/ dir with a single skill.
+    await installFixturePackages(sandbox, [
+      {
+        name: 'superpowers-base',
+        version: '1.0.0',
+        skillet: { skills: 'skills' },
+      },
+      {
+        name: 'travel-planner',
+        version: '1.0.0',
+        skillet: { skills: 'skills' },
+        deps: ['superpowers-base'],
+      },
+    ]);
+
+    // Create skill trees inside the installed packages
+    const baseRoot = await findPackageRoot('superpowers-base', sandbox.cwd);
+    const plannerRoot = await findPackageRoot('travel-planner', sandbox.cwd);
+    expect(baseRoot).not.toBeNull();
+    expect(plannerRoot).not.toBeNull();
+
+    await createSkillTree(path.join(baseRoot!, 'skills'), 'base-skill');
+    await createSkillTree(path.join(plannerRoot!, 'skills'), 'planner-skill');
+
+    // Resolve the full closure starting from travel-planner
+    const ownSkillDirs = [path.join(plannerRoot!, 'skills', 'planner-skill')];
+    const closure = await resolveSkillPackageClosure(plannerRoot!, ownSkillDirs);
+
+    // There should be two entries: superpowers-base and travel-planner
+    expect(closure).toHaveLength(2);
+
+    // Run performInstall for every entry in the closure
+    const adapter = registry.get('claude')!;
+    const scope = 'user' as const;
+
+    for (const entry of closure) {
+      const skill = await normalizeSkill(entry.skillDir);
+      await performInstall(skill, adapter, scope, {
+        pkg: { name: entry.packageName, version: '1.0.0' },
+        requestorRoot: 'travel-planner',
+      });
+    }
+
+    // Assert both skills are present under ~/.claude/skills/
+    const baseSkillMd = path.join(sandbox.home, '.claude', 'skills', 'base-skill', 'SKILL.md');
+    const plannerSkillMd = path.join(
+      sandbox.home,
+      '.claude',
+      'skills',
+      'planner-skill',
+      'SKILL.md',
+    );
+
+    const baseStat = await fs.stat(baseSkillMd);
+    expect(baseStat.isFile()).toBe(true);
+
+    const plannerStat = await fs.stat(plannerSkillMd);
+    expect(plannerStat.isFile()).toBe(true);
   });
 });
