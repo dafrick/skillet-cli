@@ -127,15 +127,6 @@ async function runInstall(
 ): Promise<void> {
   const isTTY = process.stdout.isTTY ?? false;
 
-  process.stdout.write(
-    renderFullHeader({
-      resolvedWordmarkName,
-      resolvedDisplayName,
-      pkg,
-      coreVersion,
-    }),
-  );
-
   const home = process.env.HOME ?? process.env.USERPROFILE ?? os.homedir();
   const cwd = process.cwd();
 
@@ -235,14 +226,6 @@ async function runUpdate(
   resolvedWordmarkName: string,
 ): Promise<void> {
   const isTTY = process.stdout.isTTY ?? false;
-  process.stdout.write(
-    renderFullHeader({
-      resolvedWordmarkName,
-      resolvedDisplayName,
-      pkg,
-      coreVersion,
-    }),
-  );
 
   const records = await findExistingInstalls(skill);
 
@@ -339,14 +322,6 @@ async function runUninstall(
   resolvedWordmarkName: string,
 ): Promise<void> {
   const isTTY = process.stdout.isTTY ?? false;
-  process.stdout.write(
-    renderLightHeader({
-      resolvedWordmarkName,
-      resolvedDisplayName,
-      pkg,
-      coreVersion,
-    }),
-  );
 
   const records = await findExistingInstalls(skill);
   if (records.length === 0) {
@@ -394,15 +369,6 @@ async function runList(
   resolvedDisplayName: string,
   resolvedWordmarkName: string,
 ): Promise<void> {
-  process.stdout.write(
-    renderLightHeader({
-      resolvedWordmarkName,
-      resolvedDisplayName,
-      pkg,
-      coreVersion,
-    }),
-  );
-
   const records = await findExistingInstalls(skill);
   if (records.length === 0) {
     console.log('  No installs found.');
@@ -430,7 +396,7 @@ async function runList(
 
 function registerInstallCommand(
   program: Command,
-  skill: NormalizedSkill,
+  skills: NormalizedSkill[],
   pkg: { name: string; version: string },
   hooks: RunOptions['hooks'],
   verbMode: 'fun' | 'standard',
@@ -445,21 +411,16 @@ function registerInstallCommand(
     .option('--yes', 'skip interactive prompts')
     .option('--force', 'overwrite drifted installs')
     .action(async (opts: { target: string[]; scope?: string; yes?: boolean; force?: boolean }) => {
-      await runInstall(
-        skill,
-        pkg,
-        hooks,
-        opts,
-        verbMode,
-        resolvedDisplayName,
-        resolvedWordmarkName,
-      );
+      process.stdout.write(renderFullHeader({ resolvedWordmarkName, resolvedDisplayName, pkg, coreVersion }));
+      for (const skill of skills) {
+        await runInstall(skill, pkg, hooks, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
+      }
     });
 }
 
 function registerUpdateCommand(
   program: Command,
-  skill: NormalizedSkill,
+  skills: NormalizedSkill[],
   pkg: { name: string; version: string },
   verbMode: 'fun' | 'standard',
   resolvedDisplayName: string,
@@ -471,13 +432,16 @@ function registerUpdateCommand(
     .option('--force', 'overwrite without prompting on local modifications')
     .option('--add-new', 'also offer newly available targets')
     .action(async (opts: { force?: boolean; addNew?: boolean }) => {
-      await runUpdate(skill, pkg, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
+      process.stdout.write(renderFullHeader({ resolvedWordmarkName, resolvedDisplayName, pkg, coreVersion }));
+      for (const skill of skills) {
+        await runUpdate(skill, pkg, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
+      }
     });
 }
 
 function registerUninstallCommand(
   program: Command,
-  skill: NormalizedSkill,
+  skills: NormalizedSkill[],
   pkg: { name: string; version: string },
   verbMode: 'fun' | 'standard',
   resolvedDisplayName: string,
@@ -488,13 +452,16 @@ function registerUninstallCommand(
     .description('Remove installed skill files')
     .option('--yes', 'skip interactive prompts')
     .action(async (opts: { yes?: boolean }) => {
-      await runUninstall(skill, pkg, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
+      process.stdout.write(renderLightHeader({ resolvedWordmarkName, resolvedDisplayName, pkg, coreVersion }));
+      for (const skill of skills) {
+        await runUninstall(skill, pkg, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
+      }
     });
 }
 
 function registerListCommand(
   program: Command,
-  skill: NormalizedSkill,
+  skills: NormalizedSkill[],
   pkg: { name: string; version: string },
   resolvedDisplayName: string,
   resolvedWordmarkName: string,
@@ -503,7 +470,10 @@ function registerListCommand(
     .command('list')
     .description('List all installed skill targets')
     .action(async () => {
-      await runList(skill, pkg, resolvedDisplayName, resolvedWordmarkName);
+      process.stdout.write(renderLightHeader({ resolvedWordmarkName, resolvedDisplayName, pkg, coreVersion }));
+      for (const skill of skills) {
+        await runList(skill, pkg, resolvedDisplayName, resolvedWordmarkName);
+      }
     });
 }
 
@@ -516,10 +486,10 @@ export async function run(options: RunOptions): Promise<void> {
 
   if (!pkg) throw new Error('pkg is required — pass { pkg } to run()');
 
-  // Resolve the skill directory
-  let resolvedSkillDir: string;
+  // Resolve skill directories
+  let resolvedSkillDirs: string[];
   if (skillDir !== undefined) {
-    resolvedSkillDir = skillDir;
+    resolvedSkillDirs = [skillDir];
   } else {
     const marker = await readSkilletMarker(process.cwd());
     if (!marker) {
@@ -540,7 +510,7 @@ export async function run(options: RunOptions): Promise<void> {
           'Each skill tree must contain a SKILL.md file.',
       );
     }
-    resolvedSkillDir = discovered[0];
+    resolvedSkillDirs = discovered;
   }
 
   // Resolve display and wordmark names once
@@ -551,11 +521,16 @@ export async function run(options: RunOptions): Promise<void> {
     deriveDisplayName(pkg.name)
   ).toUpperCase();
 
-  // Normalize the skill
-  let skill = await normalizeSkill(resolvedSkillDir);
-  if (hooks?.transform) {
-    skill = await hooks.transform(skill);
-  }
+  // Normalize all skills, applying transform hook to each if provided
+  const skills = await Promise.all(
+    resolvedSkillDirs.map(async (dir) => {
+      let skill = await normalizeSkill(dir);
+      if (hooks?.transform) {
+        skill = await hooks.transform(skill);
+      }
+      return skill;
+    }),
+  );
 
   // Build commander program
   const program = new Command();
@@ -569,23 +544,23 @@ export async function run(options: RunOptions): Promise<void> {
   // Register subcommands
   registerInstallCommand(
     program,
-    skill,
+    skills,
     pkg,
     hooks,
     verbMode,
     resolvedDisplayName,
     resolvedWordmarkName,
   );
-  registerUpdateCommand(program, skill, pkg, verbMode, resolvedDisplayName, resolvedWordmarkName);
+  registerUpdateCommand(program, skills, pkg, verbMode, resolvedDisplayName, resolvedWordmarkName);
   registerUninstallCommand(
     program,
-    skill,
+    skills,
     pkg,
     verbMode,
     resolvedDisplayName,
     resolvedWordmarkName,
   );
-  registerListCommand(program, skill, pkg, resolvedDisplayName, resolvedWordmarkName);
+  registerListCommand(program, skills, pkg, resolvedDisplayName, resolvedWordmarkName);
 
   // Call extendProgram hook if provided
   if (hooks?.extendProgram) {
