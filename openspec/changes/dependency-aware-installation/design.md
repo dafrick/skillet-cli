@@ -117,13 +117,13 @@ Because `.skill-meta.json` manifests are already written per-install-per-target,
 
 **Rationale:** A package's `package.json` may change between install and uninstall (e.g. `travel-planner` drops a dependency, then is uninstalled). A recomputed closure would miss skills that `P` previously placed and leak them. Matching on the recorded `requestedBy` removes exactly what `P` actually caused to be placed, regardless of how `P`'s manifest has since drifted.
 
-### Decision 9a — Explicit version-conflict message when `source` package name matches but version differs
+### Decision 9 — Explicit version-conflict message when `source` package name matches but version differs
 
 **Choice:** Show an explicit version-conflict message, distinct from a generic collision.
 
 **Rationale:** When two roots require different major versions of the same base package and npm places two copies on disk, both walks reach skills with the same folder name but different `contentHash` values and different `source` version strings. The existing collision path (prompt/`--force`) is mechanically correct, but without context the user cannot tell why a skill is being flagged as conflicting — they may not realize they have two roots requiring different major versions of the same package. A specialized message ("Two installed packages require different major versions of `superpowers-base`; the skill `brainstorming` at this location was placed by `superpowers-base@1.0.0` and is now being updated from `superpowers-base@2.0.0`") gives actionable context. The underlying action (prompt/`--force`) is unchanged; only the message is specialized.
 
-### Decision 9b — `requestedBy` excluded from all content hashes
+### Decision 10 — `requestedBy` excluded from all content hashes
 
 **Choice:** Exclude from `contentHash` and `postInstallHash`.
 
@@ -131,7 +131,7 @@ Because `.skill-meta.json` manifests are already written per-install-per-target,
 
 ## Risks / Trade-offs
 
-**Shared-dependency version skew** → If two roots require incompatible major versions of the same base, npm may place two copies on disk. They collide on the same skill folder name. This falls through to the existing §5.4 collision path (different `contentHash`, same `source` package name, different version), handled as update/prompt with a specialized version-conflict message (Decision 9a). The correct long-term answer may involve `peerDependencies`; deferred to a future revision. Risk level: low today, revisit when the ecosystem has multiple competing base packages.
+**Shared-dependency version skew** → If two roots require incompatible major versions of the same base, npm may place two copies on disk. They collide on the same skill folder name. This falls through to the existing §5.4 collision path (different `contentHash`, same `source` package name, different version), handled as update/prompt with a specialized version-conflict message (Decision 9). The correct long-term answer may involve `peerDependencies`; deferred to a future revision. Risk level: low today, revisit when the ecosystem has multiple competing base packages.
 
 **v0.1.0 manifests without `requestedBy`** → Since v0.2.0 has not launched publicly, no formal migration is required. The migration plan (below) recommends a clean reinstall. Manifests that are not reinstalled are skipped by the GC — they persist until manually removed or overwritten by a v0.2.0 install of the same skill. This is acceptable; a stale skill file does no harm.
 

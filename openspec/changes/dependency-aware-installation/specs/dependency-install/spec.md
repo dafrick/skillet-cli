@@ -64,7 +64,7 @@ Before writing, core SHALL deduplicate the collected skill set. If the same (con
 - **THEN** D's skills are installed once, not twice
 
 ### Requirement: Skills are installed in topological (dependency-before-dependent) order
-Core SHALL order the install set so that a dependency's skills are written before the skills of any package that depends on it. If no dependency ordering is computable (e.g. no dependencies), installation order is implementation-defined.
+Core SHALL order the install set so that a dependency's skills are written before the skills of any package that depends on it. If no dependency ordering is computable (e.g. no dependencies), installation order is implementation-defined. This ensures base-layer skills occupy their target slots before composed-layer skills arrive, so any name collision between the two layers follows a predictable path: the base is the existing install, and the composed layer is the incoming write that triggers the collision/update logic.
 
 #### Scenario: Base layer installed before composed layer
 - **WHEN** `travel-planner` depends on `superpowers-base`

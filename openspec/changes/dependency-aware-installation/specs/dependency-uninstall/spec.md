@@ -7,6 +7,10 @@ When uninstalling package `P`, for each selected target and scope, core SHALL sc
 - **WHEN** `P` is uninstalled from a given target and scope
 - **THEN** core reads all `.skill-meta.json` manifests in that target's skill directory and collects those listing `P` in `requestedBy`
 
+#### Scenario: Uninstall with multiple selected targets runs GC independently per target
+- **WHEN** `P` is uninstalled and two targets (e.g., `~/.claude/skills` and `.agents/skills`) are both selected
+- **THEN** core runs the GC scan independently for each (target, scope) pair; `requestedBy` removal and garbage collection within each target do not affect the other target's manifests
+
 ### Requirement: Uninstall removes `P` from `requestedBy` on every skill `P` requested
 For each skill install whose `.skill-meta.json` lists `P` in `requestedBy`, core SHALL remove `P` from the set.
 
