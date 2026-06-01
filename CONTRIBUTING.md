@@ -57,6 +57,12 @@ Commit messages must follow [Conventional Commits](https://www.conventionalcommi
 feat(core): add install command
 ```
 
+## Keeping READMEs in Sync
+
+`packages/core/README.md` is the README that appears on the npm package page. It targets skill authors (library consumers) and covers the `run()` API and RunOptions. The root `README.md` covers the same API in its "Building with @skillet-cli/core" section.
+
+When the public API changes — a new `RunOptions` field, a changed `run()` signature, or an updated minimal example — **update both files** in the same PR.
+
 ## Release Process
 
 1. Ensure `main` is passing CI

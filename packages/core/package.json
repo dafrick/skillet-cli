@@ -2,6 +2,25 @@
   "name": "@skillet-cli/core",
   "version": "0.1.0",
   "description": "Core library for skillet skill installation",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dafrick/skillet.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/dafrick/skillet",
+  "bugs": {
+    "url": "https://github.com/dafrick/skillet/issues"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "skills",
+    "claude",
+    "copilot",
+    "cli",
+    "installer"
+  ],
   "type": "module",
   "private": false,
   "engines": {
