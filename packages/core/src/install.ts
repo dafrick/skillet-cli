@@ -114,6 +114,7 @@ export async function performInstall(
   }
 
   let skipCopy = false;
+  let driftedSameSource = false;
 
   if (existingManifest !== null) {
     if (existingManifest.contentHash === skill.contentHash) {
@@ -121,7 +122,9 @@ export async function performInstall(
       skipCopy = true;
     } else {
       // Different content — same-source update path (Task 3.4)
-      const sourcePkgName = existingManifest.source.replace(/^npm:/, '').replace(/@[^@]+$/, '');
+      const sourcePkgName = existingManifest.source
+        .replace(/^npm:/, '')
+        .replace(/@[^@/][^/]*$/, '');
       if (sourcePkgName === opts.pkg.name) {
         // Same source package, new content — overwrite if pristine, skip if drifted
         const driftStatus = await detectDrift(installPath);
@@ -130,6 +133,7 @@ export async function performInstall(
         } else {
           // drifted or unknown — skip silently (performInstall is prompt-free)
           skipCopy = true;
+          driftedSameSource = true;
         }
       }
       // Different source package — proceed with normal copyTree (existing collision behavior)
@@ -140,13 +144,36 @@ export async function performInstall(
     await copyTree(renderSrc, installPath);
   }
 
+  // For a drifted same-source update, only union requestorRoot into the existing manifest
+  // and rewrite it — all other fields (contentHash, postInstallHash, source, etc.) must
+  // come from the EXISTING manifest because the files on disk were not changed.
+  if (driftedSameSource && existingManifest !== null) {
+    const existingRequestedBy: string[] = Array.isArray(existingManifest.requestedBy)
+      ? existingManifest.requestedBy
+      : [];
+    const requestedBy = opts.requestorRoot
+      ? Array.from(new Set([...existingRequestedBy, opts.requestorRoot]))
+      : existingRequestedBy;
+    await writeManifest(installPath, { ...existingManifest, requestedBy });
+    if (opts.hooks?.afterInstall) {
+      await opts.hooks.afterInstall(skill, adapter, ctx);
+    }
+    return installPath;
+  }
+
   const postInstallHash = await hashSkill(installPath); // manifest excluded by default
   const renderHash = computeRenderHash(skill.contentHash, adapter.id, LIB_VERSION);
 
-  // Build requestedBy: union of existing + new requestorRoot
-  const existingRequestedBy: string[] = Array.isArray(existingManifest?.requestedBy)
-    ? (existingManifest?.requestedBy ?? [])
-    : [];
+  // Build requestedBy: union of existing + new requestorRoot.
+  // Only inherit existing requestedBy when the existing install is from the SAME source package.
+  // For a different-source collision, start fresh to avoid inheriting unrelated requestors.
+  const isSameSource =
+    existingManifest !== null &&
+    existingManifest.source.replace(/^npm:/, '').replace(/@[^@/][^/]*$/, '') === opts.pkg.name;
+  const existingRequestedBy: string[] =
+    isSameSource && existingManifest !== null && Array.isArray(existingManifest.requestedBy)
+      ? existingManifest.requestedBy
+      : [];
   const requestedBy = opts.requestorRoot
     ? Array.from(new Set([...existingRequestedBy, opts.requestorRoot]))
     : existingRequestedBy;

@@ -13,7 +13,7 @@ import { hashSkill } from '../../src/hash.js';
 import { isLegacyManifest, performInstall } from '../../src/install.js';
 import { normalizeSkill } from '../../src/normalize.js';
 import type { SkillManifest } from '../../src/types.js';
-import { createSandbox } from '../integration/helpers/sandbox.js';
+import { createSandbox } from './helpers/sandbox.js';
 
 /** Create a minimal skill dir in tmpDir/name with given SKILL.md content */
 async function createTempSkill(
@@ -326,6 +326,132 @@ describe('requestedBy field', () => {
       // Content hash should reflect v2
       expect(manifestV2.contentHash).toBe(skillV2.contentHash);
       expect(manifestV2.contentHash).not.toBe(skillV1.contentHash);
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+
+  it('Fix1: drifted same-source update preserves v1 files and v1 contentHash in manifest', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const adapter = registry.get(ADAPTER_ID)!;
+      const pkg = { name: 'my-skill-pkg', version: '1.0.0' };
+
+      // Install v1 of a skill with requestorRoot pkg-a
+      const skillV1Dir = await createTempSkill(
+        skillTmpDir,
+        'drift-skill-v1',
+        'Drift Skill',
+        'v1 content only',
+      );
+      const skillV1 = await normalizeSkill(skillV1Dir);
+      const installPath = await performInstall(skillV1, adapter, SCOPE, {
+        pkg,
+        requestorRoot: 'pkg-a',
+      });
+
+      // Read v1 manifest to capture the v1 contentHash
+      const rawV1 = await fs.readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+      const manifestV1 = JSON.parse(rawV1);
+      const v1ContentHash = manifestV1.contentHash;
+
+      // Simulate user drift: modify a file in the installed skill directory
+      const skillMdPath = path.join(installPath, 'SKILL.md');
+      const original = await fs.readFile(skillMdPath, 'utf8');
+      await fs.writeFile(skillMdPath, `${original}\n\n<!-- user modification -->`, 'utf8');
+
+      // Create v2 of the same skill (different content → different contentHash)
+      const skillV2Dir = await createTempSkill(
+        skillTmpDir,
+        'drift-skill-v2',
+        'Drift Skill',
+        'v2 updated content here',
+      );
+      // Same skill name so it resolves to the same install path
+      const skillV2 = {
+        ...(await normalizeSkill(skillV2Dir)),
+        name: skillV1.name,
+      };
+
+      // Confirm v2 has a different contentHash
+      expect(skillV2.contentHash).not.toBe(v1ContentHash);
+
+      // Perform same-source install with v2 content and a new requestorRoot
+      const installPath2 = await performInstall(skillV2, adapter, SCOPE, {
+        pkg: { name: 'my-skill-pkg', version: '2.0.0' },
+        requestorRoot: 'pkg-b',
+      });
+
+      expect(installPath2).toBe(installPath);
+
+      // 1. Installed files should still be v1 content (drift preserved)
+      const installedContent = await fs.readFile(skillMdPath, 'utf8');
+      expect(installedContent).toContain('user modification');
+      expect(installedContent).not.toContain('v2 updated content here');
+
+      // 2. Manifest contentHash must still be v1 hash (not the new v2 hash)
+      const rawAfter = await fs.readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+      const manifestAfter = JSON.parse(rawAfter);
+      expect(manifestAfter.contentHash).toBe(v1ContentHash);
+      expect(manifestAfter.contentHash).not.toBe(skillV2.contentHash);
+
+      // 3. requestedBy must contain both pkg-a and pkg-b
+      expect(manifestAfter.requestedBy).toContain('pkg-a');
+      expect(manifestAfter.requestedBy).toContain('pkg-b');
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+
+  it('Fix2: different-source collision does NOT inherit previous requestors in requestedBy', async () => {
+    const sandbox = await createSandbox();
+    try {
+      const adapter = registry.get(ADAPTER_ID)!;
+
+      // Install skill from package A with requestorRoot 'requestor-of-a'
+      const skillADir = await createTempSkill(
+        skillTmpDir,
+        'shared-skill-a',
+        'Shared Skill',
+        'content from package A',
+      );
+      const skillA = await normalizeSkill(skillADir);
+      const installPath = await performInstall(skillA, adapter, SCOPE, {
+        pkg: { name: 'package-a', version: '1.0.0' },
+        requestorRoot: 'requestor-of-a',
+      });
+
+      // Verify package A's requestedBy
+      const rawA = await fs.readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+      const manifestA = JSON.parse(rawA);
+      expect(manifestA.requestedBy).toContain('requestor-of-a');
+
+      // Install a different-source skill (package B) to the same slot
+      // Use same name so it resolves to the same install path
+      const skillBDir = await createTempSkill(
+        skillTmpDir,
+        'shared-skill-b',
+        'Shared Skill',
+        'content from package B',
+      );
+      const skillB = {
+        ...(await normalizeSkill(skillBDir)),
+        name: skillA.name, // same name → same install path
+      };
+
+      const installPath2 = await performInstall(skillB, adapter, SCOPE, {
+        pkg: { name: 'package-b', version: '1.0.0' },
+        requestorRoot: 'requestor-of-b',
+      });
+
+      expect(installPath2).toBe(installPath);
+
+      // After package-b overwrites the slot, the manifest must NOT contain 'requestor-of-a'
+      const rawB = await fs.readFile(path.join(installPath, '.skill-manifest.json'), 'utf8');
+      const manifestB = JSON.parse(rawB);
+
+      expect(manifestB.requestedBy).not.toContain('requestor-of-a');
+      expect(manifestB.requestedBy).toContain('requestor-of-b');
     } finally {
       await sandbox[Symbol.asyncDispose]();
     }
