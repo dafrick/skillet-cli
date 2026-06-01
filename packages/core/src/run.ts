@@ -7,6 +7,7 @@ import updateNotifier from 'update-notifier';
 import { registry } from './adapters/index.js';
 import type { Adapter } from './adapters/types.js';
 import { detectDrift, isStale } from './drift.js';
+import { gcUninstall } from './gc.js';
 import type { InstallOptions, InstallRecord } from './install.js';
 import { findExistingInstalls, performInstall } from './install.js';
 import { discoverSkillTrees, readPackageName, readSkilletMarker } from './marker.js';
@@ -17,7 +18,7 @@ import { renderFullHeader, renderLightHeader } from './ui/header.js';
 import { createSpinner } from './ui/spinner.js';
 import { pickStandardVerb, pickVerb } from './ui/verbs.js';
 import { deriveDisplayName } from './ui/wordmark.js';
-import { applyUpdate, removeInstall } from './update.js';
+import { applyUpdate } from './update.js';
 import { resolveSkillPackageClosure } from './walk.js';
 
 const _require = createRequire(import.meta.url);
@@ -322,10 +323,19 @@ async function runUpdate(
   }
 }
 
+async function runGcDeletePrompt(skillDir: string): Promise<boolean> {
+  const { confirm } = await import('@inquirer/prompts');
+  return confirm({
+    message: `Skill at ${skillDir} has local modifications. Delete anyway?`,
+    default: false,
+  });
+}
+
 async function runUninstall(
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
-  opts: { yes?: boolean },
+  requestorRoot: string,
+  opts: { yes?: boolean; force?: boolean },
   verbMode: 'fun' | 'standard',
   resolvedDisplayName: string,
   resolvedWordmarkName: string,
@@ -359,14 +369,23 @@ async function runUninstall(
     verbMode === 'standard' ? pickStandardVerb('uninstall', isTTY) : pickVerb('uninstall', isTTY);
 
   for (const record of toRemove) {
+    const targetDir = path.dirname(record.installPath);
+
     if (isTTY) {
       const spinner = createSpinner(true);
       spinner.start(`${verb.active} ${record.adapter.id}…`);
-      await removeInstall(record.installPath);
+      await gcUninstall(requestorRoot, targetDir, {
+        force: opts.force,
+        isTTY,
+        onPrompt: runGcDeletePrompt,
+      });
       spinner.succeed(`${verb.done.padEnd(10)} ${record.adapter.id}`);
     } else {
       console.log(`[${pkg.name}] ${verb.active} ${record.adapter.id}…`);
-      await removeInstall(record.installPath);
+      await gcUninstall(requestorRoot, targetDir, {
+        force: opts.force,
+        isTTY,
+      });
       console.log(`[${pkg.name}] ✔ ${verb.done} — ${record.adapter.id}`);
     }
   }
@@ -374,9 +393,7 @@ async function runUninstall(
 
 async function runList(
   skill: NormalizedSkill,
-  pkg: { name: string; version: string },
-  resolvedDisplayName: string,
-  resolvedWordmarkName: string,
+  _pkg: { name: string; version: string },
 ): Promise<void> {
   const records = await findExistingInstalls(skill);
   if (records.length === 0) {
@@ -456,15 +473,17 @@ function registerUninstallCommand(
   verbMode: 'fun' | 'standard',
   resolvedDisplayName: string,
   resolvedWordmarkName: string,
+  requestorRoot: string,
 ): void {
   program
     .command('uninstall')
     .description('Remove installed skill files')
     .option('--yes', 'skip interactive prompts')
-    .action(async (opts: { yes?: boolean }) => {
+    .option('--force', 'delete modified skills without prompting')
+    .action(async (opts: { yes?: boolean; force?: boolean }) => {
       process.stdout.write(renderLightHeader({ resolvedWordmarkName, resolvedDisplayName, pkg, coreVersion }));
       for (const skill of skills) {
-        await runUninstall(skill, pkg, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
+        await runUninstall(skill, pkg, requestorRoot, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
       }
     });
 }
@@ -482,7 +501,7 @@ function registerListCommand(
     .action(async () => {
       process.stdout.write(renderLightHeader({ resolvedWordmarkName, resolvedDisplayName, pkg, coreVersion }));
       for (const skill of skills) {
-        await runList(skill, pkg, resolvedDisplayName, resolvedWordmarkName);
+        await runList(skill, pkg);
       }
     });
 }
@@ -579,6 +598,7 @@ export async function run(options: RunOptions): Promise<void> {
     verbMode,
     resolvedDisplayName,
     resolvedWordmarkName,
+    requestorRoot,
   );
   registerListCommand(program, skills, pkg, resolvedDisplayName, resolvedWordmarkName);
 

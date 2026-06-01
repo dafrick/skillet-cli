@@ -37,6 +37,7 @@
     {
       "includes": [
         "**/test/**",
+        "**/src/gc.ts",
         "**/src/run.ts",
         "**/src/marker.ts",
         "**/src/install.ts",
