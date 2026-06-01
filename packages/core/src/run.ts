@@ -13,7 +13,7 @@ import type { Scope } from './types.js';
 import { basil, chili, dim, ember400 } from './ui/colors.js';
 import { renderFullHeader, renderLightHeader } from './ui/header.js';
 import { createSpinner } from './ui/spinner.js';
-import { pickVerb } from './ui/verbs.js';
+import { pickStandardVerb, pickVerb } from './ui/verbs.js';
 import { deriveDisplayName } from './ui/wordmark.js';
 import { applyUpdate, removeInstall } from './update.js';
 
@@ -25,6 +25,9 @@ export interface RunOptions {
   skillDir: string;
   pkg: { name: string; version: string };
   argv?: string[];
+  verbMode?: 'fun' | 'standard';
+  displayName?: string;
+  wordmarkName?: string;
   hooks?: {
     transform?: (skill: NormalizedSkill) => Promise<NormalizedSkill> | NormalizedSkill;
     beforeInstall?: (
@@ -117,13 +120,15 @@ async function runInstall(
   pkg: { name: string; version: string },
   hooks: RunOptions['hooks'],
   opts: { target: string[]; scope?: string; yes?: boolean; force?: boolean },
+  verbMode: 'fun' | 'standard',
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): Promise<void> {
   const isTTY = process.stdout.isTTY ?? false;
 
-  const resolvedDisplayName = deriveDisplayName(pkg.name);
   process.stdout.write(
     renderFullHeader({
-      resolvedWordmarkName: resolvedDisplayName,
+      resolvedWordmarkName,
       resolvedDisplayName,
       pkg,
       coreVersion,
@@ -161,7 +166,8 @@ async function runInstall(
     pkg,
     hooks: { beforeInstall: hooks?.beforeInstall, afterInstall: hooks?.afterInstall },
   };
-  const verb = pickVerb('install', isTTY);
+  const verb =
+    verbMode === 'standard' ? pickStandardVerb('install', isTTY) : pickVerb('install', isTTY);
   const start = Date.now();
 
   for (const { adapter, scope } of selectedTargets) {
@@ -223,13 +229,15 @@ async function runUpdate(
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
   opts: { force?: boolean; addNew?: boolean },
+  verbMode: 'fun' | 'standard',
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): Promise<void> {
   const isTTY = process.stdout.isTTY ?? false;
-  const resolvedDisplayNameUpdate = deriveDisplayName(pkg.name);
   process.stdout.write(
     renderFullHeader({
-      resolvedWordmarkName: resolvedDisplayNameUpdate,
-      resolvedDisplayName: resolvedDisplayNameUpdate,
+      resolvedWordmarkName,
+      resolvedDisplayName,
       pkg,
       coreVersion,
     }),
@@ -242,7 +250,8 @@ async function runUpdate(
     return;
   }
 
-  const _verb = pickVerb('update', isTTY);
+  const _verb =
+    verbMode === 'standard' ? pickStandardVerb('update', isTTY) : pickVerb('update', isTTY);
   let updatedCount = 0;
 
   for (const record of records) {
@@ -285,7 +294,8 @@ async function runUpdate(
     );
 
     if (newTargets.length > 0) {
-      const installVerb = pickVerb('install', isTTY);
+      const installVerb =
+        verbMode === 'standard' ? pickStandardVerb('install', isTTY) : pickVerb('install', isTTY);
       for (const { adapter, scope } of newTargets) {
         if (isTTY) {
           const spinner = createSpinner(true);
@@ -321,13 +331,15 @@ async function runUninstall(
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
   opts: { yes?: boolean },
+  verbMode: 'fun' | 'standard',
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): Promise<void> {
   const isTTY = process.stdout.isTTY ?? false;
-  const resolvedDisplayNameUninstall = deriveDisplayName(pkg.name);
   process.stdout.write(
     renderLightHeader({
-      resolvedWordmarkName: resolvedDisplayNameUninstall,
-      resolvedDisplayName: resolvedDisplayNameUninstall,
+      resolvedWordmarkName,
+      resolvedDisplayName,
       pkg,
       coreVersion,
     }),
@@ -356,7 +368,8 @@ async function runUninstall(
     return;
   }
 
-  const verb = pickVerb('uninstall', isTTY);
+  const verb =
+    verbMode === 'standard' ? pickStandardVerb('uninstall', isTTY) : pickVerb('uninstall', isTTY);
 
   for (const record of toRemove) {
     if (isTTY) {
@@ -375,12 +388,13 @@ async function runUninstall(
 async function runList(
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): Promise<void> {
-  const resolvedDisplayNameList = deriveDisplayName(pkg.name);
   process.stdout.write(
     renderLightHeader({
-      resolvedWordmarkName: resolvedDisplayNameList,
-      resolvedDisplayName: resolvedDisplayNameList,
+      resolvedWordmarkName,
+      resolvedDisplayName,
       pkg,
       coreVersion,
     }),
@@ -416,6 +430,9 @@ function registerInstallCommand(
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
   hooks: RunOptions['hooks'],
+  verbMode: 'fun' | 'standard',
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): void {
   program
     .command('install')
@@ -425,7 +442,15 @@ function registerInstallCommand(
     .option('--yes', 'skip interactive prompts')
     .option('--force', 'overwrite drifted installs')
     .action(async (opts: { target: string[]; scope?: string; yes?: boolean; force?: boolean }) => {
-      await runInstall(skill, pkg, hooks, opts);
+      await runInstall(
+        skill,
+        pkg,
+        hooks,
+        opts,
+        verbMode,
+        resolvedDisplayName,
+        resolvedWordmarkName,
+      );
     });
 }
 
@@ -433,6 +458,9 @@ function registerUpdateCommand(
   program: Command,
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
+  verbMode: 'fun' | 'standard',
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): void {
   program
     .command('update')
@@ -440,7 +468,7 @@ function registerUpdateCommand(
     .option('--force', 'overwrite without prompting on local modifications')
     .option('--add-new', 'also offer newly available targets')
     .action(async (opts: { force?: boolean; addNew?: boolean }) => {
-      await runUpdate(skill, pkg, opts);
+      await runUpdate(skill, pkg, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
     });
 }
 
@@ -448,13 +476,16 @@ function registerUninstallCommand(
   program: Command,
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
+  verbMode: 'fun' | 'standard',
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): void {
   program
     .command('uninstall')
     .description('Remove installed skill files')
     .option('--yes', 'skip interactive prompts')
     .action(async (opts: { yes?: boolean }) => {
-      await runUninstall(skill, pkg, opts);
+      await runUninstall(skill, pkg, opts, verbMode, resolvedDisplayName, resolvedWordmarkName);
     });
 }
 
@@ -462,12 +493,14 @@ function registerListCommand(
   program: Command,
   skill: NormalizedSkill,
   pkg: { name: string; version: string },
+  resolvedDisplayName: string,
+  resolvedWordmarkName: string,
 ): void {
   program
     .command('list')
     .description('List all installed skill targets')
     .action(async () => {
-      await runList(skill, pkg);
+      await runList(skill, pkg, resolvedDisplayName, resolvedWordmarkName);
     });
 }
 
@@ -476,9 +509,17 @@ function collect(value: string, previous: string[]): string[] {
 }
 
 export async function run(options: RunOptions): Promise<void> {
-  const { skillDir, pkg, argv = process.argv, hooks } = options;
+  const { skillDir, pkg, argv = process.argv, hooks, verbMode = 'fun' } = options;
 
   if (!pkg) throw new Error('pkg is required — pass { pkg } to run()');
+
+  // Resolve display and wordmark names once
+  const resolvedDisplayName = (options.displayName ?? deriveDisplayName(pkg.name)).toUpperCase();
+  const resolvedWordmarkName = (
+    options.wordmarkName ??
+    options.displayName ??
+    deriveDisplayName(pkg.name)
+  ).toUpperCase();
 
   // Normalize the skill
   let skill = await normalizeSkill(skillDir);
@@ -496,10 +537,25 @@ export async function run(options: RunOptions): Promise<void> {
   });
 
   // Register subcommands
-  registerInstallCommand(program, skill, pkg, hooks);
-  registerUpdateCommand(program, skill, pkg);
-  registerUninstallCommand(program, skill, pkg);
-  registerListCommand(program, skill, pkg);
+  registerInstallCommand(
+    program,
+    skill,
+    pkg,
+    hooks,
+    verbMode,
+    resolvedDisplayName,
+    resolvedWordmarkName,
+  );
+  registerUpdateCommand(program, skill, pkg, verbMode, resolvedDisplayName, resolvedWordmarkName);
+  registerUninstallCommand(
+    program,
+    skill,
+    pkg,
+    verbMode,
+    resolvedDisplayName,
+    resolvedWordmarkName,
+  );
+  registerListCommand(program, skill, pkg, resolvedDisplayName, resolvedWordmarkName);
 
   // Call extendProgram hook if provided
   if (hooks?.extendProgram) {

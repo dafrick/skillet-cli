@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickVerb } from '../../src/ui/verbs.js';
+import { pickStandardVerb, pickVerb } from '../../src/ui/verbs.js';
 
 const INSTALL_ACTIVE_POOL = [
   'Searing into',
@@ -35,5 +35,34 @@ describe('ui/verbs', () => {
       expect(pair.active).toBe(pair.active.toLowerCase());
       expect(pair.done).toBe(pair.done.toLowerCase());
     }
+  });
+});
+
+describe('pickStandardVerb', () => {
+  it('install (TTY): returns Installing into / Installed', () => {
+    const pair = pickStandardVerb('install', true);
+    expect(pair).toEqual({ active: 'Installing into', done: 'Installed' });
+  });
+
+  it('update (TTY): returns Updating / Updated', () => {
+    const pair = pickStandardVerb('update', true);
+    expect(pair).toEqual({ active: 'Updating', done: 'Updated' });
+  });
+
+  it('uninstall (TTY): returns Removing / Removed', () => {
+    const pair = pickStandardVerb('uninstall', true);
+    expect(pair).toEqual({ active: 'Removing', done: 'Removed' });
+  });
+
+  it('detect (TTY): returns Detecting targets… / Found {n} target(s)', () => {
+    const pair = pickStandardVerb('detect', true);
+    expect(pair).toEqual({ active: 'Detecting targets…', done: 'Found {n} target(s)' });
+  });
+
+  it('non-TTY: active form is lowercased', () => {
+    expect(pickStandardVerb('install', false).active).toBe('installing into');
+    expect(pickStandardVerb('update', false).active).toBe('updating');
+    expect(pickStandardVerb('uninstall', false).active).toBe('removing');
+    expect(pickStandardVerb('detect', false).active).toBe('detecting targets…');
   });
 });

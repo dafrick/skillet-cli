@@ -46,3 +46,20 @@ export function pickVerb(
   if (isTTY) return pair;
   return { active: pair.active.toLowerCase(), done: pair.done.toLowerCase() };
 }
+
+const STANDARD_VERBS: Record<Command, VerbPair> = {
+  install: { active: 'Installing into', done: 'Installed' },
+  update: { active: 'Updating', done: 'Updated' },
+  uninstall: { active: 'Removing', done: 'Removed' },
+  detect: { active: 'Detecting targets…', done: 'Found {n} target(s)' },
+};
+
+// pickStandardVerb returns deterministic sentence-case in TTY, lowercase active in CI
+export function pickStandardVerb(
+  command: Command,
+  isTTY: boolean = process.stdout.isTTY ?? false,
+): VerbPair {
+  const pair = STANDARD_VERBS[command];
+  if (isTTY) return pair;
+  return { active: pair.active.toLowerCase(), done: pair.done };
+}
