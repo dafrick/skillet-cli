@@ -6,10 +6,10 @@
 
 ## 2. Core Package Scaffold
 
-- [x] 2.1 Create `packages/core/package.json` with `"name": "@skillet/core"`, `"type": "module"`, `"engines": { "node": ">=24" }`, `"private": false`, and placeholder `version`, `description`, `exports`, `files`, `scripts` fields
+- [x] 2.1 Create `packages/core/package.json` with `"name": "@skillet-cli/core"`, `"type": "module"`, `"engines": { "node": ">=24" }`, `"private": false`, and placeholder `version`, `description`, `exports`, `files`, `scripts` fields
 - [x] 2.2 Create `packages/core/tsconfig.json` targeting ESNext modules, `NodeNext` module resolution, `outDir: "dist"`, `declaration: true`, `strict: true`, `lib: ["ESNext"]` — the `ESNext` lib is required for `Symbol.asyncDispose` and the `await using` pattern used in `createSandbox()`
 - [x] 2.3 Create `packages/core/src/` directory with a placeholder `index.ts` that exports nothing (allows build to succeed from the start)
-- [x] 2.4 Run `pnpm -F @skillet/core build` and confirm `dist/` is produced with no errors
+- [x] 2.4 Run `pnpm -F @skillet-cli/core build` and confirm `dist/` is produced with no errors
 
 ## 3. Test Fixture
 
@@ -37,7 +37,7 @@
 
 - [x] 6.1 Add `vitest` and `@vitest/coverage-v8` as dev dependencies in `packages/core/` (`pnpm add -D vitest @vitest/coverage-v8`)
 - [x] 6.2 Create `packages/core/vitest.config.ts` with: `pool: 'forks'`, include patterns for `test/unit/**/*.test.ts` and `test/integration/**/*.test.ts` only (NOT e2e), coverage config excluding `test/`, `fixtures/`, `dist/`, and config files
-- [x] 6.3 Create a separate `packages/core/vitest.config.e2e.ts` using `defineConfig` (NOT `mergeConfig` — `mergeConfig` concatenates `include` arrays, causing unit/integration tests to run under the E2E suite); include only `test/e2e/**/*.test.ts`, set `pool: 'forks'`, and reference a `globalSetup` file that runs `pnpm -F @skillet/core build` before tests; the `test:e2e` script SHALL use `vitest run --config vitest.config.e2e.ts` so the pre-build only runs when E2E is explicitly invoked
+- [x] 6.3 Create a separate `packages/core/vitest.config.e2e.ts` using `defineConfig` (NOT `mergeConfig` — `mergeConfig` concatenates `include` arrays, causing unit/integration tests to run under the E2E suite); include only `test/e2e/**/*.test.ts`, set `pool: 'forks'`, and reference a `globalSetup` file that runs `pnpm -F @skillet-cli/core build` before tests; the `test:e2e` script SHALL use `vitest run --config vitest.config.e2e.ts` so the pre-build only runs when E2E is explicitly invoked
 - [x] 6.4 Add scripts to `packages/core/package.json`: `test`, `test:unit`, `test:integration`, `test:e2e`, `test:coverage`
 - [x] 6.5 Create `test/unit/.gitkeep`, `test/integration/helpers/.gitkeep`, `test/e2e/helpers/.gitkeep` to scaffold the directory tree
 - [x] 6.6 Write a smoke test at `test/unit/smoke.test.ts` that asserts `1 + 1 === 2` and run `pnpm test:unit` to confirm the test harness works end-to-end
@@ -83,8 +83,8 @@
 
 ## 12. GitHub Actions Release
 
-- [x] 12.1 Create `.github/workflows/release.yml` triggered on tags `v*`; job steps: `pnpm install`, `pnpm -F @skillet/core build`, `pnpm -F @skillet/core prepublishOnly`, `npm publish --access public`; read `NPM_TOKEN` from repository secrets
-- [x] 12.2 Add `prepublishOnly` script to `packages/core/package.json` that runs `pnpm build` only — tests are enforced by the CI gate (`workflow_run: conclusion == 'success'`) before the release workflow fires, so running them again in `prepublishOnly` would be redundant; the publish step uses `pnpm -F @skillet/core publish --access public --no-git-checks`
+- [x] 12.1 Create `.github/workflows/release.yml` triggered on tags `v*`; job steps: `pnpm install`, `pnpm -F @skillet-cli/core build`, `pnpm -F @skillet-cli/core prepublishOnly`, `npm publish --access public`; read `NPM_TOKEN` from repository secrets
+- [x] 12.2 Add `prepublishOnly` script to `packages/core/package.json` that runs `pnpm build` only — tests are enforced by the CI gate (`workflow_run: conclusion == 'success'`) before the release workflow fires, so running them again in `prepublishOnly` would be redundant; the publish step uses `pnpm -F @skillet-cli/core publish --access public --no-git-checks`
 - [x] 12.3 Add `files` field to `packages/core/package.json` excluding `src/`, `test/`, `fixtures/`, and dev config files from the published artifact
 - [x] 12.4 Verify `release.yml` YAML is valid by running `actionlint` or equivalent locally
 

@@ -5,7 +5,7 @@ pre-commit:
       stage_fixed: true
       glob: "*.{js,ts,jsx,tsx,json,mjs}"
     - name: typecheck
-      run: pnpm -F @skillet/core typecheck
+      run: pnpm -F @skillet-cli/core typecheck
 
 commit-msg:
   jobs:

@@ -1,5 +1,5 @@
 {
-  "name": "@skillet/core",
+  "name": "@skillet-cli/core",
   "version": "0.1.0",
   "description": "Core library for skillet skill installation",
   "type": "module",

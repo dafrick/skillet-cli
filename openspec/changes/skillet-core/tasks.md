@@ -1,6 +1,6 @@
 ## 1. Project Setup
 
-- [x] 1.1 Initialise `packages/core/` directory with `package.json` (`@skillet/core`, `"type": "module"`, Node 24 engine, exports map)
+- [x] 1.1 Initialise `packages/core/` directory with `package.json` (`@skillet-cli/core`, `"type": "module"`, Node 24 engine, exports map)
 - [x] 1.2 Add runtime dependencies: `commander`, `gray-matter`, `update-notifier`, `@inquirer/prompts`, `@inquirer/core` (custom prompt primitives), `chalk` (v5, ESM-native; required for all Ember/Iris/Basil/Chili color output)
 - [x] 1.3 Add dev dependencies: `typescript`, `vitest`, `@types/node`
 - [x] 1.4 Configure `tsconfig.json` for ESM output targeting Node 24

@@ -30,7 +30,7 @@ The library SHALL write a `.skill-manifest.json` file into the installed skill d
 The library SHALL compute `renderHash` as `sha256(<contentHash>|<adapterId>|<libVersion>)` and store it in the manifest.
 
 #### Scenario: renderHash changes when libVersion changes
-- **WHEN** the same skill is installed with two different versions of `@skillet/core`
+- **WHEN** the same skill is installed with two different versions of `@skillet-cli/core`
 - **THEN** the resulting `renderHash` values differ
 
 ### Requirement: source field records npm package provenance

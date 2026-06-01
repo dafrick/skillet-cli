@@ -172,7 +172,7 @@ The following scenarios SHALL be covered:
 ---
 
 ### Requirement: Test scripts are available at package and workspace level
-`packages/core/package.json` SHALL define: `test` (all layers), `test:unit`, `test:integration`, `test:e2e`, `test:coverage`. The root `package.json` SHALL proxy these via `pnpm -F @skillet/core <script>` or equivalent workspace filter.
+`packages/core/package.json` SHALL define: `test` (all layers), `test:unit`, `test:integration`, `test:e2e`, `test:coverage`. The root `package.json` SHALL proxy these via `pnpm -F @skillet-cli/core <script>` or equivalent workspace filter.
 
 #### Scenario: Unit tests run without build step
 - **WHEN** `pnpm test:unit` is run from `packages/core/`

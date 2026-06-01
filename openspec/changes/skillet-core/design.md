@@ -1,6 +1,6 @@
 ## Context
 
-`@skillet/core` is a brand-new npm library — there is no existing codebase to migrate. The design must produce a stable, extensible foundation that skill authors depend on via `npm install`. Breaking changes to the author-facing API will require a major semver bump, so the architecture prioritises getting the abstractions right on the first release rather than iterating privately.
+`@skillet-cli/core` is a brand-new npm library — there is no existing codebase to migrate. The design must produce a stable, extensible foundation that skill authors depend on via `npm install`. Breaking changes to the author-facing API will require a major semver bump, so the architecture prioritises getting the abstractions right on the first release rather than iterating privately.
 
 The target runtime is Node 24+ with ES modules. The package is published under the `@skillet` npm scope. Three v0.1 targets are supported: Claude Code, GitHub Copilot (user + project scope), and a generic `.agents/skills/` convention. All three are "Bucket A" (passthrough) — they consume the `SKILL.md` directory unchanged.
 
@@ -28,9 +28,9 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 ### D1: Library is a dependency, not a framework
 
-**Decision**: `@skillet/core` is a library that authors `import` and compose into their own npm package. It does not own `process.exit`, does not impose a project structure, and does not run anything unless `run()` is explicitly called. Authors remain in control of their package; the library provides machinery, not scaffolding.
+**Decision**: `@skillet-cli/core` is a library that authors `import` and compose into their own npm package. It does not own `process.exit`, does not impose a project structure, and does not run anything unless `run()` is explicitly called. Authors remain in control of their package; the library provides machinery, not scaffolding.
 
-**Rationale**: A framework approach (where the library takes over the bin script entirely, or auto-discovers skill directories) would couple every skill package tightly to `@skillet/core`'s conventions and make it harder to add custom commands, custom output, or non-standard publishing flows. The 3-line `bin/cli.js` contract keeps authors in control while eliminating the boilerplate they'd otherwise write.
+**Rationale**: A framework approach (where the library takes over the bin script entirely, or auto-discovers skill directories) would couple every skill package tightly to `@skillet-cli/core`'s conventions and make it harder to add custom commands, custom output, or non-standard publishing flows. The 3-line `bin/cli.js` contract keeps authors in control while eliminating the boilerplate they'd otherwise write.
 
 **Alternative considered**: Convention-based auto-discovery (e.g. look for `skill/` in the package root automatically). Rejected because it removes author control over which directory is the skill and makes the library's behaviour implicit.
 
@@ -92,7 +92,7 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 **Decision**: `renderHash = sha256(contentHash + "|" + adapterId + "|" + libVersion)` is stored in the manifest even though all v0.1 adapters are passthrough.
 
-**Rationale**: When `@skillet/core` improves a Bucket B adapter's rendering logic, the `renderHash` change flags "this install is stale even though the source hasn't changed". Adding this field later requires a manifest migration; storing it now costs nothing.
+**Rationale**: When `@skillet-cli/core` improves a Bucket B adapter's rendering logic, the `renderHash` change flags "this install is stale even though the source hasn't changed". Adding this field later requires a manifest migration; storing it now costs nothing.
 
 ---
 
@@ -148,7 +148,7 @@ Explicitly anticipated future targets that the architecture must not foreclose: 
 
 ### D13: Versioning policy and hash algorithm stability commitment
 
-**Decision**: The following semver policy governs `@skillet/core` releases:
+**Decision**: The following semver policy governs `@skillet-cli/core` releases:
 
 - **Patch** (`0.1.0` → `0.1.1`): bug fixes, no behaviour change.
 - **Minor** (`0.1.0` → `0.2.0`): new adapters, new optional hooks, new flags with safe defaults. Existing authors get these by bumping the dependency caret — no code changes required on their side.

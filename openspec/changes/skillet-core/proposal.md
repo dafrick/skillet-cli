@@ -1,10 +1,10 @@
 ## Why
 
-Skill authors publishing `SKILL.md`-based agent skills have no standard way to distribute and install them across the growing landscape of AI coding agents (Claude Code, Copilot, Cursor, Codex CLI, Gemini CLI). Each author currently writes bespoke shell scripts or manual instructions, duplicating effort and leaving users with fragile, agent-specific install flows. `@skillet/core` solves this once, for everyone.
+Skill authors publishing `SKILL.md`-based agent skills have no standard way to distribute and install them across the growing landscape of AI coding agents (Claude Code, Copilot, Cursor, Codex CLI, Gemini CLI). Each author currently writes bespoke shell scripts or manual instructions, duplicating effort and leaving users with fragile, agent-specific install flows. `@skillet-cli/core` solves this once, for everyone.
 
 ## What Changes
 
-- **New npm package `@skillet/core`** — a shared runtime library that skill authors add as a dependency to their npm skill package
+- **New npm package `@skillet-cli/core`** — a shared runtime library that skill authors add as a dependency to their npm skill package
 - **`run()` entrypoint** — authors invoke a single function from their `bin/cli.js`; the library constructs and runs the full CLI
 - **Agent detection** — detects Claude Code, GitHub Copilot, and the generic `.agents/` convention at both user and project scope
 - **Full-tree installation** — copies the entire skill directory (not just `SKILL.md`) to the correct target location
@@ -33,9 +33,9 @@ Skill authors publishing `SKILL.md`-based agent skills have no standard way to d
 
 ## Impact
 
-- **New package**: `@skillet/core` published to npm under the `@skillet` scope
+- **New package**: `@skillet-cli/core` published to npm under the `@skillet` scope
 - **Node 24+**, ES modules (`"type": "module"`)
 - **Runtime dependencies**: `commander` (CLI framework), `gray-matter` (SKILL.md frontmatter + body parsing), `update-notifier` (version nudge), `@inquirer/prompts` (interactive multi-select)
 - **No existing code modified** — this is a net-new library with no prior codebase to migrate
-- **Author impact**: skill package authors add `@skillet/core` as a dependency and replace any bespoke install scripts with a 3-line `bin/cli.js`
+- **Author impact**: skill package authors add `@skillet-cli/core` as a dependency and replace any bespoke install scripts with a 3-line `bin/cli.js`
 - **User impact**: users run `npx <skill> install` instead of following manual README steps; updates use `npm update && <skill> update`

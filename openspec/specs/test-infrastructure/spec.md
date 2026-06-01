@@ -92,7 +92,7 @@ The following scenarios SHALL be covered for each valid combination:
 | `renderHash` | string | `sha256:` prefix + 64-char lowercase hex digest | `computeRenderHash()` output |
 | `adapterId` | string | one of `'claude'`, `'copilot'`, `'agents'` | adapter `id` field |
 | `scope` | string | one of `'user'`, `'project'` | install call argument |
-| `libVersion` | string | semver string of `@skillet/core` used for the install | package version at install time |
+| `libVersion` | string | semver string of `@skillet-cli/core` used for the install | package version at install time |
 | `installedAt` | string | ISO 8601 UTC (`new Date().toISOString()` format, e.g. `"2026-05-31T12:00:00.000Z"`) | set at install time |
 | `postInstallHash` | string | `sha256:` prefix + 64-char lowercase hex digest | re-hash of installed folder |
 
@@ -168,7 +168,7 @@ The following scenarios SHALL be covered:
 ---
 
 ### Requirement: Test scripts are available at package and workspace level
-`packages/core/package.json` SHALL define: `test` (all layers), `test:unit`, `test:integration`, `test:e2e`, `test:coverage`. The root `package.json` SHALL proxy these via `pnpm -F @skillet/core <script>` or equivalent workspace filter.
+`packages/core/package.json` SHALL define: `test` (all layers), `test:unit`, `test:integration`, `test:e2e`, `test:coverage`. The root `package.json` SHALL proxy these via `pnpm -F @skillet-cli/core <script>` or equivalent workspace filter.
 
 #### Scenario: Unit tests run without build step
 - **WHEN** `pnpm test:unit` is run from `packages/core/`

@@ -38,7 +38,7 @@ All scripts can be run from the repo root or from `packages/core/`.
 ### Running a single test file
 
 ```sh
-pnpm --filter @skillet/core exec vitest run test/unit/hash.test.ts
+pnpm --filter @skillet-cli/core exec vitest run test/unit/hash.test.ts
 ```
 
 Adapt the path to any test file under `packages/core/test/`.
