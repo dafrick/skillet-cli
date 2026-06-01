@@ -40,12 +40,18 @@ export async function scanInstalledSkills(targetDir: string): Promise<InstalledS
     const skillDir = path.join(targetDir, entry.name);
     const manifestPath = path.join(skillDir, '.skill-manifest.json');
 
+    let raw: string;
     try {
-      const raw = await readFile(manifestPath, 'utf8');
+      raw = await readFile(manifestPath, 'utf8');
+    } catch {
+      // No manifest file — directory is not a skillet skill, skip silently
+      continue;
+    }
+    try {
       const manifest = JSON.parse(raw) as SkillManifest;
       results.push({ skillDir, manifestPath, manifest });
     } catch {
-      // No manifest or malformed JSON — skip
+      console.warn(`[skillet] Skipping ${manifestPath}: could not parse manifest`);
     }
   }
 
@@ -71,7 +77,7 @@ export interface GcUninstallOptions {
  *   d. If requestedBy is now empty:
  *      - Detect drift
  *      - If pristine → delete without prompt
- *      - If modified:
+ *      - If modified or unknown (corrupted/missing manifest):
  *        - TTY: call onPrompt → if true, delete; if false, rewrite manifest
  *        - CI + --force: delete without prompt
  *        - CI + no --force: warn and rewrite manifest (keep skill)
@@ -83,6 +89,7 @@ export async function gcUninstall(
   opts: GcUninstallOptions,
 ): Promise<void> {
   const installed = await scanInstalledSkills(targetDir);
+  const errors: Error[] = [];
 
   for (const { skillDir, manifestPath, manifest } of installed) {
     // a. Skip legacy manifests
@@ -105,15 +112,24 @@ export async function gcUninstall(
 
       if (isPristine) {
         // Pristine → delete without prompt
-        await rm(skillDir, { recursive: true, force: true });
+        try {
+          await rm(skillDir, { recursive: true, force: true });
+        } catch (err) {
+          errors.push(err instanceof Error ? err : new Error(String(err)));
+        }
         continue;
       }
 
-      // Modified (or unknown) — apply guardrail
+      // 'modified' | 'unknown' both treated conservatively (protect user data)
+      // Apply guardrail
       if (opts.isTTY && opts.onPrompt) {
         const shouldDelete = await opts.onPrompt(skillDir);
         if (shouldDelete) {
-          await rm(skillDir, { recursive: true, force: true });
+          try {
+            await rm(skillDir, { recursive: true, force: true });
+          } catch (err) {
+            errors.push(err instanceof Error ? err : new Error(String(err)));
+          }
           continue;
         }
         // User chose to keep — rewrite manifest with empty requestedBy
@@ -123,13 +139,17 @@ export async function gcUninstall(
 
       if (opts.force) {
         // CI + --force → delete without prompt
-        await rm(skillDir, { recursive: true, force: true });
+        try {
+          await rm(skillDir, { recursive: true, force: true });
+        } catch (err) {
+          errors.push(err instanceof Error ? err : new Error(String(err)));
+        }
         continue;
       }
 
       // CI + no --force → warn and rewrite manifest (keep skill)
       console.warn(
-        `[skillet] Skill "${manifest.name}" in ${skillDir} has local modifications and was not GC'd. ` +
+        `[skillet] Skill "${manifest.name}" in ${skillDir} has local modifications or is in an unknown state and was not GC'd. ` +
           `Use --force to delete it anyway.`,
       );
       await rewriteManifest(manifestPath, manifest, updatedRequestedBy);
@@ -138,6 +158,10 @@ export async function gcUninstall(
 
     // e. requestedBy still non-empty → rewrite manifest with updated list
     await rewriteManifest(manifestPath, manifest, updatedRequestedBy);
+  }
+
+  if (errors.length > 0) {
+    throw new AggregateError(errors, `GC failed to delete ${errors.length} skill(s)`);
   }
 }
 

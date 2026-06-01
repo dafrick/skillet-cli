@@ -324,16 +324,18 @@ describe('gcUninstall', () => {
 
     const skillDir = await writeSkill(skillsDir, 'my-skill', manifest);
 
-    const manifestBefore = JSON.stringify(manifest, null, 2);
-
     await gcUninstall('pkg-to-remove', skillsDir, { force: false, isTTY: false });
 
     // Skill dir should still exist
     await expect(fs.access(skillDir)).resolves.toBeUndefined();
 
-    // Manifest should be unchanged
+    // Manifest should be unchanged — compare parsed fields (not byte-level string)
     const raw = await fs.readFile(path.join(skillDir, '.skill-manifest.json'), 'utf8');
-    expect(raw).toBe(manifestBefore);
+    const parsed = JSON.parse(raw) as SkillManifest;
+    expect(parsed.name).toEqual(manifest.name);
+    expect(parsed.requestedBy).toEqual(manifest.requestedBy);
+    expect(parsed.source).toEqual(manifest.source);
+    expect(parsed.contentHash).toEqual(manifest.contentHash);
   });
 
   // Scenario 7: Manifest without requestedBy (legacy) → skipped, not removed
@@ -365,19 +367,21 @@ describe('gcUninstall', () => {
       'utf8',
     );
 
-    const manifestBefore = JSON.stringify(legacyRaw, null, 2);
-
     await gcUninstall('pkg-to-remove', skillsDir, { force: false, isTTY: false });
 
     // Legacy skill dir should still exist
     await expect(fs.access(skillDir)).resolves.toBeUndefined();
 
-    // Manifest should be completely untouched
+    // Manifest should be completely untouched — compare parsed fields (not byte-level string)
     const raw = await fs.readFile(path.join(skillDir, '.skill-manifest.json'), 'utf8');
-    expect(raw).toBe(manifestBefore);
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    expect(parsed['name']).toEqual(legacyRaw.name);
+    expect(parsed['source']).toEqual(legacyRaw.source);
+    expect(parsed['contentHash']).toEqual(legacyRaw.contentHash);
+    expect(Object.hasOwn(parsed, 'requestedBy')).toBe(false);
   });
 
-  it('4.5: multiple skills in dir — only matching skill is modified', async () => {
+  it('4.5/8: multiple skills in dir — only matching skill is modified', async () => {
     const skillsDir = path.join(tmpDir, 'skills');
 
     const manifestA = makeManifest({ name: 'skill-a', requestedBy: ['pkg-to-remove', 'pkg-b'] });

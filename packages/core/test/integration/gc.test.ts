@@ -40,8 +40,6 @@ async function installClosure(
   plannerOwnSkillDirs: string[],
   adapter: ReturnType<typeof registry.get>,
   scope: 'user' | 'project',
-  _home: string,
-  _cwd: string,
 ): Promise<void> {
   const closure = await resolveSkillPackageClosure(plannerRoot, plannerOwnSkillDirs);
   for (const entry of closure) {
@@ -110,8 +108,6 @@ describe('gcUninstall — two-roots scenario (Task 4.6)', () => {
       [path.join(travelRoot!, 'skills', 'travel-skill')],
       adapter,
       scope,
-      sandbox.home,
-      sandbox.cwd,
     );
 
     // Install recipe-planner's closure (includes superpowers-base — union requestedBy)
@@ -121,8 +117,6 @@ describe('gcUninstall — two-roots scenario (Task 4.6)', () => {
       [path.join(recipeRoot!, 'skills', 'recipe-skill')],
       adapter,
       scope,
-      sandbox.home,
-      sandbox.cwd,
     );
 
     // Verify base-skill's requestedBy contains both
@@ -201,8 +195,6 @@ describe('gcUninstall — GC on recorded requestedBy (Task 4.7)', () => {
       [path.join(pkgPRoot!, 'skills', 'p-skill')],
       adapter,
       scope,
-      sandbox.home,
-      sandbox.cwd,
     );
 
     // Verify installation: both skills present, base-skill has pkg-p in requestedBy

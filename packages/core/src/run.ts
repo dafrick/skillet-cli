@@ -369,6 +369,7 @@ async function runUninstall(
     verbMode === 'standard' ? pickStandardVerb('uninstall', isTTY) : pickVerb('uninstall', isTTY);
 
   for (const record of toRemove) {
+    // Assumes installPath is always a skill subdirectory (not a file), matching the adapter convention.
     const targetDir = path.dirname(record.installPath);
 
     if (isTTY) {
