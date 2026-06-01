@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
 import os from 'node:os';
+import path from 'node:path';
 import { checkbox, select } from '@inquirer/prompts';
 import { Command } from 'commander';
 import updateNotifier from 'update-notifier';
@@ -498,11 +499,11 @@ export async function run(options: RunOptions): Promise<void> {
           'Either pass skillDir to run() or add a "skillet" key to your package.json.',
       );
     }
-    let discovered: string[] = [];
+    const discovered: string[] = [];
     for (const dir of marker.skillsDirs) {
-      const abs = dir.startsWith('/') ? dir : `${process.cwd()}/${dir}`;
+      const abs = path.resolve(dir);
       const trees = await discoverSkillTrees(abs);
-      discovered = [...discovered, ...trees];
+      discovered.push(...trees);
     }
     if (discovered.length === 0) {
       throw new Error(

@@ -7,7 +7,8 @@ export interface FixturePackage {
   name: string;
   version: string;
   skillet?: object;
-  deps?: Record<string, string>; // name → version constraint (used for nested-dep tests)
+  /** names of sibling fixture packages this fixture depends on */
+  deps?: string[];
 }
 
 /**
@@ -35,10 +36,8 @@ export async function installFixturePackages(
   // Those are NOT top-level — they are resolved transitively via npm.
   const transitiveNames = new Set<string>();
   for (const fixture of fixtures) {
-    if (fixture.deps) {
-      for (const depName of Object.keys(fixture.deps)) {
-        transitiveNames.add(depName);
-      }
+    for (const depName of fixture.deps ?? []) {
+      transitiveNames.add(depName);
     }
   }
 
@@ -49,11 +48,9 @@ export async function installFixturePackages(
 
     // Build the `dependencies` map for this fixture, pointing to sibling dirs
     const fixtureDeps: Record<string, string> = {};
-    if (fixture.deps) {
-      for (const [depName, _versionConstraint] of Object.entries(fixture.deps)) {
-        // Point to the sibling fixture directory via file: protocol
-        fixtureDeps[depName] = `file:../${depName}`;
-      }
+    for (const depName of fixture.deps ?? []) {
+      // Point to the sibling fixture directory via file: protocol
+      fixtureDeps[depName] = `file:../${depName}`;
     }
 
     const pkgJson: Record<string, unknown> = {

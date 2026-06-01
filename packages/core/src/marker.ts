@@ -1,6 +1,7 @@
 import type { Dirent } from 'node:fs';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
+import type { SkilletPackageJson } from './types.js';
 
 export interface SkilletMarker {
   skillsDirs: string[];
@@ -27,9 +28,9 @@ export async function readSkilletMarker(packageRoot: string): Promise<SkilletMar
 
   const skillet = pkg.skillet;
   // skillet key must be an object (but can be empty)
-  const skilletObj: Record<string, unknown> =
+  const skilletObj: SkilletPackageJson =
     skillet !== null && typeof skillet === 'object' && !Array.isArray(skillet)
-      ? (skillet as Record<string, unknown>)
+      ? (skillet as SkilletPackageJson)
       : {};
 
   const skills = skilletObj.skills;
@@ -79,7 +80,8 @@ export async function discoverSkillTrees(parentDir: string): Promise<string[]> {
     const subdir = path.join(parentDir, entry.name);
     const skillMdPath = path.join(subdir, 'SKILL.md');
     try {
-      await fs.access(skillMdPath);
+      const stat = await fs.stat(skillMdPath);
+      if (!stat.isFile()) continue;
       skillDirs.push(subdir);
     } catch {
       // No SKILL.md — not a skill tree
@@ -99,7 +101,7 @@ export async function readPackageName(packageRoot: string): Promise<string> {
   const pkg = JSON.parse(raw) as Record<string, unknown>;
 
   if (typeof pkg.name === 'string' && pkg.name.length > 0) {
-    return pkg.name as string;
+    return pkg.name;
   }
 
   const basename = path.basename(packageRoot);

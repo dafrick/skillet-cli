@@ -7,8 +7,7 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { normalizeSkill } from '../../src/normalize.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { run } from '../../src/run.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -99,7 +98,7 @@ describe('run() — multi-skill discovery', () => {
     expect(transformedNames).toHaveLength(2);
   });
 
-  it('install command runs against all discovered skills when multi-skill package.json is used', async () => {
+  it('registers all discovered skill trees with commander (verified via --help shortcircuit)', async () => {
     // Set up: two skill trees under skills/
     const skillsDir = path.join(tmpDir, 'skills');
     await writeSkill(skillsDir, 'brainstorming');
@@ -110,10 +109,6 @@ describe('run() — multi-skill discovery', () => {
       JSON.stringify({ name: 'test-pkg', version: '1.0.0', skillet: { skills: 'skills' } }),
       'utf8',
     );
-
-    // Spy on normalizeSkill to count how many skills get normalized
-    const { normalizeSkill: originalNormalize } = await import('../../src/normalize.js');
-    const normalizedDirs: string[] = [];
 
     // We verify via the transform hook (normalized → transform called for each)
     const transformCallCount: string[] = [];
