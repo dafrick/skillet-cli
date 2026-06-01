@@ -1,7 +1,9 @@
 ## ADDED Requirements
 
-### Requirement: Wordmark is generated from pkg.name using figlet ANSI Shadow
-The library SHALL generate the full-header wordmark dynamically by passing the display name derived from `pkg.name` to `figlet` with the "ANSI Shadow" font, then applying the five-stop Ember heated-iron gradient row-by-row (same gradient as the current SKILLET wordmark). The generated art SHALL replace any hardcoded wordmark string.
+### Requirement: Wordmark is generated from the resolved wordmark name using figlet ANSI Shadow
+The library SHALL generate the full-header wordmark dynamically by passing the resolved wordmark name to `figlet` with the "ANSI Shadow" font, then applying the five-stop Ember heated-iron gradient row-by-row (same gradient as the current SKILLET wordmark). The generated art SHALL replace any hardcoded wordmark string.
+
+The resolved wordmark name follows this priority order: `wordmarkName` (uppercased) when provided to `run()`, otherwise `displayName` (uppercased) when provided, otherwise the name derived from `pkg.name` (scope stripped, uppercased).
 
 #### Scenario: Plain package name renders as uppercased wordmark
 - **WHEN** `pkg.name` is `"my-skill"` and the full header is rendered

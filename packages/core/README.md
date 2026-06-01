@@ -1,16 +1,36 @@
 # @skillet-cli/core
 
-`@skillet-cli/core` is a library that gives any npm package a complete, polished CLI for installing, updating, and managing an AI agent skill — so skill authors ship one dependency and get a production-ready installer for free.
+Use `@skillet-cli/core` to ship your skill as an npm package with a complete CLI — so your users can install, update, and uninstall it in any agent environment with a single command, whether that's Claude Code, GitHub Copilot, or any other agent.
 
-## Installation
+## For skill authors
+
+### 1. Create your package
+
+Initialize a directory with a `package.json`. Publishing via GitHub Package Registry requires no separate npm account:
+
+```json
+{
+  "name": "@your-github-username/my-skill",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": { "my-skill": "bin/cli.js" },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" }
+}
+```
+
+### 2. Add your skill files
+
+Place your prompt files in a `skill/` directory.
+
+### 3. Wire up the CLI
+
+Install the library:
 
 ```sh
 npm install @skillet-cli/core
 ```
 
-## Usage
-
-Create an entry-point file (e.g. `bin/cli.js`) — this is the entire CLI:
+Create `bin/cli.js` — this is your entire CLI:
 
 ```js
 #!/usr/bin/env node
@@ -21,7 +41,27 @@ const pkg = createRequire(import.meta.url)('../package.json');
 await run({ skillDir: new URL('../skill', import.meta.url).pathname, pkg });
 ```
 
-Add a `"bin"` field to your `package.json` pointing to that file, publish to npm, and you're done. Skillet handles detection, prompts, install, update, drift, and uninstall for every supported agent environment (Claude Code, GitHub Copilot, and generic agents).
+### 4. Publish
+
+Authenticate with GitHub Package Registry once, then publish:
+
+```sh
+npm login --registry=https://npm.pkg.github.com
+npm publish
+```
+
+Your users configure the registry for your scope once, then install via npx:
+
+```sh
+npm config set @your-github-username:registry https://npm.pkg.github.com
+npx @your-github-username/my-skill install
+```
+
+Skillet detects their agent environment and puts the skill in the right place.
+
+### Publishing to npm instead
+
+If you'd rather publish to the public npm registry, remove `publishConfig` from your `package.json` and run `npm publish`. Your users can then run `npx @your-github-username/my-skill install` with no registry setup.
 
 ## RunOptions
 

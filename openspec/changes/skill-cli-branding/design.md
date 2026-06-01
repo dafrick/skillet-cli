@@ -54,11 +54,21 @@ Scope of override: `displayName` replaces the derived name in both the full head
 
 **Alternative: modify pkg before passing to run()** — e.g., `run({ pkg: { ...pkg, name: 'skillet' }, ... })`. Works but mutates a shared object and silently changes behavior in non-header contexts. Rejected in favor of an explicit, purpose-scoped option.
 
-**Alternative: a separate `wordmarkName` option** — more specific but adds cognitive overhead without additional power. Rejected; `displayName` covers all header contexts where the name appears.
+**Alternative: a separate `wordmarkName` option** — more specific but adds cognitive overhead without additional power when `displayName` alone is the question. Rejected as a *replacement* for `displayName`; `displayName` covers both header contexts.
+
+### Decision: `wordmarkName` option for independent wordmark control
+
+When `displayName` is set to a long name (e.g. `my-analytics-platform`), the skill author may want to keep that full name in the light header — where it reads as plain text — while using a shorter abbreviation in the figlet wordmark to avoid overflow. `wordmarkName` provides that control without forcing the author to shorten `displayName` globally.
+
+Resolution order:
+- **Full header wordmark**: `wordmarkName` (uppercased) → `displayName` (uppercased) → derived from `pkg.name`
+- **Light header**: `displayName` (uppercased) → derived from `pkg.name`
+
+`wordmarkName` is optional. When omitted, the wordmark input falls through to `displayName` or the derived name as before. Like `displayName`, it does not affect `pkg.name` usage in manifests, CI log prefixes, or the update notifier.
 
 ### Decision: Same Ember heated-iron gradient for all generated wordmarks
 
-Skill CLIs that use Skillet share Skillet's visual language. This makes the ecosystem recognizable and reinforces the "Built with Skillet" attribution. Skill authors who want different colors can style their own header via `extendProgram`.
+Skill CLIs that use Skillet share Skillet's visual language. This makes the ecosystem recognizable and reinforces the "Packaged with Skillet" attribution. Skill authors who want different colors can style their own header via `extendProgram`.
 
 **Alternative: derive gradient from skill name** — gimmick with low payoff. Rejected.
 
@@ -70,9 +80,9 @@ The tagline pool is Skillet's brand copy. Showing "Cast iron. No flaking." under
 
 ### Decision: Attribution line is a single compact line in Iris Bright
 
-Format: `Built with Skillet · <what Skillet does> · <url>`. Final copy and canonical URL are open questions (see below). Iris Bright signals secondary context and contrasts with the skill name's Ember rendering, creating a clear visual hierarchy: skill identity → Skillet attribution.
+Format: `Packaged with Skillet v{core-version} · package your own for any agent in one step ↗`. The version is `@skillet-cli/core`'s own version. The `↗` text is an OSC 8 terminal hyperlink to the Skillet GitHub repository. Iris Bright signals secondary context and contrasts with the skill name's Ember rendering, creating a clear visual hierarchy: skill identity → Skillet attribution.
 
-Colors: `Built with Skillet` in Iris Bright bold; `·` and remainder in `chalk.dim`.
+Colors: `Packaged with Skillet v{core-version}` in Iris Bright bold; `·` and remainder in `chalk.dim`.
 
 ### Decision: `verbMode` is a `run()` parameter, not a CLI flag
 
@@ -93,7 +103,7 @@ CI / non-TTY mode lowercases the active form as with fun verbs: `[my-skill] inst
 
 ## Risks / Trade-offs
 
-[Long skill names produce wide wordmarks] → `figlet` does not wrap. A name like `my-analytics-platform` renders as a ~130-char-wide wordmark that may overflow narrow terminals. Mitigation: document the behavior; consider a max-name-length warning (not hard limit) in a follow-up.
+[Long skill names produce wide wordmarks] → `figlet` does not wrap. A name like `my-analytics-platform` renders as a ~130-char-wide wordmark that may overflow narrow terminals. Mitigation: render the figlet string first, measure the longest line against `process.stdout.columns` (defaulting to 120), and fall back to an Ember-gradient `chalk.bold` plain-text header if it would overflow. No arbitrary character-count threshold; no startup warning.
 
 [figlet ANSI Shadow output may differ from current handcrafted SKILLET art] → Visual regression limited to Skillet's own CLI. Accept minor glyph differences in exchange for removing the hardcoded string. Can be fine-tuned after seeing actual figlet output.
 
@@ -109,5 +119,5 @@ Rollback: revert the figlet integration; restore the hardcoded SKILLET wordmark 
 
 ## Open Questions
 
-1. **Attribution copy**: Final wording and URL need sign-off. Candidates: `Built with Skillet · skill manager for AI agents · skillet.dev`, `Packaged with Skillet · <url>`. URL and tagline are placeholders until a canonical one is established.
-2. **Long-name behavior**: Should the library warn at startup if `pkg.name` (stripped) exceeds N characters? What is N?
+1. ~~**Attribution copy**~~: Resolved. Final line: `Packaged with Skillet v{core-version} · package your own for any agent in one step ↗`, linking to the Skillet GitHub repository via OSC 8.
+2. ~~**Long-name behavior**~~: Resolved. Render figlet output first, measure longest line against `process.stdout.columns ?? 120`, fall back to Ember-gradient `chalk.bold` plain-text header if it would overflow. No character-count threshold, no startup warning.

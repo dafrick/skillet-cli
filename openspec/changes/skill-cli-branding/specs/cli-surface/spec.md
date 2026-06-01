@@ -56,7 +56,19 @@ In CI / non-TTY mode, the active form SHALL be lowercased and prefixed with `[pk
 ---
 
 ### Requirement: Full header uses generated wordmark from resolved display name
-When the full header is displayed (install and update commands, TTY only), the library SHALL render the wordmark using the `skill-wordmark` capability. The input to wordmark generation SHALL be `displayName` (uppercased) when provided, or the name derived from `pkg.name` otherwise. No hardcoded ASCII string SHALL be used.
+When the full header is displayed (install and update commands, TTY only), the library SHALL render the wordmark using the `skill-wordmark` capability. The input to wordmark generation SHALL follow this resolution order: `wordmarkName` (uppercased) when provided, otherwise `displayName` (uppercased) when provided, otherwise the name derived from `pkg.name`. No hardcoded ASCII string SHALL be used.
+
+#### Scenario: wordmarkName overrides displayName for the wordmark only
+- **WHEN** `run({ skillDir, pkg, displayName: 'my-analytics-platform', wordmarkName: 'MAP' })` is called
+- **THEN** the full header wordmark renders `MAP` and the light header prefix renders `MY-ANALYTICS-PLATFORM`
+
+#### Scenario: wordmarkName does not affect light header
+- **WHEN** `wordmarkName` is provided alongside `displayName`
+- **THEN** the light header uses `displayName`, not `wordmarkName`
+
+#### Scenario: wordmarkName alone (no displayName)
+- **WHEN** `run({ skillDir, pkg, wordmarkName: 'MAP' })` is called and `pkg.name` is `'@my-org/my-analytics-platform'`
+- **THEN** the full header wordmark renders `MAP` and the light header prefix renders `MY-ANALYTICS-PLATFORM` (derived from `pkg.name`)
 
 #### Scenario: Full header wordmark reflects pkg.name
 - **WHEN** install is run with `pkg.name` set to `"my-skill"` in a TTY environment
@@ -84,7 +96,7 @@ When the light header is displayed (list and uninstall commands, TTY only), the 
 ### Requirement: Attribution line appears in all TTY headers
 Every header variant (full and light) SHALL include a single attribution line rendered immediately below the wordmark or name line, before any other content. The attribution line SHALL NOT appear in CI or non-TTY environments (consistent with header suppression rules).
 
-The attribution line format: `Built with Skillet` in Iris Bright bold, followed by `·` and a brief descriptor and URL in `chalk.dim`. Final copy and URL are specified in the CLI Design System reference.
+The attribution line format: `Packaged with Skillet v{core-version}` in Iris Bright bold, followed by `· package your own for any agent in one step ↗` in `chalk.dim`, where `↗` is an OSC 8 terminal hyperlink to the Skillet GitHub repository and `{core-version}` is `@skillet-cli/core`'s own package version.
 
 #### Scenario: Attribution line appears below full header wordmark
 - **WHEN** install runs in TTY and the full header is displayed
@@ -121,7 +133,8 @@ The library SHALL export a `run(options)` function that builds a `commander`-bas
 - `skillDir` (required): Path to the skill directory
 - `pkg` (required): The skill's `package.json` object; `pkg.name` and `pkg.version` populate headers; `pkg.name` and `pkg.version` populate the `source` field in manifests
 - `verbMode` (optional, default `'fun'`): `'fun'` for cooking verbs, `'standard'` for conventional English verbs
-- `displayName` (optional): Explicit display name for headers; uppercased at render time. When omitted, the display name is derived from `pkg.name` (scope stripped, uppercased). Does not affect `pkg.name` usage in manifests, CI log prefixes, or the update notifier.
+- `displayName` (optional): Explicit display name for both the full header wordmark and the light header prefix; uppercased at render time. When omitted, the display name is derived from `pkg.name` (scope stripped, uppercased). Does not affect `pkg.name` usage in manifests, CI log prefixes, or the update notifier.
+- `wordmarkName` (optional): Explicit name used only for the full header wordmark (ASCII art); uppercased at render time. When provided, overrides `displayName` and the derived name for wordmark generation only — the light header still uses `displayName` or the derived name. Useful when `displayName` is long enough to overflow the terminal in figlet output. Does not affect `pkg.name` usage in manifests, CI log prefixes, or the update notifier.
 - `extendProgram` (optional): Hook called with the commander program instance after built-in commands are registered
 - `transform` (optional): Hook called after normalization; return value replaces the skill object
 

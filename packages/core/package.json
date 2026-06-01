@@ -1,7 +1,7 @@
 {
   "name": "@skillet-cli/core",
   "version": "0.1.1",
-  "description": "Core library for skillet skill installation",
+  "description": "Ship your skill as an npm package with a complete CLI for any agent environment",
   "license": "MIT",
   "repository": {
     "type": "git",

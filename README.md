@@ -15,12 +15,12 @@
 
 Skills are structured files that teach AI agents how to accomplish specific tasks. Getting them installed across different agent environments — Claude Code, GitHub Copilot, generic agents — requires detecting the right tool, resolving the right path, handling updates, and presenting a consistent experience. Every skill author would have to build that from scratch.
 
-Skillet solves this once. Authors publish a small CLI powered by `@skillet-cli/core`; end users run it to install, update, and manage skills in their agent environment.
+Skillet solves this once. Authors ship a small npm package powered by `@skillet-cli/core`; end users run it to install, update, and uninstall skills in any agent environment.
 
 ## Design Principles
 
 - **One dependency ships a complete installer.** Add `@skillet-cli/core` to your package, call `run()`. The CLI, prompts, adapters, drift detection, and UX are all included. Nothing else to wire up.
-- **npm is the distribution layer.** Skills ship as npm packages. Skillet adds an installer, not a new registry or distribution channel. Your existing publish workflow is enough.
+- **Standard package distribution.** Skills ship as npm packages — via GitHub Package Registry, npmjs.com, or any compatible registry. Skillet adds an installer, not a new distribution channel. Your existing publish workflow is enough.
 - **UX is skillet's job, not yours.** Scope selection, auto-detection of agent environments, drift detection, update prompts, rich terminal output — everything that makes an installer feel polished comes out of the box. Write great skills; let skillet handle the rest.
 - **Broad reach that expands over time.** Skillet ships with adapters for Claude Code, GitHub Copilot, and generic agents. As the ecosystem grows, so does adapter support — without changes to your skill.
 
@@ -44,13 +44,35 @@ The installer detects which agent tools are present and pre-selects them. You ca
 
 ## Building with @skillet-cli/core
 
-Install the package:
+Use `@skillet-cli/core` to ship your skill as an npm package with a complete CLI — so your users can install, update, and uninstall it in any agent environment with a single command, whether that's Claude Code, GitHub Copilot, or any other agent.
+
+### 1. Create your package
+
+Initialize a directory with a `package.json`. Publishing via GitHub Package Registry requires no separate npm account:
+
+```json
+{
+  "name": "@your-github-username/my-skill",
+  "version": "1.0.0",
+  "type": "module",
+  "bin": { "my-skill": "bin/cli.js" },
+  "publishConfig": { "registry": "https://npm.pkg.github.com" }
+}
+```
+
+### 2. Add your skill files
+
+Place your prompt files in a `skill/` directory.
+
+### 3. Wire up the CLI
+
+Install the library:
 
 ```sh
 npm install @skillet-cli/core
 ```
 
-Create an entry point — this is the entire CLI:
+Create `bin/cli.js` — this is your entire CLI:
 
 ```js
 #!/usr/bin/env node
@@ -61,18 +83,40 @@ const pkg = createRequire(import.meta.url)('../package.json');
 await run({ skillDir: new URL('../skill', import.meta.url).pathname, pkg });
 ```
 
-Add a `"bin"` field to your `package.json` pointing to that file, publish to npm, and you're done. Skillet handles detection, prompts, install, update, drift, and uninstall for every supported agent environment.
+### 4. Publish
+
+Authenticate with GitHub Package Registry once, then publish:
+
+```sh
+npm login --registry=https://npm.pkg.github.com
+npm publish
+```
+
+Your users configure the registry for your scope once, then install via npx:
+
+```sh
+npm config set @your-github-username:registry https://npm.pkg.github.com
+npx @your-github-username/my-skill install
+```
+
+Skillet detects their agent environment and puts the skill in the right place.
+
+### Publishing to npm instead
+
+If you'd rather publish to the public npm registry, remove `publishConfig` from your `package.json` and run `npm publish`. Your users can then run `npx @your-github-username/my-skill install` with no registry setup.
 
 ### RunOptions
 
 | Option | Type | Description |
 |---|---|---|
 | `skillDir` | `string` | Path to the directory containing your skill files |
-| `pkg` | `{ name, version }` | Your package's name and version (for the update notifier) |
-| `hooks.transform` | `(skill) => skill` | Modify the normalized skill before adapter dispatch |
-| `hooks.beforeInstall` | `(skill, adapter, ctx) => void` | Run before each install |
-| `hooks.afterInstall` | `(skill, adapter, ctx) => void` | Run after each install |
-| `hooks.extendProgram` | `(program, ctx) => void` | Add custom subcommands to the CLI |
+| `pkg` | `{ name: string; version: string }` | Your package's name and version (used by the update notifier) |
+| `hooks.transform` | `(skill: NormalizedSkill) => NormalizedSkill` | Modify the normalized skill before adapter dispatch; may be async |
+| `hooks.beforeInstall` | `(skill: NormalizedSkill, adapter: Adapter, ctx: Context) => void` | Run before each adapter install; may be async |
+| `hooks.afterInstall` | `(skill: NormalizedSkill, adapter: Adapter, ctx: Context) => void` | Run after each adapter install; may be async |
+| `hooks.extendProgram` | `(program: Command, ctx: Record<string, unknown>) => void` | Add custom subcommands to the CLI (`Command` is from `commander`) |
+
+All `hooks` fields are optional. `NormalizedSkill`, `Adapter`, and `Context` are TypeScript types exported from `@skillet-cli/core`.
 
 ## Contributing
 
