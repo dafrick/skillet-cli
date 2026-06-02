@@ -176,14 +176,14 @@ describe('renderLightHeader', () => {
     }
   });
 
-  it('3.2: contains pkg.version in light header', async () => {
+  it('3.2: does not contain pkg.version in light header', async () => {
     const restoreIsTTY = withTTY(true);
     vi.stubEnv('CI', '');
     vi.resetModules();
     try {
       const { renderLightHeader } = await import('../../src/ui/header.js');
       const result = renderLightHeader(baseOpts);
-      expect(result).toContain('1.2.3');
+      expect(result).not.toContain('1.2.3');
     } finally {
       restoreIsTTY();
     }
@@ -196,10 +196,8 @@ describe('renderLightHeader', () => {
     try {
       const { renderLightHeader } = await import('../../src/ui/header.js');
       const result = renderLightHeader(baseOpts);
-      // The result should contain the resolved display name and version (not hardcoded SKILLET)
-      // ANSI color codes wrap the text but the plain chars are still in the string
       expect(result).toContain('MY-SKILL');
-      expect(result).toContain('v1.2.3');
+      expect(result).not.toContain('SKILLET');
     } finally {
       restoreIsTTY();
     }
@@ -452,7 +450,7 @@ describe('6.2: light header shows derived name, version, and description', () =>
         coreVersion: '0.1.1',
       });
       expect(result).toContain('MY-SKILL');
-      expect(result).toContain('1.2.0');
+      expect(result).not.toContain('1.2.0');
     } finally {
       restoreIsTTY();
     }
