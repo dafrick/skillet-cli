@@ -1,15 +1,15 @@
 ## ADDED Requirements
 
 ### Requirement: CONTRIBUTING.md documents local build and manual testing
-`CONTRIBUTING.md` SHALL include a "Local Build & Manual Testing" section that explains how to build the package, smoke-test the CLI, iterate with watch mode, and test against a local skill project using `pnpm link`.
+`CONTRIBUTING.md` SHALL include a "Local Build & Manual Testing" section that explains how to build the package, smoke-test the CLI via `node bin/cli.js`, iterate with watch mode, and test against a local skill project using `pnpm link`.
 
 #### Scenario: Contributor can smoke-test the CLI
-- **WHEN** a contributor reads the local build section and runs `make run`
+- **WHEN** a contributor reads the local build section and runs `make build && node bin/cli.js --help`
 - **THEN** the CLI is built and prints its help output without requiring any additional configuration
 
 #### Scenario: Contributor can iterate with watch mode
 - **WHEN** a contributor reads the watch mode instructions
-- **THEN** they can run `make watch` in one terminal and `make run` in another to get automatic recompilation on save
+- **THEN** they can run `make watch` in one terminal and `node bin/cli.js <command>` in another to get automatic recompilation on save
 
 #### Scenario: Contributor can test against a real skill project
 - **WHEN** a contributor reads the local linking instructions
