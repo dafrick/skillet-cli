@@ -1,38 +1,29 @@
-## ADDED Requirements
+## Requirements
 
-### Requirement: Makefile provides a build target
-The repo root SHALL contain a `Makefile` with a `build` target that compiles TypeScript to `dist/`.
+### Requirement: Makefile lives in packages/core/ and provides a build target
+`packages/core/` SHALL contain a `Makefile` with a `build` target that compiles TypeScript to `dist/`.
 
 #### Scenario: Build succeeds
-- **WHEN** a contributor runs `make build` from the repo root
+- **WHEN** a contributor runs `make build` from `packages/core/`
 - **THEN** TypeScript is compiled and `packages/core/dist/` is populated
 
 ---
 
 ### Requirement: Makefile provides a clean target
-The `Makefile` SHALL include a `clean` target that removes `packages/core/dist/` and `packages/core/coverage/`.
+The `Makefile` SHALL include a `clean` target that removes `dist/` and `coverage/` relative to `packages/core/`.
 
 #### Scenario: Clean removes generated output
-- **WHEN** a contributor runs `make clean`
+- **WHEN** a contributor runs `make clean` from `packages/core/`
 - **THEN** `dist/` and `coverage/` are deleted and absent from the filesystem
 
 ---
 
-### Requirement: Makefile provides a run target
-The `Makefile` SHALL include a `run` target that builds the package and runs the CLI with `--help`, confirming the binary starts correctly.
-
-#### Scenario: Run exits zero after a clean build
-- **WHEN** a contributor runs `make run`
-- **THEN** the package is built and the CLI prints help text and exits 0
-
----
-
-### Requirement: Makefile provides a watch target
-The `Makefile` SHALL include a `watch` target that starts TypeScript in watch mode, recompiling on file save.
+### Requirement: Makefile provides a watch target with preserved output
+The `Makefile` SHALL include a `watch` target that starts TypeScript in watch mode with `--preserveWatchOutput`, so recompile output is visible rather than being cleared by tsc's default terminal-clearing behavior.
 
 #### Scenario: Watch starts the compiler in watch mode
 - **WHEN** a contributor runs `make watch`
-- **THEN** tsc starts in `--watch` mode and recompiles on source changes
+- **THEN** tsc starts in `--watch --preserveWatchOutput` mode and recompile output accumulates in the terminal
 
 ---
 
@@ -55,3 +46,12 @@ The `Makefile` SHALL include `lint`, `format`, and `typecheck` targets delegatin
 #### Scenario: typecheck exits zero on a clean codebase
 - **WHEN** a contributor runs `make typecheck` on a type-correct codebase
 - **THEN** the process exits 0 with no output
+
+---
+
+### Requirement: Local CLI testing uses node bin/cli.js directly
+Contributors SHALL invoke the CLI directly via `node bin/cli.js` for local testing rather than via `pnpm exec <bin>`. `CONTRIBUTING.md` SHALL document this pattern. No `make run` target exists.
+
+#### Scenario: Contributor smoke-tests the CLI
+- **WHEN** a contributor runs `make build && node bin/cli.js --help` from `packages/core/`
+- **THEN** the CLI prints help text and exits 0
