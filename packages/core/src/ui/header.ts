@@ -25,16 +25,16 @@ function renderAttributionLine(coreVersion: string): string {
 export function renderFullHeader(opts: HeaderOpts): string {
   if (!process.stdout.isTTY || process.env.CI) return '';
   const wordmark = generateWordmark(opts.resolvedWordmarkName);
-  const description = dim(opts.pkg.description ?? '');
+  const descriptionLine = opts.pkg.description ? `${dim(opts.pkg.description)}\n` : '';
   const attribution = renderAttributionLine(opts.coreVersion);
-  return `\n${wordmark}\n${description}\n${attribution}\n\n`;
+  return `\n${wordmark}\n${descriptionLine}${attribution}\n\n`;
 }
 
 // Light header: DISPLAY-NAME + description + attribution — for list/uninstall
 export function renderLightHeader(opts: HeaderOpts): string {
   if (!process.stdout.isTTY || process.env.CI) return '';
   const title = ember500.bold(`${opts.resolvedDisplayName}`);
-  const description = dim(opts.pkg.description ?? '');
+  const titleLine = opts.pkg.description ? `${title} - ${dim(opts.pkg.description)}` : title;
   const attribution = renderAttributionLine(opts.coreVersion);
-  return `${title} - ${description}\n${attribution}\n\n`;
+  return `${titleLine}\n${attribution}\n\n`;
 }
