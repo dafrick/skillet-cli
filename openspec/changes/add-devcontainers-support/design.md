@@ -28,7 +28,7 @@ Dev containers solve both: VS Code attaches its terminal and language servers to
 
 ### 1. Pre-built image over custom Dockerfile
 
-`mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm` includes Node 24, npm, git, common utilities, and VS Code server hooks. Maintaining a custom Dockerfile adds ongoing overhead for a team that doesn't need it yet. We add the one missing piece (gh CLI) via a devcontainer feature, and run pnpm setup in `postCreateCommand`. This matches the OpenSpec pattern and keeps the config minimal.
+`mcr.microsoft.com/devcontainers/typescript-node:24-bookworm` includes Node 24, npm, git, common utilities, and VS Code server hooks. Maintaining a custom Dockerfile adds ongoing overhead for a team that doesn't need it yet. We add the one missing piece (gh CLI) via a devcontainer feature, and run pnpm setup in `postCreateCommand`. This matches the OpenSpec pattern and keeps the config minimal.
 
 **If a custom Dockerfile is ever needed** (e.g., pinned tool versions, egress firewall, non-npm package installs), it's a straightforward addition: add a `Dockerfile` to `.devcontainer/` and change `"image"` to `"build": { "dockerfile": "Dockerfile" }` in `devcontainer.json`.
 
@@ -36,19 +36,17 @@ Dev containers solve both: VS Code attaches its terminal and language servers to
 
 ### 2. Node 24 + TypeScript 6
 
-`1-24-bookworm` is the Node 24 variant of the MS devcontainers TypeScript image (Debian Bookworm base). TypeScript 6 is a project dependency, not an image-level concern — it arrives via `pnpm install` from `package.json`. The container handles the runtime; the project handles the compiler.
+`24-bookworm` is the Node 24 variant of the MS devcontainers TypeScript image (Debian Bookworm base). TypeScript 6 is a project dependency, not an image-level concern — it arrives via `pnpm install` from `package.json`. The container handles the runtime; the project handles the compiler.
 
 ### 3. pnpm via corepack in postCreateCommand
 
-The pre-built image includes Node 24 and npm but not pnpm. We run `corepack enable && corepack prepare pnpm@latest --activate && pnpm install` in `postCreateCommand` so that on first container open, pnpm is activated and all project dependencies are installed. This follows the OpenSpec pattern and means the container is immediately usable, including for agents.
+The pre-built image includes Node 24 and npm but not pnpm. We run `corepack enable && corepack install && pnpm install` in `postCreateCommand` so that on first container open, pnpm is activated and all project dependencies are installed. `corepack install` reads the `"packageManager"` field from `package.json` and activates that exact pinned version — no registry call, no version drift. This follows the OpenSpec pattern and means the container is immediately usable, including for agents.
 
 ### 4. Workspace bind-mount only by default; optional mounts as comments
 
 The workspace mount (`source=${localWorkspaceFolder},target=/workspace`) is the only default mount. This is the minimal, agent-agnostic baseline — it works for any agent, any IDE, and carries the project's `.claude/` directory (project-level settings) naturally.
 
-Optional mounts are documented as commented-out examples in `devcontainer.json`:
-- `~/.gitconfig` (readonly) — carries git identity (name, email) into the container so commits have the right author
-- Agent home-directory config dirs (e.g., `~/.claude`) — for contributors who want auth to persist across rebuilds; commented out because it's Claude-specific and not the recommended path (env var auth is preferred)
+The `~/.gitconfig` bind-mount (active by default, see Decision 5) is the only non-workspace default mount. An optional bind-mount for `~/.claude` is documented as a commented-out example for contributors who want Claude Code auth to persist across rebuilds; commented out because it's agent-specific and not the recommended default (env var auth is preferred).
 
 **Why no `~/.claude` volume by default**: it couples the container to one agent's config format. Using `ANTHROPIC_API_KEY` (or equivalent) in `containerEnv` is agent-agnostic, survives rebuilds with no special mount, and works identically in Codespaces.
 
@@ -65,9 +63,9 @@ This is agent-agnostic: any agent that calls `git commit` or `gh pr create` insi
 
 Adding `"ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}` to `features` installs Claude Code and the VS Code extension without any Dockerfile changes. This is the recommended Anthropic path for pre-built images and auto-updates Claude Code on container rebuild.
 
-### 7. DEVCONTAINER env var set by VS Code automatically
+### 7. DEVCONTAINER env var set explicitly in containerEnv
 
-VS Code's devcontainer extension sets `DEVCONTAINER=true` automatically when it opens a container. We do not need to add it to `containerEnv`. Agents that check for this variable will find it without any explicit configuration on our part.
+`DEVCONTAINER=true` is set explicitly via `containerEnv` rather than relying on the base image or extension to inject it. VS Code's devcontainer extension does not guarantee this variable; the base image may or may not include it. Setting it ourselves makes the signal reliable and agent-agnostic — any agent that checks `DEVCONTAINER` gets a consistent answer regardless of which image variant or tool opens the container.
 
 ### 8. Documentation in .devcontainer/README.md + CONTRIBUTING.md mention
 
