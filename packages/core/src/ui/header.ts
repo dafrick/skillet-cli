@@ -26,7 +26,7 @@ export function renderFullHeader(opts: HeaderOpts): string {
   if (!process.stdout.isTTY || process.env.CI) return '';
   const wordmark = generateWordmark(opts.resolvedWordmarkName);
   const attribution = renderAttributionLine(opts.coreVersion);
-  return `${wordmark}\n${attribution}\n\n`;
+  return `\n${wordmark}\n${attribution}\n\n`;
 }
 
 // Light header: DISPLAY-NAME vX.Y.Z + attribution + description — for list/uninstall
