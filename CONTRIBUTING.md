@@ -45,22 +45,24 @@ Adapt the path to any test file under `packages/core/test/`.
 
 ## Local Build & Manual Testing
 
-A `Makefile` at the repo root abstracts all common commands. Run `make <target>` from anywhere in the repo.
+A `Makefile` in `packages/core/` abstracts common commands. Run `make <target>` from that directory.
 
 | Target | Description |
 |---|---|
 | `make build` | Compile TypeScript to `dist/` |
 | `make clean` | Remove `dist/` and `coverage/` |
-| `make run` | Build, then run the CLI against the built-in fixture |
 | `make watch` | Recompile on save (TypeScript watch mode) |
 
 ### Smoke-test the CLI against the built-in fixture
 
+Build first, then invoke `bin/cli.js` directly:
+
 ```sh
-make run
+make build && node bin/cli.js --help
+make build && node bin/cli.js install
 ```
 
-This builds the package and immediately runs the CLI against `fixtures/hello-skill` — no extra setup required. For a faster iteration loop, run `make watch` in one terminal and `make run` in another; the watch compile picks up saves automatically.
+This runs the CLI against `fixtures/hello-skill` — no extra setup required. For a faster iteration loop, run `make watch` in one terminal to pick up saves automatically, then run `node bin/cli.js <command>` as needed.
 
 ### Test against a local skill project
 
