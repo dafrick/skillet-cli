@@ -23,7 +23,7 @@ The `Makefile` SHALL include a `devcontainer-open` target that opens the project
 ---
 
 ### Requirement: Makefile provides a devcontainer-rebuild target
-The `Makefile` SHALL include a `devcontainer-rebuild` target that forces a full rebuild of the container image (no Docker cache) and reopens VS Code.
+The `Makefile` SHALL include a `devcontainer-rebuild` target that forces a full rebuild of the container image with no Docker cache.
 
 #### Scenario: Rebuild ignores cache
 - **WHEN** a contributor runs `make devcontainer-rebuild`

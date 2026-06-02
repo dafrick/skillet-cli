@@ -10,7 +10,7 @@ The repository SHALL contain a `.devcontainer/` directory with `devcontainer.jso
 ---
 
 ### Requirement: Container uses pre-built Node 24 image
-The `devcontainer.json` SHALL reference `mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm` as its base image so the container requires no local Docker build and no custom Dockerfile.
+The `devcontainer.json` SHALL reference `mcr.microsoft.com/devcontainers/typescript-node:24-bookworm` as its base image so the container requires no local Docker build and no custom Dockerfile.
 
 #### Scenario: Container opens without a Dockerfile
 - **WHEN** a contributor opens the project with "Reopen in Container"
@@ -37,7 +37,7 @@ The `devcontainer.json` SHALL add Claude Code via `ghcr.io/anthropics/devcontain
 ---
 
 ### Requirement: pnpm and project dependencies are ready on first open
-The `devcontainer.json` SHALL set `postCreateCommand` to `corepack enable && corepack prepare pnpm@latest --activate && pnpm install` so that pnpm is activated and all project dependencies are installed when the container first starts.
+The `devcontainer.json` SHALL set `postCreateCommand` to `corepack enable && corepack install && pnpm install` so that pnpm is activated at the version pinned in `package.json` and all project dependencies are installed when the container first starts.
 
 #### Scenario: pnpm is available after container start
 - **WHEN** a contributor opens a terminal in the running container
@@ -76,6 +76,15 @@ The `devcontainer.json` SHALL bind-mount the host `~/.gitconfig` read-only at `/
 
 ---
 
+### Requirement: DEVCONTAINER env var is set inside the container
+The `devcontainer.json` SHALL set `DEVCONTAINER: "true"` in `containerEnv` so that agents and tooling can reliably detect they are running inside a dev container.
+
+#### Scenario: DEVCONTAINER is set inside the container
+- **WHEN** a contributor or agent runs `echo $DEVCONTAINER` in a container terminal
+- **THEN** the output is `true`
+
+---
+
 ### Requirement: GitHub auth is available via GH_TOKEN
 The `devcontainer.json` SHALL pass `GH_TOKEN` from the host environment into the container via `containerEnv` so the gh CLI can authenticate for PR creation and other GitHub operations without SSH keys.
 
@@ -86,11 +95,11 @@ The `devcontainer.json` SHALL pass `GH_TOKEN` from the host environment into the
 ---
 
 ### Requirement: Optional mounts are documented as commented examples
-The `devcontainer.json` SHALL include commented-out `mounts` examples for `~/.claude` (named volume, for agent auth persistence) and any other commonly useful host directories, with inline comments explaining the tradeoff.
+The `devcontainer.json` SHALL include a commented-out `mounts` entry for `~/.claude` as a bind-mount (`source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind`) with an inline comment explaining the tradeoff between agent-agnosticism and auth persistence.
 
 #### Scenario: Contributor can enable optional mount by uncommenting
-- **WHEN** a contributor uncomments the `~/.claude` volume mount and rebuilds the container
-- **THEN** Claude Code authentication persists across container rebuilds
+- **WHEN** a contributor uncomments the `~/.claude` bind-mount entry and rebuilds the container
+- **THEN** the host `~/.claude` directory is available inside the container and Claude Code authentication persists across container rebuilds
 
 ---
 
@@ -110,11 +119,3 @@ The `.devcontainer/README.md` SHALL document: prerequisites (Docker Desktop, VS 
 - **WHEN** a contributor reads `.devcontainer/README.md` and follows the steps
 - **THEN** they can open the container in VS Code and run `claude` without additional guidance
 
----
-
-### Requirement: CONTRIBUTING.md references the dev container
-`CONTRIBUTING.md` SHALL include a short dev container section that names the dev container as the recommended development environment and links to `.devcontainer/README.md` for setup instructions.
-
-#### Scenario: CONTRIBUTING.md mentions the dev container
-- **WHEN** a contributor reads `CONTRIBUTING.md`
-- **THEN** they find a mention of the dev container and a path or link to the setup instructions

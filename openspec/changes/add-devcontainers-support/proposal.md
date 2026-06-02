@@ -4,8 +4,8 @@ Contributors currently set up their development environment manually — install
 
 ## What Changes
 
-- Add `.devcontainer/devcontainer.json` using the pre-built `mcr.microsoft.com/devcontainers/typescript-node:1-24-bookworm` image; no custom Dockerfile required
-- `devcontainer.json` adds gh CLI via a devcontainer feature, runs `pnpm install` on first start, configures VS Code extensions and settings, and mounts the workspace at `/workspace`
+- Add `.devcontainer/devcontainer.json` using the pre-built `mcr.microsoft.com/devcontainers/typescript-node:24-bookworm` image; no custom Dockerfile required
+- `devcontainer.json` adds Claude Code and the gh CLI via devcontainer features, runs `pnpm install` on first start, configures VS Code extensions and settings, and mounts the workspace at `/workspace`
 - Git identity carried in via a read-only `~/.gitconfig` bind-mount; GitHub auth via `GH_TOKEN` env var so agents can make commits and open PRs from inside the container
 - Optional mounts (e.g. agent config directories) documented as commented-out examples in `devcontainer.json`
 - Add `.devcontainer/README.md` with step-by-step VS Code setup instructions and agent usage guidance
