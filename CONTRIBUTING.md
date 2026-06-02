@@ -43,6 +43,39 @@ pnpm --filter @skillet-cli/core exec vitest run test/unit/hash.test.ts
 
 Adapt the path to any test file under `packages/core/test/`.
 
+## Local Build & Manual Testing
+
+A `Makefile` at the repo root abstracts all common commands. Run `make <target>` from anywhere in the repo.
+
+| Target | Description |
+|---|---|
+| `make build` | Compile TypeScript to `dist/` |
+| `make clean` | Remove `dist/` and `coverage/` |
+| `make run` | Build, then run the CLI against the built-in fixture |
+| `make watch` | Recompile on save (TypeScript watch mode) |
+
+### Smoke-test the CLI against the built-in fixture
+
+```sh
+make run
+```
+
+This builds the package and immediately runs the CLI against `fixtures/hello-skill` — no extra setup required. For a faster iteration loop, run `make watch` in one terminal and `make run` in another; the watch compile picks up saves automatically.
+
+### Test against a local skill project
+
+To try your changes inside an actual skill project (one with its own `package.json` and `SKILL.md`), link the local build:
+
+```sh
+# from packages/core/
+pnpm link --global
+
+# from your skill project
+pnpm link --global @skillet-cli/core
+```
+
+Run `make build` in this repo after each change — the linked package resolves straight to `dist/`, so no re-linking is needed.
+
 ## Commit Format
 
 Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/). The `commit-msg` hook enforces this automatically.
