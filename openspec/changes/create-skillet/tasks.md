@@ -31,6 +31,19 @@
 - [ ] 1.7 Update all `packages/core/src/ui/colors.js`, `/spinner.js`, `/wordmark.js`, `/header.js` import paths to `@skillet-cli/ui` — `verbs.ts` and `taglines.ts` remain at their local paths
 - [ ] 1.8 Update `packages/core/src/ui/header.ts` (now a thin wrapper) to pass the core attribution string into the shared `renderFullHeader`/`renderLightHeader`
 - [ ] 1.9 Run `pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test` — confirm all tests pass with migrated imports
+- [ ] 1.10 Write unit tests for `packages/ui/src/colors.ts`: import `{ ember500, irisBright, basil, dim }` from the compiled package → assert each is a function (chalk color instance) and does not throw when called with a string
+- [ ] 1.11 Write unit tests for `packages/ui/src/spinner.ts`:
+  - TTY spinner (`createSpinner(true)`): call `start('label')` then `succeed('done')` — assert `process.stdout.write` was called and the final write does NOT contain ANSI escape sequences on the success line (or assert the exact ANSI clear sequence was emitted)
+  - Non-TTY spinner (`createSpinner(false)`): call `succeed('done')` — assert stdout received `'done\n'` with no ANSI escape codes
+- [ ] 1.12 Write unit tests for `packages/ui/src/wordmark.ts`:
+  - `deriveDisplayName('@skillet-cli/core')` → `'CORE'`
+  - `deriveDisplayName('create-skillet')` → `'CREATE-SKILLET'`
+  - `generateWordmark('CORE')` with `process.stdout.columns` set to 10 (too narrow for figlet) → returns a plain ember-bold string, not figlet art
+  - `generateWordmark('CORE')` with `process.stdout.columns` set to 200 → returns a string containing ANSI color codes (figlet rendered)
+- [ ] 1.13 Write unit tests for `packages/ui/src/header.ts`:
+  - `renderFullHeader({ wordmark: 'W', tagline: 'T', attributionLine: 'A' })` in TTY (mock `process.stdout.isTTY = true`, `process.env.CI` unset) → returned string contains `'A'`
+  - Same call with `process.env.CI = 'true'` → returns `''`
+  - `renderLightHeader({ ... , attributionLine: 'X' })` in TTY → returned string contains `'X'`
 
 ## 2. Create packages/create scaffold
 
@@ -70,6 +83,11 @@
   - Existing `package.json`: reads `name`, `version`, `author`, `description`, `skillet.skillDir` → used as prompt defaults; `skillDir` comes from `skillet.skillDir`, not from filesystem check
   - No `package.json`: `name` is kebab-case of directory name (e.g., `'My Skill'` → `'my-skill'`, `'.config'` → `'config'`, `'My_Skill_v2'` → `'my-skill-v2'`)
   - `skill/` subfolder present, no `package.json`: `skillDir: 'skill/'`
+- [ ] 3.4 Create `packages/create/test/helpers/sandbox.ts` — a test helper that:
+  1. Creates a fresh temp directory via `fs.mkdtemp`
+  2. Optionally pre-populates it with a given file set (e.g., a `SKILL.md` file, a `skill/` subfolder)
+  3. Returns `{ dir, cleanup }` where `cleanup()` removes the temp directory
+  Mirror the shape of `packages/core/test/integration/helpers/sandbox.ts`. This is used by scaffold and skill-dir integration tests.
 
 ## 4. Implement NPM setup phase (prompts + preview)
 
@@ -95,6 +113,12 @@
 - [ ] 5.4 In `scaffold.ts`, run `npm install @skillet-cli/core` as the final step
 - [ ] 5.5 Wrap each scaffold step in a spinner using the shared `createSpinner` from `@skillet-cli/ui`; use cooking verbs (`Prepping`, `Seasoning`, `Plating`, `Firing up`) for TTY output
 - [ ] 5.6 In `scaffold.ts`, wrap the full `executeScaffold` body in a try/catch. On any thrown error, print to stderr: `Error during setup: <step-name> failed — <error.message>`. Then `process.exit(1)`. Do the same for the npm install step in task 5.4 — check the subprocess exit code explicitly rather than relying on thrown errors, since `execa`/`child_process.exec` may not throw on non-zero exit.
+- [ ] 5.7 Write unit and integration tests for `scaffold.ts`:
+  - **Unit — npm init conditional**: mock `fs.existsSync` to return false → assert `npm init -y` is called; return true → assert it is skipped
+  - **Unit — npm pkg set fields**: call `executeScaffold` with a full config object → assert `npm pkg set` is called for each required field (name, version, description, author, license, type, engines.node, skillet.skillDir, bin)
+  - **Unit — repository URL guard**: config with empty `repositoryUrl` → assert `npm pkg set repository.url` is NOT called
+  - **Integration — bin/cli.js written**: using sandbox from task 3.4, run `executeScaffold` with `skillDir: 'skill/'` → read `bin/cli.js` → assert it contains `new URL('../skill/', import.meta.url)` (the interpolated value, not a placeholder)
+  - **Integration — bin/cli.js chmod**: assert `bin/cli.js` stat mode includes execute bits (`(stat.mode & 0o111) !== 0`)
 
 ## 6. Implement skill directory setup (skilletize phase)
 
@@ -132,5 +156,10 @@
 - [ ] 10.1 Run `pnpm --filter @skillet-cli/ui build && pnpm --filter @skillet-cli/ui test` — confirm UI package builds and tests pass
 - [ ] 10.2 Run `pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test` — confirm core still passes with migrated imports and tsup bundling
 - [ ] 10.3 Run `pnpm --filter create-skillet build` — confirm create package compiles without errors
-- [ ] 10.4 Run `npx . install` from a temporary skill directory to confirm the wizard executes end-to-end in a real terminal
+- [ ] 10.4 Create `packages/create/test/e2e/wizard.test.ts` — an automated e2e test that:
+  1. Creates a temp directory with a `SKILL.md` file using the sandbox helper
+  2. Spawns `create-skillet` as a subprocess (from the built dist) using `@inquirer/prompts`-compatible stdin piping or by pre-seeding all prompts via CLI args if supported
+  3. Asserts: process exits 0, `package.json` exists with required fields, `bin/cli.js` exists and is executable, `skill/SKILL.md` exists (moved from root)
+  Mirror the pattern in `packages/core/test/e2e/install.test.ts` and `packages/core/test/e2e/globalSetup.ts`. Run as part of `pnpm --filter create-skillet test:e2e` (separate vitest config).
+  **Note:** If fully automated e2e is not feasible for the interactive wizard (stdin piping to @inquirer/prompts is non-trivial), document the limitation and keep this as a documented manual step — but create the test file scaffold so future automation can be added.
 - [ ] 10.5 Confirm the SKILLETIZE wordmark renders correctly in TTY and that no output is emitted in `CI=true` mode
