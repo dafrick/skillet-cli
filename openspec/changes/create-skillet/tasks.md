@@ -106,8 +106,11 @@
 
 ## 7. Implement wizard header and UX
 
-- [ ] 7.1 Create `packages/create/src/ui/header.ts`: call `generateWordmark('SKILLETIZE')` from `@skillet-cli/ui`; compose tagline (`Package <name> for any AI agent`, falling back to `Package your skill for any AI agent`) and attribution line (`Powered by Skillet CLI v{version}` + OSC8 link); suppress in non-TTY/CI
-- [ ] 7.2 Render the header at the start of `run()`, before the early gate prompt
+- [ ] 7.1 In `packages/create/src/run.ts`, after calling `detectEnvironment()` and before the early gate, compose and print the header directly using `@skillet-cli/ui` exports:
+  - Call `renderFullHeader({ wordmark: generateWordmark('SKILLETIZE'), tagline: \`Package ${detected.name} for any AI agent\`, attributionLine: \`Powered by Skillet CLI v${pkg.version}\` })`. Since `detected.name` is always a non-empty string (kebab-case directory name at minimum, per task 3.1), the generic fallback is only needed if `detected.name` is unexpectedly empty: `detected.name || 'your skill'`.
+  - Do **not** create a separate `packages/create/src/ui/header.ts` wrapper file — call `renderFullHeader` from `@skillet-cli/ui` directly in `run.ts`. The extra indirection layer adds no value.
+  - Suppress in non-TTY/CI: `renderFullHeader` already returns empty string in those environments (per shared-ui/spec.md).
+- [ ] 7.2 Call `detectEnvironment()` first in `run()`, then render the header (per task 7.1) using the detection result, then proceed to the early gate (task 4.2). The header uses `detected.name` so the tagline always shows a real name — no re-render is needed after `collectConfig` because the name was available from detection.
 - [ ] 7.3 After all steps complete, print the completion block: elapsed time, "Your skill package is ready.", labeled next steps (`npx . install`, `npm publish`)
 
 ## 8. Add cross-promotion hint to packages/core

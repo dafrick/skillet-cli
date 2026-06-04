@@ -156,9 +156,9 @@ After successful execution, the wizard SHALL print a completion message with the
 ### Requirement: Wizard visual identity uses SKILLETIZE wordmark
 The wizard SHALL display a figlet ANSI Shadow wordmark rendering "SKILLETIZE" with the ember gradient on TTY terminals. The tagline SHALL be `Package <name> for any AI agent` once a package name is known, falling back to `Package your skill for any AI agent` before detection. Attribution SHALL read `Powered by Skillet CLI v{version}` with the standard OSC8 link. In CI or non-TTY environments the header SHALL be suppressed.
 
-#### Scenario: TTY header
+#### Scenario: TTY header — detected name in tagline
 - **WHEN** the wizard runs in a TTY terminal
-- **THEN** the ANSI Shadow "SKILLETIZE" wordmark with ember gradient is printed, followed by tagline and attribution
+- **THEN** the ANSI Shadow "SKILLETIZE" wordmark with ember gradient is printed, followed by the tagline `Package <detected-name> for any AI agent` (where `<detected-name>` is the package name from an existing `package.json`, or the kebab-case directory name if no `package.json` exists), followed by the attribution line
 
 #### Scenario: Non-TTY / CI suppression
 - **WHEN** stdout is not a TTY or CI environment variable is set
