@@ -7,6 +7,11 @@ pre-commit:
     - name: typecheck
       run: pnpm -F @skillet-cli/core typecheck
 
+pre-push:
+  jobs:
+    - name: biome
+      run: pnpm exec biome check .
+
 commit-msg:
   jobs:
     - name: conventional-commits
