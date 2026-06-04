@@ -33,7 +33,7 @@
 ## 5. Implement scaffold execution module
 
 - [ ] 5.1 Create `packages/create/src/scaffold.ts` with `executeScaffold(config)`: runs `npm init -y` if no `package.json` exists, then runs `npm pkg set` for each config field (name, version, description, author, license, type=module, `engines.node='>=24'`, repository.type, repository.url, `skillet.skillDir`, bin entry)
-- [ ] 5.2 In `scaffold.ts`, write `bin/cli.js` from a template string:
+- [ ] 5.2 In `scaffold.ts`, write `bin/cli.js` by interpolating `config.skillDir` into a template string before writing:
   ```js
   #!/usr/bin/env node
   import { createRequire } from 'node:module';
@@ -41,8 +41,9 @@
   import { run } from '@skillet-cli/core';
 
   const pkg = createRequire(import.meta.url)('../package.json');
-  await run({ skillDir: fileURLToPath(new URL('../<skillPath>', import.meta.url)), pkg });
+  await run({ skillDir: fileURLToPath(new URL('../skill/', import.meta.url)), pkg });
   ```
+  Replace `skill/` with `config.skillDir` at template-write time (i.e., use a JS template literal: `` `...new URL('../${config.skillDir}', import.meta.url)...` ``). `config.skillDir` is the skill content path value from `collectConfig`.
 - [ ] 5.3 In `scaffold.ts`, run `chmod 755 bin/cli.js` after writing the file
 - [ ] 5.4 In `scaffold.ts`, run `npm install @skillet-cli/core` as the final step
 - [ ] 5.5 Wrap each scaffold step in a spinner using the shared `createSpinner` from `@skillet-cli/ui`; use cooking verbs (`Prepping`, `Seasoning`, `Plating`, `Firing up`) for TTY output

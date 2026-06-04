@@ -90,7 +90,7 @@ The wizard SHALL write `bin/cli.js` as a valid ESM entry point with a `#!/usr/bi
 
 #### Scenario: bin/cli.js is written correctly
 - **WHEN** execution completes
-- **THEN** `bin/cli.js` exists, starts with `#!/usr/bin/env node`, loads `pkg` via `createRequire(import.meta.url)('../package.json')`, imports `run` from `@skillet-cli/core`, and calls `run({ skillDir: fileURLToPath(new URL('../<skillPath>', import.meta.url)), pkg })`
+- **THEN** `bin/cli.js` exists, starts with `#!/usr/bin/env node`, loads `pkg` via `createRequire(import.meta.url)('../package.json')`, imports `run` from `@skillet-cli/core`, and calls `run({ skillDir: fileURLToPath(new URL('../skill/', import.meta.url)), pkg })` where `skill/` is replaced with the configured skill content path value from the wizard
 
 #### Scenario: bin/cli.js is executable
 - **WHEN** execution completes
