@@ -94,6 +94,7 @@
 - [ ] 5.3 In `scaffold.ts`, run `chmod 755 bin/cli.js` after writing the file
 - [ ] 5.4 In `scaffold.ts`, run `npm install @skillet-cli/core` as the final step
 - [ ] 5.5 Wrap each scaffold step in a spinner using the shared `createSpinner` from `@skillet-cli/ui`; use cooking verbs (`Prepping`, `Seasoning`, `Plating`, `Firing up`) for TTY output
+- [ ] 5.6 In `scaffold.ts`, wrap the full `executeScaffold` body in a try/catch. On any thrown error, print to stderr: `Error during setup: <step-name> failed — <error.message>`. Then `process.exit(1)`. Do the same for the npm install step in task 5.4 — check the subprocess exit code explicitly rather than relying on thrown errors, since `execa`/`child_process.exec` may not throw on non-zero exit.
 
 ## 6. Implement skill directory setup (skilletize phase)
 
@@ -103,6 +104,7 @@
 - [ ] 6.4 After selection, show a skilletize preview listing exactly which files and folders will be moved and ask for final confirmation; on "no" print "No files moved. Your npm package is set up." and `process.exit(0)`
 - [ ] 6.5 Execute the move: create `skill/` then move each selected item into it; print which files were moved
 - [ ] 6.6 Write unit tests for pre-selection logic covering: standard case, >12 items threshold, `skill/` already exists, >12 items with multiple skill-related dirs present
+- [ ] 6.7 In `skill-dir.ts`, wrap each `fs.rename` call in a try/catch. On failure: print to stderr which file failed and the error message, then `process.exit(1)`. Do not attempt to roll back already-moved files.
 
 ## 7. Implement wizard header and UX
 
