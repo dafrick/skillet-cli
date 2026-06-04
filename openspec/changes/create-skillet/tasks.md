@@ -27,7 +27,15 @@
 - [ ] 2.2 Create `packages/create/tsconfig.json` and `packages/create/vitest.config.ts` mirroring `packages/core`
 - [ ] 2.3 Create `packages/create/tsup.config.ts` with `noExternal: ['@skillet-cli/ui']` to bundle the UI package into the create package's dist output
 - [ ] 2.4 Create `packages/create/bin/cli.js` with shebang importing and calling `run()` from `../dist/run.js`
-- [ ] 2.5 Create `packages/create/src/run.ts` as the main entry point — Commander program setup, `prepublishOnly` build script in `package.json`
+- [ ] 2.5 Create `packages/create/src/run.ts` as the main entry point. Set up a minimal Commander program:
+  ```ts
+  program
+    .name('create-skillet')
+    .description('Convert a skill directory into a publishable npm package')
+    .argument('[name]', 'optional package name — overrides the directory-name default')
+    .action(async (nameArg?: string) => { /* wizard flow */ });
+  ```
+  Pass `nameArg` to `detectEnvironment()` so it can use it as the `name` field in `DetectionResult` when present. Add `prepublishOnly: "npm run build"` to `packages/create/package.json` scripts.
 
 ## 3. Implement detection module
 
