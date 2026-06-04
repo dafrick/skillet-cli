@@ -53,6 +53,10 @@ The wizard SHALL collect the following fields via interactive prompts in this or
 - **WHEN** `skillet.skillDir` exists in an existing `package.json`, or a `skill/` subfolder exists
 - **THEN** the skill content path prompt defaults to that value
 
+#### Scenario: Package name supplied as CLI argument
+- **WHEN** the user runs `npm create skillet my-cooking-skill`
+- **THEN** the package name prompt defaults to `my-cooking-skill`, taking precedence over the kebab-case directory name default
+
 ---
 
 ### Requirement: NPM preview step shows a summary before npm execution
