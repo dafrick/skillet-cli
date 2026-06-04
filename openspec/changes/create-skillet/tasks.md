@@ -1,6 +1,17 @@
 ## 1. Extract shared UI into packages/ui
 
-- [ ] 1.1 Create `packages/ui/` directory with `package.json` (`name: @skillet-cli/ui`, `private: true`, `type: module`, `engines.node: >=24`), `tsconfig.json`, and `vitest.config.ts` mirroring `packages/core` toolchain
+- [ ] 1.1 Create `packages/ui/` directory with `package.json`:
+  ```json
+  {
+    "name": "@skillet-cli/ui",
+    "private": true,
+    "type": "module",
+    "main": "./dist/index.js",
+    "exports": { ".": "./dist/index.js" },
+    "engines": { "node": ">=24" }
+  }
+  ```
+  Add `tsconfig.json` (with `"outDir": "dist"` and `"declaration": true`) and `vitest.config.ts` mirroring `packages/core` toolchain. The `exports` and `main` fields are required so that tsup can resolve the package entry point when bundling it via `noExternal: ['@skillet-cli/ui']` in consuming packages.
 - [ ] 1.2 Copy `colors.ts`, `spinner.ts`, and `wordmark.ts` from `packages/core/src/ui/` into `packages/ui/src/` — remove any core-specific content (static `ART_LINES` / `renderWordmark()` stays in core)
 - [ ] 1.3 Refactor `header.ts` into `packages/ui/src/header.ts` with `attributionLine: string` as a required parameter instead of hardcoding the core attribution string
 - [ ] 1.4 Add `packages/ui/src/index.ts` exporting all public symbols (`colors`, `spinner`, `wordmark`, `header`)

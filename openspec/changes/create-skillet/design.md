@@ -112,7 +112,7 @@ The cooking tagline pool is part of core's personality, not shared brand infrast
 
 `packages/ui` uses `tsc` for build (it is compiled but not bundled). `packages/core` and `packages/create` use `tsup` for build — tsup bundles `@skillet-cli/ui` via `noExternal: ['@skillet-cli/ui']` into their dist output. All packages use `tsc` for typecheck, `vitest` for tests, `biome` for lint/format.
 
-Keeping the toolchain otherwise identical lowers maintenance overhead and means contributors don't context-switch. tsup is built on esbuild and produces builds in <100ms — no meaningful DX regression from the `tsc`-only baseline.
+Keeping the toolchain otherwise identical lowers maintenance overhead and means contributors don't context-switch. tsup is built on esbuild and produces builds in <100ms — no meaningful DX regression from the `tsc`-only baseline. `packages/ui/package.json` must declare `"exports": { ".": "./dist/index.js" }` and `"main": "./dist/index.js"` so that tsup can resolve it when bundling with `noExternal: ['@skillet-cli/ui']`. Without this, tsup falls back to heuristics and may resolve the wrong entry on a clean checkout.
 
 ## Risks / Trade-offs
 

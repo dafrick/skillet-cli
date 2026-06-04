@@ -11,6 +11,10 @@ The `@skillet-cli/ui` package SHALL live at `packages/ui/` with its own `package
 - **WHEN** `npm publish` is run from `packages/ui/`
 - **THEN** it fails because `"private": true` is set
 
+#### Scenario: UI package exports field is declared
+- **WHEN** `packages/ui/package.json` is read
+- **THEN** it contains `"exports": { ".": "./dist/index.js" }` and `"main": "./dist/index.js"` pointing at the tsc-compiled output directory
+
 ---
 
 ### Requirement: Create package lives at packages/create
