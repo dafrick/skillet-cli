@@ -153,6 +153,19 @@ After successful execution, the wizard SHALL print a completion message with the
 
 ---
 
+### Requirement: Wizard exits non-zero on execution failure
+When any execution step fails (npm init, npm pkg set, bin/cli.js write, chmod, npm install, mkdir, file move), the wizard SHALL print a human-readable error message to stderr describing which step failed and exit with code 1. The wizard SHALL NOT exit with code 0 after a failure.
+
+#### Scenario: npm install fails
+- **WHEN** `npm install @skillet-cli/core` exits non-zero
+- **THEN** the wizard prints an error message to stderr (e.g., `Error: npm install @skillet-cli/core failed. Run it manually and re-run create-skillet if needed.`) and exits with code 1
+
+#### Scenario: File move fails
+- **WHEN** moving a selected file into `skill/` throws a filesystem error
+- **THEN** the wizard prints the failed filename and error to stderr and exits with code 1, leaving any already-moved files in their moved location (no rollback)
+
+---
+
 ### Requirement: Wizard visual identity uses SKILLETIZE wordmark
 The wizard SHALL display a figlet ANSI Shadow wordmark rendering "SKILLETIZE" with the ember gradient on TTY terminals. The tagline SHALL be `Package <name> for any AI agent` once a package name is known, falling back to `Package your skill for any AI agent` before detection. Attribution SHALL read `Powered by Skillet CLI v{version}` with the standard OSC8 link. In CI or non-TTY environments the header SHALL be suppressed.
 
