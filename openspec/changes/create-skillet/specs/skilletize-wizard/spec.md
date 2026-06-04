@@ -1,20 +1,24 @@
 ## ADDED Requirements
 
-### Requirement: Early gate informs user before touching the filesystem
-Before making any filesystem changes, the wizard SHALL print a clear statement that it will turn the current directory into an npm package and prompt the user to confirm. Declining SHALL print manual setup instructions and exit with code 0. Accepting SHALL continue the wizard.
+### Requirement: Early gate informs user before making any changes
+Before making any changes, the wizard SHALL display a summary of what was detected in the current directory and ask for confirmation. The summary SHALL include: (1) the absolute path of the current working directory, (2) whether `SKILL.md` was found, (3) whether a `package.json` already exists, (4) the detected git user name (or "(not detected)" if unavailable). Declining SHALL print manual setup instructions and exit with code 0.
+
+#### Scenario: Detection context shown at gate
+- **WHEN** the early gate is displayed
+- **THEN** the output includes the absolute current working directory path, SKILL.md presence, package.json presence, and detected git user
 
 #### Scenario: User declines early gate
 - **WHEN** the user runs `create-skillet` and answers "no" to the initial confirmation
-- **THEN** the wizard prints manual setup instructions (npm init, npm pkg set, bin/cli.js steps) and exits with code 0 without touching the filesystem
+- **THEN** the wizard prints manual setup instructions (npm init, npm pkg set, bin/cli.js steps) and exits with code 0 without making any changes
 
 #### Scenario: User accepts early gate
 - **WHEN** the user runs `create-skillet` and answers "yes" to the initial confirmation
-- **THEN** the wizard proceeds to detection and configuration phases
+- **THEN** the wizard proceeds to the NPM configuration phase
 
 ---
 
 ### Requirement: Wizard detects environment state before prompting
-During detection (before any prompts), the wizard SHALL silently check: (1) whether a `package.json` exists in the current directory, (2) whether a `skill/` subfolder exists, (3) whether a `SKILL.md` exists in the root, (4) the git remote URL via `git remote get-url origin`, and (5) the git user name and email via `git config`. Detection failures SHALL be swallowed — missing data leaves the corresponding prompt field empty for manual entry.
+During detection (before any prompts), the wizard SHALL silently check: (1) whether a `package.json` exists in the current directory, (2) whether a `skill/` subfolder exists, (3) whether a `SKILL.md` exists in the root, (4) the git remote URL via `git remote get-url origin`, (5) the git user name and email via `git config`, and (6) the `skillet.skillDir` field from an existing `package.json`. Detection failures SHALL be swallowed — missing data leaves the corresponding prompt field empty for manual entry.
 
 #### Scenario: Git remote is present
 - **WHEN** `git remote get-url origin` succeeds
@@ -26,28 +30,7 @@ During detection (before any prompts), the wizard SHALL silently check: (1) whet
 
 #### Scenario: package.json already exists
 - **WHEN** a `package.json` is present in the current directory
-- **THEN** the wizard reads existing `name`, `version`, `author`, and `description` fields and uses them as prompt defaults instead of derived values
-
----
-
-### Requirement: Skill directory setup when SKILL.md is in root
-When `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder before configuration. The handling depends on the number of items in the directory.
-
-#### Scenario: Directory has 12 or fewer items — checkbox selection
-- **WHEN** `SKILL.md` is in the root and the directory contains 12 or fewer items
-- **THEN** the wizard shows a checkbox list of all directory items; `SKILL.md` and any folders named `resources`, `assets`, or `templates` are pre-selected; README.md, dotfiles, lock files, and dot-folders are not pre-selected
-
-#### Scenario: User confirms file move
-- **WHEN** the user confirms the selection and proceeds
-- **THEN** the selected files and folders are moved into a newly created `skill/` subfolder
-
-#### Scenario: Directory has more than 12 items — collapsed confirm
-- **WHEN** `SKILL.md` is in the root and the directory contains more than 12 items
-- **THEN** the wizard shows a single confirm prompt offering to move only `SKILL.md` and `resources/` (if present) into `skill/`; the user is informed they can move additional files manually
-
-#### Scenario: skill/ subfolder already exists
-- **WHEN** a `skill/` subfolder already exists in the current directory
-- **THEN** the wizard skips the skill directory setup step entirely
+- **THEN** the wizard reads existing `name`, `version`, `author`, `description`, and `skillet.skillDir` fields and uses them as prompt defaults instead of derived values
 
 ---
 
@@ -67,21 +50,21 @@ The wizard SHALL collect the following fields via interactive prompts in this or
 - **THEN** the author prompt defaults to `Name <email>` format
 
 #### Scenario: Skill content path default
-- **WHEN** a `skill/` subfolder exists (or was just created by the skill directory setup step)
-- **THEN** the skill content path prompt defaults to `skill/`
+- **WHEN** `skillet.skillDir` exists in an existing `package.json`, or a `skill/` subfolder exists
+- **THEN** the skill content path prompt defaults to that value
 
 ---
 
-### Requirement: Preview step shows a summary before execution
-After all prompts, the wizard SHALL display a human-readable summary of what will be created or modified and ask for final confirmation before executing any npm commands or writing any files.
+### Requirement: NPM preview step shows a summary before npm execution
+After all configuration prompts, the wizard SHALL display a human-readable summary of the npm commands and files that will be created or modified, and ask for confirmation before running any npm commands or writing any files.
 
 #### Scenario: User reviews and proceeds
-- **WHEN** the user confirms the preview
-- **THEN** the wizard proceeds to the execution phase
+- **WHEN** the user confirms the NPM preview
+- **THEN** the wizard proceeds to npm execution
 
-#### Scenario: User declines at preview
-- **WHEN** the user answers "no" at the preview confirmation
-- **THEN** the wizard exits with code 0 without touching the filesystem
+#### Scenario: User declines at NPM preview
+- **WHEN** the user answers "no" at the NPM preview confirmation
+- **THEN** the wizard prints "No changes made. Re-run `create-skillet` to start over." and exits with code 0 without touching the filesystem
 
 ---
 
@@ -98,16 +81,16 @@ The wizard SHALL set up the npm package using only `npm init -y` and `npm pkg se
 
 #### Scenario: All required fields are set
 - **WHEN** execution completes successfully
-- **THEN** `package.json` contains: `name`, `version`, `description`, `author`, `license`, `type: "module"`, `repository.type`, `repository.url`, `repository.directory` (set to the skill content path), and a `bin` field with the package name pointing to `./bin/cli.js`
+- **THEN** `package.json` contains: `name`, `version`, `description`, `author`, `license`, `type: "module"`, `engines.node: ">=24"`, `repository.type`, `repository.url`, `skillet.skillDir` (set to the skill content path), and a `bin` field with the package name pointing to `./bin/cli.js`
 
 ---
 
 ### Requirement: bin/cli.js is created and made executable
-The wizard SHALL write `bin/cli.js` as a valid ESM entry point with a `#!/usr/bin/env node` shebang, importing `run` from `@skillet-cli/core` and calling `run({ skillDir, pkg })`. The file SHALL be made executable (`chmod 755`).
+The wizard SHALL write `bin/cli.js` as a valid ESM entry point with a `#!/usr/bin/env node` shebang, loading `pkg` from `package.json` via `createRequire`, importing `run` from `@skillet-cli/core`, and calling `run({ skillDir, pkg })`. The file SHALL be made executable (`chmod 755`).
 
 #### Scenario: bin/cli.js is written correctly
 - **WHEN** execution completes
-- **THEN** `bin/cli.js` exists, starts with `#!/usr/bin/env node`, imports from `@skillet-cli/core`, and calls `run()` with the configured `skillDir` path
+- **THEN** `bin/cli.js` exists, starts with `#!/usr/bin/env node`, loads `pkg` via `createRequire(import.meta.url)('../package.json')`, imports `run` from `@skillet-cli/core`, and calls `run({ skillDir: fileURLToPath(new URL('../<skillPath>', import.meta.url)), pkg })`
 
 #### Scenario: bin/cli.js is executable
 - **WHEN** execution completes
@@ -121,6 +104,35 @@ After writing `bin/cli.js`, the wizard SHALL run `npm install @skillet-cli/core`
 #### Scenario: Dependency is added
 - **WHEN** execution completes
 - **THEN** `package.json` lists `@skillet-cli/core` under `dependencies`
+
+---
+
+### Requirement: Skill directory setup when SKILL.md is in root
+After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary.
+
+#### Scenario: skill/ subfolder already exists
+- **WHEN** a `skill/` subfolder already exists in the current directory
+- **THEN** the wizard skips the skill directory setup step entirely and prints a single line noting that `skill/` was found
+
+#### Scenario: Directory has 12 or fewer items — checkbox selection
+- **WHEN** `SKILL.md` is in the root and the directory contains 12 or fewer items
+- **THEN** the wizard shows a checkbox list of all directory items; `SKILL.md` and any folders named `resources`, `assets`, or `templates` are pre-selected; README.md, dotfiles, lock files, and dot-folders are not pre-selected
+
+#### Scenario: Directory has more than 12 items — collapsed confirm
+- **WHEN** `SKILL.md` is in the root and the directory contains more than 12 items
+- **THEN** the wizard shows a single confirm prompt offering to move only `SKILL.md` and `resources/` (if present) into `skill/`; the prompt explicitly names any other skill-related directories found (e.g., `assets/`, `templates/`) that will NOT be moved, informing the user they can move those manually
+
+#### Scenario: Skilletize preview before move
+- **WHEN** the user has confirmed the file selection (checkbox or confirm)
+- **THEN** the wizard shows a pre-move summary listing exactly which files and folders will be moved and asks for final confirmation before touching the filesystem
+
+#### Scenario: User confirms file move
+- **WHEN** the user confirms the skilletize preview
+- **THEN** the selected files and folders are moved into a newly created `skill/` subfolder and the wizard prints which files were moved
+
+#### Scenario: User declines at skilletize preview
+- **WHEN** the user answers "no" at the skilletize preview
+- **THEN** the wizard prints "No files moved. Your npm package is set up." and exits with code 0
 
 ---
 

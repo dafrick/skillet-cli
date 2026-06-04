@@ -14,12 +14,16 @@ The `@skillet-cli/ui` package SHALL live at `packages/ui/` with its own `package
 ---
 
 ### Requirement: Create package lives at packages/create
-The `create-skillet` package SHALL live at `packages/create/` with its own `package.json` (`"name": "create-skillet"`, `"type": "module"`, `"engines": { "node": ">=24" }`), `tsconfig.json`, and `vitest.config.ts`. It SHALL declare `@skillet-cli/ui` as a `workspace:*` runtime dependency.
+The `create-skillet` package SHALL live at `packages/create/` with its own `package.json` (`"name": "create-skillet"`, `"type": "module"`, `"engines": { "node": ">=24" }`), `tsconfig.json`, `tsup.config.ts`, and `vitest.config.ts`. It SHALL declare `@skillet-cli/ui` as a `workspace:*` **devDependency** — the UI package is bundled into the create package's dist output via tsup's `noExternal` setting and does not appear in the published runtime dependencies.
 
 #### Scenario: Create package is scoped correctly
 - **WHEN** `packages/create/package.json` is read
 - **THEN** `name` is `create-skillet` and `type` is `module`
 
-#### Scenario: Create package depends on shared UI
+#### Scenario: Create package bundles shared UI at build time
 - **WHEN** `packages/create/package.json` is read
-- **THEN** `dependencies` includes `@skillet-cli/ui` with value `workspace:*`
+- **THEN** `devDependencies` includes `@skillet-cli/ui` with value `workspace:*` and `dependencies` does NOT include `@skillet-cli/ui`
+
+#### Scenario: Create package dist includes bundled UI code
+- **WHEN** `packages/create` is built with tsup
+- **THEN** the dist output contains inlined code from `@skillet-cli/ui` and does not reference it as an external module

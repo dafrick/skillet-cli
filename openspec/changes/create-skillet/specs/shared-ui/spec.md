@@ -61,13 +61,13 @@
 
 ---
 
-### Requirement: packages/core and packages/create both depend on @skillet-cli/ui
-Both `packages/core` and `packages/create` SHALL declare `@skillet-cli/ui` as a `workspace:*` dependency in their `package.json`. All brand color, spinner, wordmark, and header imports in those packages SHALL resolve through `@skillet-cli/ui` rather than local paths.
+### Requirement: packages/core and packages/create both bundle @skillet-cli/ui at build time
+Both `packages/core` and `packages/create` SHALL declare `@skillet-cli/ui` as a `workspace:*` **devDependency** in their `package.json` and use tsup with `noExternal: ['@skillet-cli/ui']` to inline the UI package into their dist output. All brand color, spinner, wordmark, and header imports in those packages SHALL resolve through `@skillet-cli/ui` at compile time rather than local paths, and the UI code SHALL be present in their dist without requiring a separate runtime install of `@skillet-cli/ui`.
 
-#### Scenario: Core resolves UI imports via workspace package
-- **WHEN** `packages/core` is built
-- **THEN** all former `./ui/colors.js`, `./ui/spinner.js`, `./ui/wordmark.js`, and `./ui/header.js` imports resolve through `@skillet-cli/ui` without error
+#### Scenario: Core bundles UI imports at build time
+- **WHEN** `packages/core` is built with tsup
+- **THEN** all former `./ui/colors.js`, `./ui/spinner.js`, `./ui/wordmark.js`, and `./ui/header.js` imports resolve through the bundled `@skillet-cli/ui` code in dist without error, and `@skillet-cli/ui` does not appear in `packages/core`'s published `dependencies`
 
 #### Scenario: Build order is respected
 - **WHEN** the workspace build is run
-- **THEN** `packages/ui` is built before `packages/core` and `packages/create`
+- **THEN** `packages/ui` is built before `packages/core` and `packages/create` (tsup requires the compiled source of `@skillet-cli/ui` to be available to bundle it)
