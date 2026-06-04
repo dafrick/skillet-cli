@@ -16,7 +16,18 @@
 - [ ] 1.3 Refactor `header.ts` into `packages/ui/src/header.ts` with `attributionLine: string` as a required parameter instead of hardcoding the core attribution string
 - [ ] 1.4 Add `packages/ui/src/index.ts` exporting all public symbols (`colors`, `spinner`, `wordmark`, `header`)
 - [ ] 1.5 Add `@skillet-cli/ui` as a `workspace:*` **devDependency** in `packages/core/package.json` — it is bundled at build time by tsup and does not appear in the published package's runtime dependencies
-- [ ] 1.6 Add `tsup.config.ts` to `packages/core` with `noExternal: ['@skillet-cli/ui']` so that `@skillet-cli/ui` is inlined into `packages/core/dist/` at build time; replace the existing `tsc` build step with `tsup`
+- [ ] 1.6 Add `packages/core/tsup.config.ts` with this exact config — every field is required:
+  ```ts
+  import { defineConfig } from 'tsup';
+  export default defineConfig({
+    entry: ['src/index.ts'],
+    format: ['esm'],
+    dts: true,
+    outDir: 'dist',
+    noExternal: ['@skillet-cli/ui'],
+  });
+  ```
+  Replace the existing `tsc` build step in `packages/core/package.json` scripts (`"build": "tsc"`) with `"build": "tsup"`. The `entry`, `format`, and `dts` fields are required to match the existing `"exports": { ".": "./dist/index.js" }` in packages/core/package.json — tsup must produce `dist/index.js` (ESM) and `dist/index.d.ts` to satisfy existing consumers.
 - [ ] 1.7 Update all `packages/core/src/ui/colors.js`, `/spinner.js`, `/wordmark.js`, `/header.js` import paths to `@skillet-cli/ui` — `verbs.ts` and `taglines.ts` remain at their local paths
 - [ ] 1.8 Update `packages/core/src/ui/header.ts` (now a thin wrapper) to pass the core attribution string into the shared `renderFullHeader`/`renderLightHeader`
 - [ ] 1.9 Run `pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test` — confirm all tests pass with migrated imports

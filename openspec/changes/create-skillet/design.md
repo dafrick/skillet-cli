@@ -114,6 +114,8 @@ The cooking tagline pool is part of core's personality, not shared brand infrast
 
 Keeping the toolchain otherwise identical lowers maintenance overhead and means contributors don't context-switch. tsup is built on esbuild and produces builds in <100ms — no meaningful DX regression from the `tsc`-only baseline. `packages/ui/package.json` must declare `"exports": { ".": "./dist/index.js" }` and `"main": "./dist/index.js"` so that tsup can resolve it when bundling with `noExternal: ['@skillet-cli/ui']`. Without this, tsup falls back to heuristics and may resolve the wrong entry on a clean checkout.
 
+`packages/core`'s `tsup.config.ts` must explicitly declare `entry: ['src/index.ts']`, `format: ['esm']`, `dts: true`, and `outDir: 'dist'` — matching the existing `exports: { ".": "./dist/index.js" }` in packages/core/package.json. Without explicit format and dts settings, tsup defaults may produce CJS output or omit type declarations, breaking consumers.
+
 ### Decision: Accept optional `[name]` positional argument
 
 `npm create skillet my-skill` passes `my-skill` as the first positional argument per the npm create convention. The wizard's Commander program defines an optional `[name]` argument. When provided, it overrides the package name prompt default (taking precedence over the kebab-case directory name). When absent, the directory-name-derived default applies.
