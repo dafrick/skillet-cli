@@ -31,9 +31,26 @@
 
 ## 3. Implement detection module
 
-- [ ] 3.1 Create `packages/create/src/detect.ts` with `detectEnvironment()`: checks for `package.json`, `skill/` subfolder, `SKILL.md` in root, runs `git remote get-url origin` (normalize to `git+https://`), runs `git config user.name` and `git config user.email` — all git calls swallow errors
-- [ ] 3.2 In `detectEnvironment()`, read existing `package.json` fields (`name`, `version`, `author`, `description`, `skillet.skillDir`) when present and include them in the returned detection result for use as prompt defaults
-- [ ] 3.3 Write unit tests for `detect.ts` covering: git remote normalization, graceful failure on non-git dirs, existing `package.json` field extraction including `skillet.skillDir`
+- [ ] 3.1 Create `packages/create/src/detect.ts` with `detectEnvironment(): DetectionResult`. The function checks the current directory and returns:
+  ```ts
+  interface DetectionResult {
+    cwd: string;                  // absolute path from process.cwd()
+    name: string;                 // from existing package.json `name`, or kebab-case(path.basename(cwd))
+    hasPackageJson: boolean;
+    hasSkillMd: boolean;          // SKILL.md exists in cwd root (not inside skill/)
+    skillDir: string | null;      // 'skill/' if skill/ subfolder exists, or existing skillet.skillDir value, else null
+    repositoryUrl: string;        // normalized git+https:// URL, or empty string
+    gitUser: string;              // 'Name <email>' format, or empty string
+  }
+  ```
+  Kebab-case conversion: lowercase, replace spaces/underscores/dots with hyphens, strip any character not in `[a-z0-9-]`, collapse consecutive hyphens. All git subprocess calls (`git remote get-url origin`, `git config user.name`, `git config user.email`) swallow errors and return empty string on failure.
+- [ ] 3.2 In `detectEnvironment()`, when `package.json` exists: read `name`, `version`, `author`, `description` from it for prompt defaults; read `skillet.skillDir` and use it as `skillDir` in the result (taking precedence over the detected `skill/` subfolder). When `package.json` is absent: derive `name` from `path.basename(process.cwd())` via the kebab-case conversion defined in task 3.1; leave `version`, `author`, `description` empty.
+- [ ] 3.3 Write unit tests for `detect.ts` covering:
+  - Git remote normalization: SSH `git@github.com:org/repo.git` → `git+https://github.com/org/repo.git`; already-HTTPS `https://github.com/org/repo` → `git+https://github.com/org/repo`; `.git` suffix stripped
+  - Graceful failure: `git remote get-url origin` exits non-zero → `repositoryUrl: ''`
+  - Existing `package.json`: reads `name`, `version`, `author`, `description`, `skillet.skillDir` → used as prompt defaults; `skillDir` comes from `skillet.skillDir`, not from filesystem check
+  - No `package.json`: `name` is kebab-case of directory name (e.g., `'My Skill'` → `'my-skill'`, `'.config'` → `'config'`, `'My_Skill_v2'` → `'my-skill-v2'`)
+  - `skill/` subfolder present, no `package.json`: `skillDir: 'skill/'`
 
 ## 4. Implement NPM setup phase (prompts + preview)
 
