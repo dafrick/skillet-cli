@@ -43,7 +43,7 @@
 
 ## 5. Implement scaffold execution module
 
-- [ ] 5.1 Create `packages/create/src/scaffold.ts` with `executeScaffold(config)`: runs `npm init -y` if no `package.json` exists, then runs `npm pkg set` for each config field (name, version, description, author, license, type=module, `engines.node='>=24'`, repository.type, repository.url, `skillet.skillDir`, bin entry)
+- [ ] 5.1 Create `packages/create/src/scaffold.ts` with `executeScaffold(config)`: runs `npm init -y` if no `package.json` exists, then runs `npm pkg set` for each config field (name, version, description, author, license, type=module, `engines.node='>=24'`, `skillet.skillDir`, bin entry). Run `npm pkg set repository.type=git` and `npm pkg set repository.url=<value>` **only when `config.repositoryUrl` is non-empty**; skip both repository fields entirely when the user left the URL blank.
 - [ ] 5.2 In `scaffold.ts`, write `bin/cli.js` by interpolating `config.skillDir` into a template string before writing:
   ```js
   #!/usr/bin/env node

@@ -83,6 +83,10 @@ The wizard SHALL set up the npm package using only `npm init -y` and `npm pkg se
 - **WHEN** execution completes successfully
 - **THEN** `package.json` contains: `name`, `version`, `description`, `author`, `license`, `type: "module"`, `engines.node: ">=24"`, `repository.type`, `repository.url`, `skillet.skillDir` (set to the skill content path), and a `bin` field with the package name pointing to `./bin/cli.js`
 
+#### Scenario: Repository URL left blank
+- **WHEN** the user leaves the repository URL prompt empty
+- **THEN** the wizard skips `npm pkg set repository.url` and `npm pkg set repository.type` — neither field is written to `package.json`
+
 ---
 
 ### Requirement: bin/cli.js is created and made executable
