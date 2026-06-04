@@ -20,7 +20,7 @@ function osc8Link(url: string, text: string): string {
 function renderAttributionLine(coreVersion: string): string {
   const primary = irisBright.bold(`Packaged with Skillet v${coreVersion}`);
   const secondary = dim(
-    `· package your own for any agent in one step ${osc8Link('https://github.com/dafrick/skillet', '↗')}`,
+    `· package your own for any agent in one step ${osc8Link('https://github.com/dafrick/skillet-cli', '↗')}`,
   );
   return `  ${primary} ${secondary}`;
 }

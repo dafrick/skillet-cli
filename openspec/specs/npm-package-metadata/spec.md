@@ -14,7 +14,7 @@
 ```json
 {
   "type": "git",
-  "url": "git+https://github.com/dafrick/skillet.git",
+  "url": "git+https://github.com/dafrick/skillet-cli.git",
   "directory": "packages/core"
 }
 ```
@@ -31,7 +31,7 @@ The `directory` key SHALL be present because this is a monorepo package, allowin
 ---
 
 ### Requirement: package.json includes a homepage field
-`packages/core/package.json` SHALL include a `"homepage"` field pointing to the GitHub repository URL (`https://github.com/dafrick/skillet`).
+`packages/core/package.json` SHALL include a `"homepage"` field pointing to the GitHub repository URL (`https://github.com/dafrick/skillet-cli`).
 
 #### Scenario: npm package page shows homepage link
 - **WHEN** the package is published and the npm page is viewed
@@ -43,7 +43,7 @@ The `directory` key SHALL be present because this is a monorepo package, allowin
 `packages/core/package.json` SHALL include a `"bugs"` field:
 ```json
 {
-  "url": "https://github.com/dafrick/skillet/issues"
+  "url": "https://github.com/dafrick/skillet-cli/issues"
 }
 ```
 

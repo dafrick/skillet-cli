@@ -5,12 +5,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dafrick/skillet.git",
+    "url": "git+https://github.com/dafrick/skillet-cli.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/dafrick/skillet",
+  "homepage": "https://github.com/dafrick/skillet-cli",
   "bugs": {
-    "url": "https://github.com/dafrick/skillet/issues"
+    "url": "https://github.com/dafrick/skillet-cli/issues"
   },
   "keywords": [
     "ai",

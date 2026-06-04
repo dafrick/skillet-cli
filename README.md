@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/dafrick/skillet/actions/workflows/ci.yml"><img src="https://github.com/dafrick/skillet/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/dafrick/skillet-cli/actions/workflows/ci.yml"><img src="https://github.com/dafrick/skillet-cli/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://www.npmjs.com/package/@skillet-cli/core"><img src="https://img.shields.io/npm/v/@skillet-cli/core" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/@skillet-cli/core"><img src="https://img.shields.io/node/v/@skillet-cli/core" alt="Node.js ≥24" /></a>
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" />

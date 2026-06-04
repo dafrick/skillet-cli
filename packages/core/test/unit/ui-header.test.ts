@@ -109,7 +109,7 @@ describe('renderFullHeader', () => {
     try {
       const { renderFullHeader } = await import('../../src/ui/header.js');
       const result = renderFullHeader(baseOpts);
-      expect(result).toContain('https://github.com/dafrick/skillet');
+      expect(result).toContain('https://github.com/dafrick/skillet-cli');
     } finally {
       restoreIsTTY();
     }
@@ -297,7 +297,7 @@ describe('renderLightHeader', () => {
     try {
       const { renderLightHeader } = await import('../../src/ui/header.js');
       const result = renderLightHeader(baseOpts);
-      expect(result).toContain('https://github.com/dafrick/skillet');
+      expect(result).toContain('https://github.com/dafrick/skillet-cli');
     } finally {
       restoreIsTTY();
     }
@@ -526,7 +526,7 @@ describe('6.4: attribution present in TTY, absent in CI/non-TTY', () => {
       const { renderFullHeader } = await import('../../src/ui/header.js');
       const result = renderFullHeader(baseOpts);
       expect(result).toContain('Packaged with Skillet');
-      expect(result).toContain('https://github.com/dafrick/skillet');
+      expect(result).toContain('https://github.com/dafrick/skillet-cli');
     } finally {
       restoreIsTTY();
     }
@@ -540,7 +540,7 @@ describe('6.4: attribution present in TTY, absent in CI/non-TTY', () => {
       const { renderLightHeader } = await import('../../src/ui/header.js');
       const result = renderLightHeader(baseOpts);
       expect(result).toContain('Packaged with Skillet');
-      expect(result).toContain('https://github.com/dafrick/skillet');
+      expect(result).toContain('https://github.com/dafrick/skillet-cli');
     } finally {
       restoreIsTTY();
     }

@@ -132,4 +132,4 @@ Initial release.
 
 ## Further Reading
 
-- [GitHub repository](https://github.com/dafrick/skillet) — full docs, contributing guide, and issue tracker
+- [GitHub repository](https://github.com/dafrick/skillet-cli) — full docs, contributing guide, and issue tracker
