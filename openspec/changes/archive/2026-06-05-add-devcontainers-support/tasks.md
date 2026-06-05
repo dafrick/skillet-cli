@@ -35,3 +35,4 @@
 - [ ] 5.4 Confirm `echo $DEVCONTAINER` returns `true` inside the container (set via `containerEnv`)
 - [ ] 5.5 Make a test git commit inside the container and confirm author name/email match host identity
 - [ ] 5.6 Run `make devcontainer-rebuild` and confirm it completes with no cache
+<!-- Tasks 5.2-5.6 require an interactive VS Code/container session — to be verified manually -->
