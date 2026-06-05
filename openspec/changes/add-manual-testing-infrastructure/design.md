@@ -70,9 +70,9 @@ The test protocol starts with the tester cloning the repo and identifying its co
 - T4: Multiple `SKILL.md` files in subdirectories (multi-skill)
 - T5: Multi-skill with scripts, templates, or deep nesting
 
-### 7. Option B for agent environment coverage
+### 7. Agent environment is selected at test time, not pre-assigned
 
-T1–T3 use Claude Code (the primary environment). T4 adds a second environment (Copilot CLI or custom). T5 tests a different environment exclusively. This gives depth on the primary path without combinatorial explosion.
+The target agent environment (Claude Code, GitHub Copilot CLI, a custom agent, etc.) is chosen by the tester at the start of each run and recorded in the `env:` field of `TEST-RUN.md`. The infrastructure does not mandate which environment to use for which tier. Testers should exercise variety across runs to build coverage over time — this is a matter of discipline, not enforcement. The README gives light guidance on what environment means in this context; the TEST-MATRIX run log accumulates the record.
 
 ## Risks / Trade-offs
 

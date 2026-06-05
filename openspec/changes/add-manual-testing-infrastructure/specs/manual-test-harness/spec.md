@@ -48,6 +48,15 @@ The project SHALL contain a `test-manual/` directory at the repository root with
 
 ---
 
+### Requirement: README instructs tester to record their target agent environment
+`test-manual/README.md` SHALL instruct the tester to decide which agent environment they are testing skill installation into (e.g., Claude Code, GitHub Copilot CLI) before starting a session, and to record it in the `env:` field of their `TEST-RUN.md` metadata block. The README SHALL clarify that environment choice is left to the tester — the infrastructure does not prescribe which to use.
+
+#### Scenario: Tester records environment before proceeding
+- **WHEN** a tester begins a new test run
+- **THEN** they fill in the `env:` field of their `TEST-RUN.md` with the chosen agent environment before running the first test step
+
+---
+
 ### Requirement: TEST-MATRIX.md maintains a candidate repo catalog and run log
 `test-manual/TEST-MATRIX.md` SHALL contain two sections: a candidate repo catalog table (columns: Tier, Repo, Complexity notes, Status) and a test run log table (columns: Date, Repo, Tier, Env, Outcome, Run folder). The catalog SHALL be seeded with at least five repos spanning all five tiers.
 
@@ -67,6 +76,25 @@ The project SHALL contain a `test-manual/` directory at the repository root with
 #### Scenario: First step of template is tier identification
 - **WHEN** a tester opens the TEST-RUN template
 - **THEN** the first substantive step is "Identify the tier" with guidance on the five tier definitions
+
+---
+
+### Requirement: Session LOG.md captures a running narrative of test activity
+Each test run SHALL produce a `tmp/<run>/LOG.md` file that accumulates timestamped free-form entries as the session progresses. `test-manual/templates/LOG.md.template` SHALL provide the starting structure. The LOG.md is the primary artifact for reconstructing how an issue was encountered — it documents what the tester was doing, in what order, and what workarounds were tried. It is distinct from `TEST-RUN.md`: the test run template records pass/fail status against structured steps; the log captures the unstructured narrative of how the tester arrived at each state.
+
+The file SHALL be strictly append-only: entries are never edited or deleted once written. Each entry SHALL be prefixed with the current time (HH:MM format). When an issue file is created, the log entry that prompted it SHALL reference the issue identifier (e.g., `→ ISS-001`).
+
+#### Scenario: LOG.md entries are timestamped and append-only
+- **WHEN** a tester records an observation during a session
+- **THEN** a new HH:MM-prefixed entry is added at the bottom of LOG.md without modifying any prior entry
+
+#### Scenario: LOG.md references issue files as they are created
+- **WHEN** a tester creates an issue file during a session
+- **THEN** the LOG.md entry that prompted the issue references the issue identifier (ISS-NNN)
+
+#### Scenario: LOG.md is distinct from TEST-RUN.md
+- **WHEN** a reviewer reads both files from the same run folder
+- **THEN** TEST-RUN.md shows which protocol steps passed or failed, while LOG.md shows the narrative of what happened and how
 
 ---
 
@@ -92,9 +120,22 @@ The project SHALL contain a `test-manual/` directory at the repository root with
 
 ---
 
+### Requirement: Run folders are named by date and repo slug
+Test run folders under `test-manual/tmp/` SHALL be named `YYYY-MM-DD-<repo-slug>/` where `<repo-slug>` is the kebab-cased last path segment of the repo URL (e.g., `2026-06-05-agent-rules-skill/`). Each run folder SHALL contain at minimum a `LOG.md`, a filled `TEST-RUN.md`, and an `issues/` subdirectory.
+
+#### Scenario: Run folder is identifiable by date and repo
+- **WHEN** a tester lists `test-manual/tmp/`
+- **THEN** each folder name indicates when the run occurred and which repo was tested, without opening any file
+
+---
+
 ### Requirement: tmp/ is gitignored and never committed
-`test-manual/tmp/` SHALL be listed in the root `.gitignore`. A `tmp/.gitkeep` file SHALL be committed so the directory exists in the repo. All ephemeral test content (cloned repos, run folders, logs, issue files) SHALL live under `tmp/` and SHALL never be committed.
+The root `.gitignore` SHALL contain `test-manual/tmp/*` (contents pattern, not directory pattern) so that `tmp/.gitkeep` can be committed while all ephemeral test content is excluded. All cloned repos, run folders, logs, and issue files SHALL live under `tmp/` and SHALL never be committed.
 
 #### Scenario: test-manual/tmp/ contents are not tracked by git
 - **WHEN** a tester clones a repo into `test-manual/tmp/` and runs `git status`
 - **THEN** the cloned content does not appear as untracked files
+
+#### Scenario: tmp/.gitkeep is committed
+- **WHEN** the harness is first added to the repo
+- **THEN** `test-manual/tmp/.gitkeep` exists in the repository and `git ls-files test-manual/tmp/` lists it
