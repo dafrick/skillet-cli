@@ -40,7 +40,7 @@
     "bin"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "typecheck": "tsc --noEmit -p tsconfig.test.json",
     "test": "vitest run --config vitest.config.ts",
     "test:unit": "vitest run --config vitest.config.ts test/unit",
@@ -59,11 +59,13 @@
     "update-notifier": "^7.3.1"
   },
   "devDependencies": {
+    "@skillet-cli/ui": "workspace:*",
     "@types/figlet": "^1.7.0",
     "@types/node": "^25.9.1",
     "@types/update-notifier": "^6.0.8",
     "@vitest/coverage-v8": "^4.1.7",
     "cli-testing-library": "^3.0.1",
+    "tsup": "^8.5.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.7"
   }

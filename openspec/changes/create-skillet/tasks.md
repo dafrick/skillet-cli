@@ -1,6 +1,6 @@
 ## 1. Extract shared UI into packages/ui
 
-- [ ] 1.1 Create `packages/ui/` directory with `package.json`:
+- [x] 1.1 Create `packages/ui/` directory with `package.json`:
   ```json
   {
     "name": "@skillet-cli/ui",
@@ -12,11 +12,11 @@
   }
   ```
   Add `tsconfig.json` (with `"outDir": "dist"` and `"declaration": true`) and `vitest.config.ts` mirroring `packages/core` toolchain. The `exports` and `main` fields are required so that tsup can resolve the package entry point when bundling it via `noExternal: ['@skillet-cli/ui']` in consuming packages.
-- [ ] 1.2 Copy `colors.ts`, `spinner.ts`, and `wordmark.ts` from `packages/core/src/ui/` into `packages/ui/src/` — remove any core-specific content (static `ART_LINES` / `renderWordmark()` stays in core)
-- [ ] 1.3 Refactor `header.ts` into `packages/ui/src/header.ts` with `attributionLine: string` as a required parameter instead of hardcoding the core attribution string
-- [ ] 1.4 Add `packages/ui/src/index.ts` exporting all public symbols (`colors`, `spinner`, `wordmark`, `header`)
-- [ ] 1.5 Add `@skillet-cli/ui` as a `workspace:*` **devDependency** in `packages/core/package.json` — it is bundled at build time by tsup and does not appear in the published package's runtime dependencies
-- [ ] 1.6 Add `packages/core/tsup.config.ts` with this exact config — every field is required:
+- [x] 1.2 Copy `colors.ts`, `spinner.ts`, and `wordmark.ts` from `packages/core/src/ui/` into `packages/ui/src/` — remove any core-specific content (static `ART_LINES` / `renderWordmark()` stays in core)
+- [x] 1.3 Refactor `header.ts` into `packages/ui/src/header.ts` with `attributionLine: string` as a required parameter instead of hardcoding the core attribution string
+- [x] 1.4 Add `packages/ui/src/index.ts` exporting all public symbols (`colors`, `spinner`, `wordmark`, `header`)
+- [x] 1.5 Add `@skillet-cli/ui` as a `workspace:*` **devDependency** in `packages/core/package.json` — it is bundled at build time by tsup and does not appear in the published package's runtime dependencies
+- [x] 1.6 Add `packages/core/tsup.config.ts` with this exact config — every field is required:
   ```ts
   import { defineConfig } from 'tsup';
   export default defineConfig({
@@ -28,19 +28,19 @@
   });
   ```
   Replace the existing `tsc` build step in `packages/core/package.json` scripts (`"build": "tsc"`) with `"build": "tsup"`. The `entry`, `format`, and `dts` fields are required to match the existing `"exports": { ".": "./dist/index.js" }` in packages/core/package.json — tsup must produce `dist/index.js` (ESM) and `dist/index.d.ts` to satisfy existing consumers.
-- [ ] 1.7 Update all `packages/core/src/ui/colors.js`, `/spinner.js`, `/wordmark.js`, `/header.js` import paths to `@skillet-cli/ui` — `verbs.ts` and `taglines.ts` remain at their local paths
-- [ ] 1.8 Update `packages/core/src/ui/header.ts` (now a thin wrapper) to pass the core attribution string into the shared `renderFullHeader`/`renderLightHeader`
-- [ ] 1.9 Run `pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test` — confirm all tests pass with migrated imports
-- [ ] 1.10 Write unit tests for `packages/ui/src/colors.ts`: import `{ ember500, irisBright, basil, dim }` from the compiled package → assert each is a function (chalk color instance) and does not throw when called with a string
-- [ ] 1.11 Write unit tests for `packages/ui/src/spinner.ts`:
+- [x] 1.7 Update all `packages/core/src/ui/colors.js`, `/spinner.js`, `/wordmark.js`, `/header.js` import paths to `@skillet-cli/ui` — `verbs.ts` and `taglines.ts` remain at their local paths
+- [x] 1.8 Update `packages/core/src/ui/header.ts` (now a thin wrapper) to pass the core attribution string into the shared `renderFullHeader`/`renderLightHeader`
+- [x] 1.9 Run `pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test` — confirm all tests pass with migrated imports
+- [x] 1.10 Write unit tests for `packages/ui/src/colors.ts`: import `{ ember500, irisBright, basil, dim }` from the compiled package → assert each is a function (chalk color instance) and does not throw when called with a string
+- [x] 1.11 Write unit tests for `packages/ui/src/spinner.ts`:
   - TTY spinner (`createSpinner(true)`): call `start('label')` then `succeed('done')` — assert `process.stdout.write` was called and the final write does NOT contain ANSI escape sequences on the success line (or assert the exact ANSI clear sequence was emitted)
   - Non-TTY spinner (`createSpinner(false)`): call `succeed('done')` — assert stdout received `'done\n'` with no ANSI escape codes
-- [ ] 1.12 Write unit tests for `packages/ui/src/wordmark.ts`:
+- [x] 1.12 Write unit tests for `packages/ui/src/wordmark.ts`:
   - `deriveDisplayName('@skillet-cli/core')` → `'CORE'`
   - `deriveDisplayName('create-skillet')` → `'CREATE-SKILLET'`
   - `generateWordmark('CORE')` with `process.stdout.columns` set to 10 (too narrow for figlet) → returns a plain ember-bold string, not figlet art
   - `generateWordmark('CORE')` with `process.stdout.columns` set to 200 → returns a string containing ANSI color codes (figlet rendered)
-- [ ] 1.13 Write unit tests for `packages/ui/src/header.ts`:
+- [x] 1.13 Write unit tests for `packages/ui/src/header.ts`:
   - `renderFullHeader({ wordmark: 'W', tagline: 'T', attributionLine: 'A' })` in TTY (mock `process.stdout.isTTY = true`, `process.env.CI` unset) → returned string contains `'A'`
   - Same call with `process.env.CI = 'true'` → returns `''`
   - `renderLightHeader({ ... , attributionLine: 'X' })` in TTY → returned string contains `'X'`

@@ -1,5 +1,9 @@
-import { dim, ember500, irisBright } from './colors.js';
-import { generateWordmark } from './wordmark.js';
+import {
+  generateWordmark,
+  renderFullHeader as uiRenderFullHeader,
+  renderLightHeader as uiRenderLightHeader,
+} from '@skillet-cli/ui';
+import { dim, irisBright } from './colors.js';
 
 export interface HeaderOpts {
   resolvedWordmarkName: string; // for full header wordmark (figlet input)
@@ -23,18 +27,18 @@ function renderAttributionLine(coreVersion: string): string {
 
 // Full header: wordmark + description + attribution — for install/update
 export function renderFullHeader(opts: HeaderOpts): string {
-  if (!process.stdout.isTTY || process.env.CI) return '';
   const wordmark = generateWordmark(opts.resolvedWordmarkName);
-  const descriptionLine = opts.pkg.description ? `${dim(opts.pkg.description)}\n` : '';
-  const attribution = renderAttributionLine(opts.coreVersion);
-  return `\n${wordmark}\n${descriptionLine}${attribution}\n\n`;
+  const tagline = opts.pkg.description ?? '';
+  const attributionLine = renderAttributionLine(opts.coreVersion);
+  return uiRenderFullHeader({ wordmark, tagline, attributionLine });
 }
 
 // Light header: DISPLAY-NAME + description + attribution — for list/uninstall
 export function renderLightHeader(opts: HeaderOpts): string {
-  if (!process.stdout.isTTY || process.env.CI) return '';
-  const title = ember500.bold(`${opts.resolvedDisplayName}`);
-  const titleLine = opts.pkg.description ? `${title} - ${dim(opts.pkg.description)}` : title;
-  const attribution = renderAttributionLine(opts.coreVersion);
-  return `${titleLine}\n${attribution}\n\n`;
+  const attributionLine = renderAttributionLine(opts.coreVersion);
+  return uiRenderLightHeader({
+    displayName: opts.resolvedDisplayName,
+    tagline: opts.pkg.description,
+    attributionLine,
+  });
 }
