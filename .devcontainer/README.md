@@ -27,7 +27,7 @@ export GH_TOKEN=ghp_your_token_here
 
 Then open (or reopen) the container — the value is injected via `containerEnv` at startup.
 
-If `GH_TOKEN` is not set, the `gh` CLI will fall back to read-only, unauthenticated access. You won't be able to create PRs or perform write operations against the GitHub API.
+If `GH_TOKEN` is not set, the `gh` CLI will prompt for interactive login; in a container terminal you'll see this prompt and can authenticate interactively. Without a token or successful interactive login, you won't be able to create PRs or perform write operations against the GitHub API.
 
 ## Running Claude Code
 
@@ -66,5 +66,6 @@ The root `Makefile` provides targets for building the container image outside of
 |---|---|
 | `make devcontainer-build` | Build the image using the local `devcontainer.json` |
 | `make devcontainer-rebuild` | Same as above but skips the Docker layer cache (full rebuild) |
+| `make devcontainer-open` | Open VS Code connected to the running container via `vscode-remote://` URI (useful for CLI-based launches) |
 
 These are useful for pre-building the image in CI or verifying that the container definition builds cleanly before pushing.
