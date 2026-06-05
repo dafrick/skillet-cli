@@ -45,7 +45,7 @@ describe('executeScaffold — integration (filesystem)', () => {
     expect(content).toContain("new URL('../skill/', import.meta.url)");
   });
 
-  it('bin/cli.js has execute bits set', async () => {
+  it.skipIf(process.platform === 'win32')('bin/cli.js has execute bits set', async () => {
     await fsp.writeFile(
       path.join(sandbox.dir, 'package.json'),
       JSON.stringify({ name: 'my-skill', version: '1.0.0' }),
