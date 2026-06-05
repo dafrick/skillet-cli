@@ -46,6 +46,11 @@ if [[ -z "$SOCKET" || -z "$TARGET" || -z "$PATTERN" ]]; then
   usage
 fi
 
+if [[ ! "$TIMEOUT" =~ ^[0-9]+$ ]]; then
+  echo "Error: -T must be a positive integer" >&2
+  usage
+fi
+
 if [[ "$FIXED" -eq 1 ]]; then
   GREP_MODE="-F"
 else

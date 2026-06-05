@@ -89,6 +89,14 @@ Run `npm pack` in the skilletized directory to produce a tarball. Then, from a s
 
 Confirm skill files landed in the correct location within the target environment. Record the actual path and whether it matches the expected placement.
 
+Expected paths by environment:
+
+| Environment | Skill install path |
+|---|---|
+| Claude Code | `~/.claude/skills/<skill-name>/` |
+| GitHub Copilot CLI | `~/.config/gh-copilot/skills/<skill-name>/` |
+| Custom agent | Defined by the agent's configuration |
+
 **Step 7 — Document issues**
 
 For each issue found during the session, create `ISS-NNN.md` in `issues/` and reference it in the `LOG.md` entry that prompted it (e.g., `→ ISS-001`).

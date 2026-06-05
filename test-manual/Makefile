@@ -7,7 +7,9 @@ IMAGE     ?= ubuntu:24.04
 
 test-start:
 	mkdir -p $(dir $(SOCKET))
+	-docker rm -f $(CONTAINER)
 	docker run -d --name $(CONTAINER) $(IMAGE) sleep infinity
+	-tmux -S "$(SOCKET)" kill-session -t $(SESSION)
 	tmux -S "$(SOCKET)" new-session -d -s $(SESSION)
 	tmux -S "$(SOCKET)" send-keys -t $(SESSION) "docker exec -it $(CONTAINER) bash" Enter
 	@echo ""
