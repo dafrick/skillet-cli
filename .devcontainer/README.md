@@ -11,8 +11,25 @@ The skillet monorepo ships a dev container that gives you Node 24, pnpm, the Git
 
 1. Clone the repository and open it in VS Code.
 2. When prompted "Reopen in Container", click it. If the prompt doesn't appear, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) and run **Dev Containers: Reopen in Container**.
-3. VS Code will pull the image, install features, and run `corepack enable && corepack install && pnpm install`. This takes **2–4 minutes on first start**; subsequent starts are fast because Docker caches the image layers.
+3. VS Code will pull the image, install features, and run `corepack enable && corepack install && pnpm install && pnpm exec lefthook install`. This takes **2–4 minutes on first start**; subsequent starts are fast because Docker caches the image layers.
 4. Once the container is ready, open a terminal — you're working inside the container at `/workspace`.
+
+## Git Configuration (`~/.gitconfig`)
+
+The dev container bind-mounts your host `~/.gitconfig` file so that git commits inside the container use your host identity without any extra setup.
+
+**Important:** `~/.gitconfig` must exist as a **file** on your host. If it doesn't exist and Docker creates a directory instead, git commands in the container will fail.
+
+To ensure `~/.gitconfig` exists:
+
+```sh
+# If you haven't created a .gitconfig yet, initialize one
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+
+# Verify it exists
+ls -l ~/.gitconfig
+```
 
 ## GitHub Authentication (`GH_TOKEN`)
 
@@ -66,6 +83,6 @@ The root `Makefile` provides targets for building the container image outside of
 |---|---|
 | `make devcontainer-build` | Build the image using the local `devcontainer.json` |
 | `make devcontainer-rebuild` | Same as above but skips the Docker layer cache (full rebuild) |
-| `make devcontainer-open` | Open VS Code connected to the running container via `vscode-remote://` URI (useful for CLI-based launches) |
+| `make devcontainer-open` | Open VS Code connected to the running container via `vscode-remote://` URI; **requires the container to already be running** (useful for CLI-based launches) |
 
 These are useful for pre-building the image in CI or verifying that the container definition builds cleanly before pushing.

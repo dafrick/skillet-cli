@@ -16,6 +16,8 @@
   "mounts": [
     // Bind-mount host .gitconfig (read-only) so git commits inside the container
     // use the correct author identity without any extra setup.
+    // NOTE: ~/.gitconfig must exist on the host; if it doesn't, Docker will create
+    // a directory instead of a file, breaking git commands in the container.
     "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,readonly"
 
     // OPTIONAL — uncomment to persist Claude Code auth across container rebuilds.
@@ -39,13 +41,14 @@
       "extensions": [
         "anthropic.claude-code",
         "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
+        "biomejs.biome",
         "eamodio.gitlens",
         "vitest.explorer",
         "streetsidesoftware.code-spell-checker"
       ],
       "settings": {
         "editor.formatOnSave": true,
+        "editor.defaultFormatter": "biomejs.biome",
         "terminal.integrated.defaultProfile.linux": "bash",
         "typescript.tsdk": "node_modules/typescript/lib"
       }
