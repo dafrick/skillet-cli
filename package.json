@@ -2,15 +2,14 @@
   "private": true,
   "packageManager": "pnpm@11.5.0",
   "scripts": {
-    "test": "pnpm -F @skillet-cli/core test",
-    "test:unit": "pnpm -F @skillet-cli/core test:unit",
-    "test:integration": "pnpm -F @skillet-cli/core test:integration",
-    "test:e2e": "pnpm -F @skillet-cli/core test:e2e",
-    "test:coverage": "pnpm -F @skillet-cli/core test:coverage",
+    "build": "pnpm --filter @skillet-cli/ui build && pnpm --filter @skillet-cli/core build && pnpm --filter create-skillet build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:unit": "pnpm -r test:unit",
+    "test:integration": "pnpm --filter @skillet-cli/core test:integration && pnpm --filter create-skillet test:integration",
+    "test:e2e": "pnpm --filter @skillet-cli/core test:e2e && pnpm --filter create-skillet test:e2e",
     "lint": "biome check .",
-    "format": "biome check --write .",
-    "build": "pnpm -F @skillet-cli/core build",
-    "typecheck": "pnpm -F @skillet-cli/core typecheck"
+    "format": "biome check --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",

@@ -197,6 +197,14 @@ async function runInstall(
     console.log(
       `\n  ${selectedTargets.length} target${selectedTargets.length !== 1 ? 's' : ''} installed · ${elapsed}s`,
     );
+    // Cross-promotion hint: only in TTY, not CI, only if create-skillet not already installed
+    if (!process.env.CI) {
+      const { spawnSync } = await import('node:child_process');
+      const { status } = spawnSync('which', ['create-skillet'], { stdio: 'ignore' });
+      if (status !== 0) {
+        process.stdout.write(dim('  Tip: publish your own skill — npm create skillet\n'));
+      }
+    }
   } else {
     console.log(
       `[${pkg.name}] ${selectedTargets.length} target${selectedTargets.length !== 1 ? 's' : ''} installed`,

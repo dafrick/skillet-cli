@@ -136,6 +136,17 @@ This is intentionally minimal: no other flags or sub-commands are defined. The `
 
 [`which create-skillet` false-negative in some PATH configurations] → Acceptable for an optional hint; the tip fires only when `which` returns non-zero.
 
+### Decision: Package-prefixed release tags
+
+Release tags use a package prefix to distinguish which package is being released:
+
+- `core-v<semver>` — releases `@skillet-cli/core` (e.g. `core-v1.2.3`)
+- `create-v<semver>` — releases `create-skillet` (e.g. `create-v0.1.0`)
+
+`packages/ui` is private and is never tagged or published independently. It is always inlined into the consuming packages' dist output at build time.
+
+This prefix strategy avoids the ambiguity of a single `v*` tag when multiple independently-versioned packages share a repository.
+
 ## Migration Plan
 
 1. Create `packages/ui` and move UI modules from `packages/core/src/ui/` — update all import paths in `packages/core`
