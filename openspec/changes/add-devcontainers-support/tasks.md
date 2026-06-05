@@ -24,12 +24,12 @@
 
 ## 4. Documentation
 
-- [ ] 4.1 Create `.devcontainer/README.md` covering: prerequisites (Docker Desktop, VS Code Dev Containers extension), step-by-step "Reopen in Container" instructions, how to set `GH_TOKEN` in the host environment, how to run `claude` inside the container, the optional `~/.claude` bind-mount for auth persistence, and a note that `make devcontainer-build/rebuild` are available for headless use
-- [ ] 4.2 Update `CONTRIBUTING.md` with a short "Dev Container" section: one sentence recommending the container as the default environment, and a link/path to `.devcontainer/README.md`
+- [x] 4.1 Create `.devcontainer/README.md` covering: prerequisites (Docker Desktop, VS Code Dev Containers extension), step-by-step "Reopen in Container" instructions, how to set `GH_TOKEN` in the host environment, how to run `claude` inside the container, the optional `~/.claude` bind-mount for auth persistence, and a note that `make devcontainer-build/rebuild` are available for headless use
+- [x] 4.2 Update `CONTRIBUTING.md` with a short "Dev Container" section: one sentence recommending the container as the default environment, and a link/path to `.devcontainer/README.md`
 
 ## 5. Verification
 
-- [ ] 5.1 Run `make devcontainer-build` and confirm it completes without errors
+- [x] 5.1 Run `make devcontainer-build` and confirm it completes without errors
 - [ ] 5.2 Open the project in VS Code via "Reopen in Container" and verify the terminal runs as `node` inside `/workspace`
 - [ ] 5.3 Confirm `claude --version`, `pnpm --version`, and `gh --version` all exit 0 inside the container
 - [ ] 5.4 Confirm `echo $DEVCONTAINER` returns `true` inside the container (set via `containerEnv`)
