@@ -188,7 +188,7 @@
   - `release-create.yml` — same pattern: `head_branch` starts with `create-v`; validates `^create-v[0-9]+\.[0-9]+\.[0-9]+$`; runs `pnpm --filter @skillet-cli/ui build` then `pnpm -F create-skillet publish --access public --no-git-checks`
   - Delete the original `release.yml`
 
-- [ ] 9.5 Run full workspace build and test suite to confirm all packages pass before marking this section complete:
+- [x] 9.5 Run full workspace build and test suite to confirm all packages pass before marking this section complete:
   ```
   pnpm --filter @skillet-cli/ui build && pnpm --filter @skillet-cli/ui test
   pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test
@@ -197,13 +197,13 @@
 
 ## 10. Verify
 
-- [ ] 10.1 Run `pnpm --filter @skillet-cli/ui build && pnpm --filter @skillet-cli/ui test` — confirm UI package builds and tests pass
-- [ ] 10.2 Run `pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test` — confirm core still passes with migrated imports and tsup bundling
-- [ ] 10.3 Run `pnpm --filter create-skillet build` — confirm create package compiles without errors
-- [ ] 10.4 Create `packages/create/test/e2e/wizard.test.ts` — an automated e2e test that:
+- [x] 10.1 Run `pnpm --filter @skillet-cli/ui build && pnpm --filter @skillet-cli/ui test` — confirm UI package builds and tests pass
+- [x] 10.2 Run `pnpm --filter @skillet-cli/core build && pnpm --filter @skillet-cli/core test` — confirm core still passes with migrated imports and tsup bundling
+- [x] 10.3 Run `pnpm --filter create-skillet build` — confirm create package compiles without errors
+- [x] 10.4 Create `packages/create/test/e2e/wizard.test.ts` — an automated e2e test that:
   1. Creates a temp directory with a `SKILL.md` file using the sandbox helper
   2. Spawns `create-skillet` as a subprocess (from the built dist) using `@inquirer/prompts`-compatible stdin piping or by pre-seeding all prompts via CLI args if supported
   3. Asserts: process exits 0, `package.json` exists with required fields, `bin/cli.js` exists and is executable, `skill/SKILL.md` exists (moved from root)
   Mirror the pattern in `packages/core/test/e2e/install.test.ts` and `packages/core/test/e2e/globalSetup.ts`. Run as part of `pnpm --filter create-skillet test:e2e` (separate vitest config).
   **Note:** If fully automated e2e is not feasible for the interactive wizard (stdin piping to @inquirer/prompts is non-trivial), document the limitation and keep this as a documented manual step — but create the test file scaffold so future automation can be added.
-- [ ] 10.5 Confirm the SKILLETIZE wordmark renders correctly in TTY and that no output is emitted in `CI=true` mode
+- [x] 10.5 Confirm the SKILLETIZE wordmark renders correctly in TTY and that no output is emitted in `CI=true` mode
