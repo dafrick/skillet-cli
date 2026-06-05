@@ -2,6 +2,8 @@
 
 ## Prerequisites
 
+> **Note:** If you use the dev container (see [Dev Container](#dev-container) below), you can skip this section — all prerequisites are handled automatically inside the container.
+
 Before setting up the repo, install the following tools:
 
 - **Node.js 24+** — [nodejs.org/en/download](https://nodejs.org/en/download)

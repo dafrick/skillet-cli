@@ -32,7 +32,7 @@
   },
 
   // Enable corepack, install the pinned pnpm version, then install all deps
-  "postCreateCommand": "corepack enable && corepack install && pnpm install",
+  "postCreateCommand": "corepack enable && corepack install && pnpm install && pnpm exec lefthook install",
 
   "customizations": {
     "vscode": {

@@ -17,10 +17,10 @@
 
 ## 3. Makefile Targets
 
-- [ ] 3.1 Add `devcontainer-build` target: `pnpm exec devcontainer build --workspace-folder .`
-- [ ] 3.2 Add `devcontainer-open` target: `code --folder-uri "vscode-remote://dev-container+$(shell printf '%s' $$(pwd) | xxd -p | tr -d '\n')/workspace"`
-- [ ] 3.3 Add `devcontainer-rebuild` target: `pnpm exec devcontainer build --workspace-folder . --no-cache`
-- [ ] 3.4 Add all three targets to `.PHONY`
+- [x] 3.1 Add `devcontainer-build` target: `pnpm exec devcontainer build --workspace-folder .`
+- [x] 3.2 Add `devcontainer-open` target: `code --folder-uri "vscode-remote://dev-container+$(shell printf '%s' $$(pwd) | xxd -p | tr -d '\n')/workspace"`
+- [x] 3.3 Add `devcontainer-rebuild` target: `pnpm exec devcontainer build --workspace-folder . --no-cache`
+- [x] 3.4 Add all three targets to `.PHONY`
 
 ## 4. Documentation
 
