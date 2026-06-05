@@ -1,5 +1,7 @@
-## ADDED Requirements
+## Purpose
 
+Documents how contributors set up, develop, test, and release the skillet monorepo. Covers prerequisites, setup steps, available scripts, commit conventions, the dev container environment, and the release process.
+## Requirements
 ### Requirement: CONTRIBUTING.md documents prerequisites
 `CONTRIBUTING.md` SHALL list the required tools and versions a contributor needs before setting up the repo: Node.js 20+ and pnpm 9+. Links to installation pages SHALL be included.
 
@@ -90,3 +92,11 @@ pnpm vitest run packages/core/test/unit/hash.test.ts
 #### Scenario: Contributor can test against a real skill project
 - **WHEN** a contributor reads the local linking instructions
 - **THEN** they can link their local build into a skill project using `pnpm link --global` without re-linking after each build
+
+### Requirement: CONTRIBUTING.md references the dev container as recommended environment
+`CONTRIBUTING.md` SHALL include a short dev container section that names the dev container as the recommended development environment and links to `.devcontainer/README.md` for setup instructions.
+
+#### Scenario: CONTRIBUTING.md mentions the dev container
+- **WHEN** a contributor reads `CONTRIBUTING.md`
+- **THEN** they find a mention of the dev container and a path or link to `.devcontainer/README.md`
+
