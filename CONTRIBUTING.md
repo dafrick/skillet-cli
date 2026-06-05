@@ -21,27 +21,28 @@ This installs all workspace dependencies and registers the git hooks.
 
 ## Scripts
 
-All scripts can be run from the repo root or from `packages/core/`.
+Root-level scripts run across all packages. Per-package scripts can also be run from inside `packages/core/`, `packages/create/`, or `packages/ui/`.
 
 | Script | Description |
 |---|---|
-| `pnpm test` | Run unit + integration + E2E tests |
-| `pnpm test:unit` | Fast; use during TDD |
-| `pnpm test:integration` | Filesystem tests with HOME sandbox |
-| `pnpm test:e2e` | Real pty; requires prior build |
-| `pnpm test:coverage` | Coverage report in text/JSON/HTML |
+| `pnpm build` | Build all packages in dependency order (ui → core → create) |
+| `pnpm typecheck` | Type-check all packages |
 | `pnpm lint` | Read-only lint; exits non-zero on violations |
 | `pnpm format` | Format and lint; rewrites files |
-| `pnpm build` | Compile TypeScript to dist/ |
-| `pnpm typecheck` | Type check without emitting |
+| `pnpm test:unit` | Fast unit tests across all packages; use during TDD |
+| `pnpm test:integration` | Filesystem tests with HOME sandbox |
+| `pnpm test:e2e` | Real process spawning; requires prior build |
+
+`packages/core` also has `pnpm test:coverage` for a coverage report.
 
 ### Running a single test file
 
 ```sh
 pnpm --filter @skillet-cli/core exec vitest run test/unit/hash.test.ts
+pnpm --filter create-skillet exec vitest run test/unit/detect.test.ts
 ```
 
-Adapt the path to any test file under `packages/core/test/`.
+Adapt the filter and path to the package and test file you want.
 
 ## Local Build & Manual Testing
 
@@ -53,7 +54,7 @@ A `Makefile` in `packages/core/` abstracts common commands. Run `make <target>` 
 | `make clean` | Remove `dist/` and `coverage/` |
 | `make watch` | Recompile on save (TypeScript watch mode) |
 
-### Smoke-test the CLI against the built-in fixture
+### Smoke-test the core CLI against the built-in fixture
 
 Build first, then invoke `bin/cli.js` directly:
 
@@ -63,6 +64,16 @@ make build && node bin/cli.js install
 ```
 
 This runs the CLI against `fixtures/hello-skill` — no extra setup required. For a faster iteration loop, run `make watch` in one terminal to pick up saves automatically, then run `node bin/cli.js <command>` as needed.
+
+### Smoke-test the create-skillet wizard
+
+Build all packages first (ui must be built before create), then run the wizard in a temp directory:
+
+```sh
+pnpm build
+mkdir /tmp/my-skill && cd /tmp/my-skill
+node /path/to/repo/packages/create/bin/cli.js
+```
 
 ### Test against a local skill project
 
@@ -94,26 +105,44 @@ feat(core): add install command
 
 ## Keeping READMEs in Sync
 
-`packages/core/README.md` is the README that appears on the npm package page. It targets skill authors (library consumers) and covers the `run()` API and RunOptions. The root `README.md` covers the same API in its "Building with @skillet-cli/core" section.
+There are three user-facing READMEs:
 
-When the public API changes — a new `RunOptions` field, a changed `run()` signature, or an updated minimal example — **update both files** in the same PR.
+- `packages/core/README.md` — appears on the `@skillet-cli/core` npm page; targets skill authors; covers `run()` API and RunOptions
+- `packages/create/README.md` — appears on the `create-skillet` npm page; targets first-time users running `npm create skillet`
+- `README.md` (root) — covers the same `run()` API in the "Building with @skillet-cli/core" section
+
+When the public API changes — a new `RunOptions` field, a changed `run()` signature, or an updated minimal `bin/cli.js` example — **update both `packages/core/README.md` and the root `README.md`** in the same PR.
 
 ## Release Process
 
+Each package is released independently using a prefixed tag. The tag triggers the corresponding workflow.
+
+### Releasing `@skillet-cli/core`
+
 1. Ensure `main` is passing CI
 2. Bump the version in `packages/core/package.json`
-3. Commit with `chore(release): vX.Y.Z`
+3. Commit: `chore(release): core-vX.Y.Z`
 4. Push the commit to `main`
+5. Create and push the tag:
 
 ```sh
-git push origin main
+git tag core-vX.Y.Z
+git push origin core-vX.Y.Z
 ```
 
-5. Create and push a git tag `vX.Y.Z`
+The `release-core.yml` workflow publishes `@skillet-cli/core` to npm automatically.
+
+### Releasing `create-skillet`
+
+1. Ensure `main` is passing CI
+2. Bump the version in `packages/create/package.json`
+3. Commit: `chore(release): create-vX.Y.Z`
+4. Push the commit to `main`
+5. Create and push the tag:
 
 ```sh
-git tag vX.Y.Z
-git push origin vX.Y.Z
+git tag create-vX.Y.Z
+git push origin create-vX.Y.Z
 ```
 
-6. The `release.yml` GitHub Actions workflow publishes to npm automatically — no manual publish required
+The `release-create.yml` workflow publishes `create-skillet` to npm automatically.

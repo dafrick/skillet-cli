@@ -46,6 +46,8 @@ The installer detects which agent tools are present and pre-selects them. You ca
 
 Use `@skillet-cli/core` to ship your skill as an npm package with a complete CLI — so your users can install, update, and uninstall it in any agent environment with a single command, whether that's Claude Code, GitHub Copilot, or any other agent.
 
+**Quick start:** Run `npm create skillet` in your project directory. The interactive wizard detects defaults from your git config and existing files, prompts for the rest, and scaffolds everything for you — skip straight to step 4.
+
 ### 1. Create your package
 
 Initialize a directory with a `package.json`. Publishing via GitHub Package Registry requires no separate npm account:
@@ -77,10 +79,11 @@ Create `bin/cli.js` — this is your entire CLI:
 ```js
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { run } from '@skillet-cli/core';
 
 const pkg = createRequire(import.meta.url)('../package.json');
-await run({ skillDir: new URL('../skill', import.meta.url).pathname, pkg });
+await run({ skillDir: fileURLToPath(new URL('../skill', import.meta.url)), pkg });
 ```
 
 ### 4. Publish

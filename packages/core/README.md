@@ -4,6 +4,8 @@ Use `@skillet-cli/core` to ship your skill as an npm package with a complete CLI
 
 ## For skill authors
 
+**Quick start:** Run `npm create skillet` in your project directory. The interactive wizard detects defaults from your git config and existing files, prompts for the rest, and scaffolds everything for you — skip straight to step 4.
+
 ### 1. Create your package
 
 Initialize a directory with a `package.json`. Publishing via GitHub Package Registry requires no separate npm account:
@@ -35,6 +37,7 @@ Create `bin/cli.js` — this is your entire CLI:
 ```js
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { run } from '@skillet-cli/core';
 
 const pkg = createRequire(import.meta.url)('../package.json');
