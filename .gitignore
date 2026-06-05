@@ -4,3 +4,4 @@ dist/
 .codex/
 coverage/
 *.tsbuildinfo
+test-manual/tmp/*

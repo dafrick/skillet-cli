@@ -1,0 +1,30 @@
+# ISS-NNN: <title>
+
+**Description**
+<!-- What happened — describe the symptom, not the cause. -->
+
+
+**Reproduction steps**
+
+1.
+2.
+3.
+
+**How encountered**
+<!-- Which test protocol step surfaced this issue, e.g. "Step 3 — running create-skillet" -->
+
+
+**Why it is bad / user impact**
+<!-- What a real user would experience if they hit this. -->
+
+
+**Severity**
+<!-- Pick one and delete the others. Scale: critical = data loss or complete blocker; high = common path broken, no workaround; medium = degraded experience, workaround exists; low = cosmetic or edge-case annoyance -->
+- [ ] critical
+- [ ] high
+- [ ] medium
+- [ ] low
+
+**Workaround**
+<!-- Describe a workaround if one exists, or write "None known." -->
+

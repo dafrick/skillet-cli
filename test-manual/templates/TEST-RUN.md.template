@@ -1,0 +1,118 @@
+# Test Run: <repo-name>
+
+```
+repo:
+tier:
+env:
+date:
+tester:
+```
+
+---
+
+## Failure Taxonomy Key
+
+| Symbol | Meaning |
+|--------|---------|
+| ✅ Pass | Worked correctly with the npm README alone; UX clear and defaults sensible |
+| 🟡 Soft fail — docs gap | Worked but required consulting the GitHub README beyond the npm README |
+| 🟠 Soft fail — UX issue | Worked functionally but UX was confusing, defaults wrong, preview inaccurate, or post-install guidance unclear |
+| 🔴 Hard fail | Threw an error, produced wrong output, or could not be completed even with workarounds |
+| 🔵 N/A | Test step not applicable to this tier or this repo's structure |
+
+---
+
+## Happy-Path Protocol
+
+- [ ] **Step 1 — Identify the tier**
+
+  Classify the repo using the tier definitions below before starting any other steps.
+
+  | Tier | Definition |
+  |------|------------|
+  | T1 | Single `SKILL.md`, no resources |
+  | T2 | Single skill + flat supporting files |
+  | T3 | Single skill + nested resources/scripts |
+  | T4 | Multiple `SKILL.md` files in subdirectories (multi-skill) |
+  | T5 | Multi-skill with scripts, templates, or deep nesting |
+
+  Result/notes:
+
+- [ ] **Step 2 — Bootstrap Node**
+
+  Follow only the npm README for `create-skillet`. Do not consult the GitHub README yet.
+
+  Outcome:
+
+- [ ] **Step 3 — Run create-skillet**
+
+  Run the wizard and note all prompts, defaults, and any output.
+
+  Outcome:
+
+- [ ] **Step 4 — Verify output**
+
+  Inspect the skilletized directory. Confirm the structure looks correct for the repo's tier.
+
+  Result/notes:
+
+- [ ] **Step 5 — Install skill**
+
+  Run `npm pack` inside the skilletized directory, then `npm install <tarball>` from a separate working directory.
+
+  Result/notes:
+
+- [ ] **Step 6 — Verify skill placement**
+
+  Confirm skill files landed in the expected location (e.g., `~/.claude/skills/` or equivalent).
+
+  Result/notes:
+
+- [ ] **Step 7 — Document issues**
+
+  File `ISS-NNN.md` (using the ISSUE.md.template) for each issue found during this run.
+
+  Issues filed:
+
+---
+
+## Edge Cases / Unhappy Paths
+
+- [ ] **No git remote configured** — Remove or stub the git remote and run create-skillet. Note behavior.
+
+  Result/notes:
+
+- [ ] **Existing `package.json` in the repo** — Run create-skillet in a repo that already has a `package.json`. Note behavior.
+
+  Result/notes:
+
+- [ ] **Missing `SKILL.md`** — Run create-skillet in a repo with no `SKILL.md`. Note behavior.
+
+  Result/notes:
+
+- [ ] **Large skill directory with many files** — Run against a repo with a large number of files. Note performance and correctness.
+
+  Result/notes:
+
+---
+
+## Soft-Fail Log
+
+| Step | Outcome | Notes |
+|------|---------|-------|
+|      |         |       |
+
+---
+
+## Issues
+
+<!-- List each ISS-NNN filed during this run with a one-line summary. -->
+
+- [ISS-NNN](./ISS-NNN.md) — <one-line summary>
+
+---
+
+## UX Quality Observations
+
+<!-- Free-form notes on UX clarity, default values, preview accuracy, and post-install guidance. -->
+
