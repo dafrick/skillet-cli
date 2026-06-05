@@ -1,0 +1,54 @@
+// devcontainer.json — skillet monorepo
+// Image: Node 24 + TypeScript on Debian Bookworm
+{
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm",
+
+  // Features: GitHub CLI for repo ops; Claude Code for AI assistance
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+
+  "remoteUser": "node",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+  "workspaceFolder": "/workspace",
+
+  "mounts": [
+    // Bind-mount host .gitconfig (read-only) so git commits inside the container
+    // use the correct author identity without any extra setup.
+    "source=${localEnv:HOME}/.gitconfig,target=/home/node/.gitconfig,type=bind,readonly"
+
+    // OPTIONAL — uncomment to persist Claude Code auth across container rebuilds.
+    // Tradeoff: convenient for Claude Code users (no re-auth after rebuild), but
+    // ties the devcontainer to a Claude-specific credential store. Leave commented
+    // out to stay agent-agnostic and rely on env-var-based auth (e.g. ANTHROPIC_API_KEY)
+    // instead.
+    // "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind"
+  ],
+
+  "containerEnv": {
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    "DEVCONTAINER": "true"
+  },
+
+  // Enable corepack, install the pinned pnpm version, then install all deps
+  "postCreateCommand": "corepack enable && corepack install && pnpm install",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "vitest.explorer",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  }
+}
