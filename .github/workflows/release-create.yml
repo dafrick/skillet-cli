@@ -1,4 +1,4 @@
-name: Release
+name: Release Create
 
 on:
   workflow_run:
@@ -7,21 +7,18 @@ on:
 
 jobs:
   publish:
-    name: Publish to npm
+    name: Publish create-skillet to npm
     runs-on: ubuntu-latest
-    # For a tag push (e.g. v1.0.0), GitHub sets head_branch to the tag name itself,
-    # so startsWith(..., 'v') correctly matches only tag-triggered CI runs.
-    # Branches that happen to start with 'v' are caught by the semver validation step below.
     if: >
       github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'v')
+      startsWith(github.event.workflow_run.head_branch, 'create-v')
     concurrency:
-      group: release-${{ github.event.workflow_run.head_sha }}
+      group: release-create-${{ github.event.workflow_run.head_sha }}
       cancel-in-progress: false
     steps:
       - name: Validate semver tag
         run: |
-          [[ "$BRANCH" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$BRANCH" =~ ^create-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
         env:
           BRANCH: ${{ github.event.workflow_run.head_branch }}
       - uses: actions/checkout@v4
@@ -36,6 +33,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
         env:
           LEFTHOOK: 0
-      - run: pnpm -F @skillet-cli/core publish --access public --no-git-checks
+      - run: pnpm --filter @skillet-cli/ui build
+      - run: pnpm -F create-skillet publish --access public --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
