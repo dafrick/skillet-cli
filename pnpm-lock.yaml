@@ -12,8 +12,8 @@ importers:
         specifier: ^2.4.16
         version: 2.4.16
       '@devcontainers/cli':
-        specifier: ^0.75.0
-        version: 0.75.0
+        specifier: ^0.87.0
+        version: 0.87.0
       lefthook:
         specifier: ^2.1.9
         version: 2.1.9
@@ -211,9 +211,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@devcontainers/cli@0.75.0':
-    resolution: {integrity: sha512-fYcAZMX1RjhG9bIhkiBrQMcKwnoGp808PWToAvWyNqSg8AeY8Bm2ClXVrFQknnPLRzD+GENlLrlx+WpI6weuUA==}
-    engines: {node: ^16.13.0 || >=18.0.0}
+  '@devcontainers/cli@0.87.0':
+    resolution: {integrity: sha512-OVwjI0LH6cYilo2MXrnqYALtCwKM0dsdphNsIguw0ESRBG8s1wPIjDbPiDO5taxPTe3cLshsQYVZY1UpKtFaJA==}
+    engines: {node: '>=20.0.0'}
     hasBin: true
 
   '@emnapi/core@1.10.0':
@@ -1785,7 +1785,7 @@ snapshots:
   '@biomejs/cli-win32-x64@2.4.16':
     optional: true
 
-  '@devcontainers/cli@0.75.0': {}
+  '@devcontainers/cli@0.87.0': {}
 
   '@emnapi/core@1.10.0':
     dependencies:

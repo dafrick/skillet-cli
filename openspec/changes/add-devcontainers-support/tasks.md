@@ -1,19 +1,19 @@
 ## 1. Project Setup
 
-- [ ] 1.1 Create `.devcontainer/` directory at repo root
-- [ ] 1.2 Add `@devcontainers/cli` as a dev dependency in root `package.json`
-- [ ] 1.3 Run `pnpm install` to update lockfile
+- [x] 1.1 Create `.devcontainer/` directory at repo root
+- [x] 1.2 Add `@devcontainers/cli` as a dev dependency in root `package.json`
+- [x] 1.3 Run `pnpm install` to update lockfile
 
 ## 2. devcontainer.json
 
-- [ ] 2.1 Create `.devcontainer/devcontainer.json` with `"image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm"`
-- [ ] 2.2 Add `features` block: `ghcr.io/devcontainers/features/github-cli:1` (latest) and `ghcr.io/anthropics/devcontainer-features/claude-code:1.0`
-- [ ] 2.3 Set `"remoteUser": "node"`, `"workspaceMount"`, and `"workspaceFolder": "/workspace"`
-- [ ] 2.4 Add `"mounts"` with: `~/.gitconfig` read-only bind-mount at `/home/node/.gitconfig` (active by default), plus a commented-out bind-mount for `~/.claude` (`source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind`) with inline explanation of the tradeoff
-- [ ] 2.5 Set `"containerEnv"` with: `GH_TOKEN: "${localEnv:GH_TOKEN}"` and `DEVCONTAINER: "true"`
-- [ ] 2.6 Set `"postCreateCommand": "corepack enable && corepack install && pnpm install"`
-- [ ] 2.7 Add `"customizations.vscode.extensions"`: `anthropic.claude-code`, `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `eamodio.gitlens`, `vitest.explorer`, `streetsidesoftware.code-spell-checker`
-- [ ] 2.8 Add `"customizations.vscode.settings"`: `editor.formatOnSave`, default terminal bash, `typescript.tsdk` pointing to workspace TypeScript
+- [x] 2.1 Create `.devcontainer/devcontainer.json` with `"image": "mcr.microsoft.com/devcontainers/typescript-node:24-bookworm"`
+- [x] 2.2 Add `features` block: `ghcr.io/devcontainers/features/github-cli:1` (latest) and `ghcr.io/anthropics/devcontainer-features/claude-code:1.0`
+- [x] 2.3 Set `"remoteUser": "node"`, `"workspaceMount"`, and `"workspaceFolder": "/workspace"`
+- [x] 2.4 Add `"mounts"` with: `~/.gitconfig` read-only bind-mount at `/home/node/.gitconfig` (active by default), plus a commented-out bind-mount for `~/.claude` (`source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind`) with inline explanation of the tradeoff
+- [x] 2.5 Set `"containerEnv"` with: `GH_TOKEN: "${localEnv:GH_TOKEN}"` and `DEVCONTAINER: "true"`
+- [x] 2.6 Set `"postCreateCommand": "corepack enable && corepack install && pnpm install"`
+- [x] 2.7 Add `"customizations.vscode.extensions"`: `anthropic.claude-code`, `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `eamodio.gitlens`, `vitest.explorer`, `streetsidesoftware.code-spell-checker`
+- [x] 2.8 Add `"customizations.vscode.settings"`: `editor.formatOnSave`, default terminal bash, `typescript.tsdk` pointing to workspace TypeScript
 
 ## 3. Makefile Targets
 
