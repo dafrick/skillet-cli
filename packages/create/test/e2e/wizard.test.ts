@@ -1,6 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { createSandbox } from '../helpers/sandbox.js';
 
@@ -18,10 +19,7 @@ import { createSandbox } from '../helpers/sandbox.js';
 
 describe('create-skillet binary smoke test', () => {
   it('bin/cli.js exists and is a valid ESM file', async () => {
-    const binPath = path.resolve(
-      path.dirname(new URL(import.meta.url).pathname),
-      '../../bin/cli.js',
-    );
+    const binPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../bin/cli.js');
     const stat = await fs.stat(binPath);
     expect(stat.isFile()).toBe(true);
     // Verify execute permission

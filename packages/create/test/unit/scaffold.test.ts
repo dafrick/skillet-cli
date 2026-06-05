@@ -69,7 +69,7 @@ describe('executeScaffold — npm init conditional', () => {
 
     const calls = mockSpawnSync.mock.calls;
     const initCall = calls.find(
-      (c) => c[0] === 'npm' && Array.isArray(c[1]) && c[1].includes('init'),
+      (c) => typeof c[0] === 'string' && c[0].includes('npm') && c[0].includes('init'),
     );
     expect(initCall).toBeDefined();
   });
@@ -81,7 +81,7 @@ describe('executeScaffold — npm init conditional', () => {
 
     const calls = mockSpawnSync.mock.calls;
     const initCall = calls.find(
-      (c) => c[0] === 'npm' && Array.isArray(c[1]) && c[1].includes('init'),
+      (c) => typeof c[0] === 'string' && c[0].includes('npm') && c[0].includes('init'),
     );
     expect(initCall).toBeUndefined();
   });
@@ -94,65 +94,69 @@ describe('executeScaffold — npm pkg set fields', () => {
     mockFsExistsSync.mockReturnValue(true);
   });
 
-  function getPkgSetArgs(): string[][] {
+  function getPkgSetArgs(): string[] {
     return mockSpawnSync.mock.calls
       .filter(
-        (c) => c[0] === 'npm' && Array.isArray(c[1]) && c[1][0] === 'pkg' && c[1][1] === 'set',
+        (c) =>
+          typeof c[0] === 'string' &&
+          c[0].includes('npm') &&
+          c[0].includes('"pkg"') &&
+          c[0].includes('"set"'),
       )
-      .map((c) => c[1] as string[]);
+      .map((c) => c[0] as string);
   }
 
   it('sets name field', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('name=') && a.includes('my-skill'))).toBe(true);
   });
 
   it('sets version field', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('version=') && a.includes('1.0.0'))).toBe(true);
   });
 
   it('sets description field', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('description='))).toBe(true);
   });
 
   it('sets author field', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('author='))).toBe(true);
   });
 
   it('sets license field', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('license=') && a.includes('MIT'))).toBe(true);
   });
 
   it('sets type=module', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('type=module'))).toBe(true);
   });
 
   it('sets engines.node', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('engines.node='))).toBe(true);
   });
 
   it('sets skillet.skillDir', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('skillet.skillDir='))).toBe(true);
   });
 
   it('sets bin entry', async () => {
     await executeScaffold(baseConfig);
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     // bin.[name]=./bin/cli.js
     expect(allArgs.some((a) => a.includes('bin.') && a.includes('./bin/cli.js'))).toBe(true);
   });
@@ -165,23 +169,27 @@ describe('executeScaffold — repository URL guard', () => {
     mockFsExistsSync.mockReturnValue(true);
   });
 
-  function getPkgSetArgs(): string[][] {
+  function getPkgSetArgs(): string[] {
     return mockSpawnSync.mock.calls
       .filter(
-        (c) => c[0] === 'npm' && Array.isArray(c[1]) && c[1][0] === 'pkg' && c[1][1] === 'set',
+        (c) =>
+          typeof c[0] === 'string' &&
+          c[0].includes('npm') &&
+          c[0].includes('"pkg"') &&
+          c[0].includes('"set"'),
       )
-      .map((c) => c[1] as string[]);
+      .map((c) => c[0] as string);
   }
 
   it('does NOT set repository.url when repositoryUrl is empty', async () => {
     await executeScaffold({ ...baseConfig, repositoryUrl: '' });
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('repository.url'))).toBe(false);
   });
 
   it('sets repository.url when repositoryUrl is non-empty', async () => {
     await executeScaffold({ ...baseConfig, repositoryUrl: 'git+https://github.com/org/repo' });
-    const allArgs = getPkgSetArgs().flat();
+    const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('repository.url'))).toBe(true);
     expect(allArgs.some((a) => a.includes('repository.type=git'))).toBe(true);
   });

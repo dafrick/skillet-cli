@@ -5,10 +5,14 @@ import * as path from 'node:path';
 import { createSpinner } from '@skillet-cli/ui';
 import type { WizardConfig } from './prompts.js';
 
-const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-
+// shell:true is required on Windows where npm is a .cmd batch file that
+// CreateProcess cannot execute directly. We build the command string ourselves
+// and double-quote every arg so shell metacharacters (>, |, &, spaces) in
+// values like "engines.node=>=24" or "description=A test skill" are not
+// interpreted by the shell.
 function runSync(cmd: string, args: string[], stepName: string): void {
-  const result = spawnSync(cmd, args, { stdio: 'inherit', encoding: 'buffer' });
+  const cmdStr = [cmd, ...args.map((a) => `"${a}"`)].join(' ');
+  const result = spawnSync(cmdStr, [], { stdio: 'inherit', shell: true });
   if (result.status !== 0) {
     throw new Error(`${stepName} exited with code ${result.status ?? 'null'}`);
   }
@@ -33,7 +37,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     const pkgJsonPath = path.join(process.cwd(), 'package.json');
     if (!fs.existsSync(pkgJsonPath)) {
       spinner.start('Prepping npm package…');
-      runSync(npm, ['init', '-y'], 'npm init');
+      runSync('npm', ['init', '-y'], 'npm init');
       spinner.succeed('Prepping done');
     }
 
@@ -52,13 +56,13 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       `bin.${config.name}=./bin/cli.js`,
     ];
 
-    runSync(npm, ['pkg', 'set', ...pkgSetArgs], 'npm pkg set');
+    runSync('npm', ['pkg', 'set', ...pkgSetArgs], 'npm pkg set');
 
     // Step 3: repository URL (only if non-empty)
     if (config.repositoryUrl) {
-      runSync(npm, ['pkg', 'set', 'repository.type=git'], 'npm pkg set repository.type');
+      runSync('npm', ['pkg', 'set', 'repository.type=git'], 'npm pkg set repository.type');
       runSync(
-        npm,
+        'npm',
         ['pkg', 'set', `repository.url=${config.repositoryUrl}`],
         'npm pkg set repository.url',
       );
@@ -79,9 +83,9 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
 
     // Step 6: npm install @skillet-cli/core
     spinner.start('Firing up @skillet-cli/core install…');
-    const installResult = spawnSync(npm, ['install', '@skillet-cli/core'], {
+    const installResult = spawnSync('npm install @skillet-cli/core', [], {
       stdio: 'inherit',
-      encoding: 'buffer',
+      shell: true,
     });
     if (installResult.status !== 0) {
       throw new Error(
