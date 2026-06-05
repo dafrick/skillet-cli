@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
-    "@devcontainers/cli": "^0.75.0",
+    "@devcontainers/cli": "^0.87.0",
     "lefthook": "^2.1.9",
     "typescript": "^6.0.3"
   }
