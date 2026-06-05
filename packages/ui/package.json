@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run test/unit",
-    "lint": "biome check .",
-    "format": "biome check --write ."
+    "lint": "pnpm exec biome check .",
+    "format": "pnpm exec biome check --write ."
   },
   "dependencies": {
     "chalk": "^5.4.1",
