@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Package declares itself a skill-package via the `skillet` key
-An npm package SHALL be treated as a skill-package by `@skillet/core` if and only if its `package.json` contains a top-level key named `skillet`. The presence of this key is the sole switch; the absence of any dependencies, the presence of `node_modules`, or any other package characteristic SHALL NOT trigger skill-package treatment.
+An npm package SHALL be treated as a skill-package by `@skillet-cli/core` if and only if its `package.json` contains a top-level key named `skillet`. The presence of this key is the sole switch; the absence of any dependencies, the presence of `node_modules`, or any other package characteristic SHALL NOT trigger skill-package treatment.
 
 #### Scenario: Package with `skillet` key is recognized as a skill-package
 - **WHEN** core reads a `package.json` that contains a `skillet` key

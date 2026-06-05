@@ -25,7 +25,13 @@
 
 - [x] 6.1 Update `openspec/changes/npm-package-polish/specs/npm-package-metadata/spec.md`: replace all three hardcoded `dafrick/skillet` URLs (repository, homepage, bugs) with `dafrick/skillet-cli` equivalents
 
-## 7. Verification
+## 7. New Packages (added on main after branch was created)
 
-- [x] 7.1 Run `pnpm test` and confirm all tests pass with the updated URL assertions
-- [x] 7.2 Grep the repo for any remaining `github.com/dafrick/skillet[^-]` occurrences and confirm none remain
+- [x] 7.1 Update `packages/create/package.json`: add `repository`, `homepage`, and `bugs` fields pointing to `dafrick/skillet-cli`
+- [x] 7.2 Fix `openspec/specs/skill-package-marker/spec.md`: replace stale `@skillet/core` scope with `@skillet-cli/core`
+- [x] 7.3 Extend `openspec/specs/npm-package-metadata/spec.md`: add requirements for `create-skillet` `repository`, `homepage`, and `bugs` fields
+
+## 8. Verification
+
+- [x] 8.1 Run `pnpm test` and confirm all tests pass with the updated URL assertions
+- [x] 8.2 Grep the repo for any remaining `github.com/dafrick/skillet[^-]` occurrences and confirm none remain

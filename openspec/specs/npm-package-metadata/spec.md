@@ -59,3 +59,30 @@ The `directory` key SHALL be present because this is a monorepo package, allowin
 #### Scenario: Package appears in npm search for "ai skills"
 - **WHEN** a developer searches npm for "ai skills"
 - **THEN** `@skillet-cli/core` appears in results
+
+---
+
+### Requirement: create-skillet package.json includes repository, homepage, and bugs fields
+`packages/create/package.json` SHALL include `"repository"`, `"homepage"`, and `"bugs"` fields pointing to the GitHub repository, matching the pattern used by `@skillet-cli/core` but with `"directory": "packages/create"`.
+
+```json
+{
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dafrick/skillet-cli.git",
+    "directory": "packages/create"
+  },
+  "homepage": "https://github.com/dafrick/skillet-cli",
+  "bugs": {
+    "url": "https://github.com/dafrick/skillet-cli/issues"
+  }
+}
+```
+
+#### Scenario: npm repo command opens the GitHub page for create-skillet
+- **WHEN** a developer runs `npm repo create-skillet`
+- **THEN** the GitHub repository page opens in their browser
+
+#### Scenario: npm bugs command opens the issues page for create-skillet
+- **WHEN** a developer runs `npm bugs create-skillet`
+- **THEN** the GitHub issues page opens in their browser

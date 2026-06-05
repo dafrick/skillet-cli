@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "Interactive wizard to package a skill for any AI agent",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dafrick/skillet-cli.git",
+    "directory": "packages/create"
+  },
+  "homepage": "https://github.com/dafrick/skillet-cli",
+  "bugs": {
+    "url": "https://github.com/dafrick/skillet-cli/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=24"
