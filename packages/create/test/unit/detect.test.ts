@@ -1,4 +1,3 @@
-import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -22,7 +21,7 @@ function mockGitSuccess(results: Record<string, string>) {
       if (key.includes(pattern)) {
         return {
           status: 0,
-          stdout: Buffer.from(value + '\n'),
+          stdout: Buffer.from(`${value}\n`),
           stderr: Buffer.from(''),
         } as ReturnType<typeof spawnSync>;
       }

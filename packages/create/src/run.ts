@@ -66,7 +66,7 @@ program
     process.stdout.write(`  author:       ${config.author}\n`);
     process.stdout.write(`  license:      ${config.license}\n`);
     process.stdout.write(
-      `  repositoryUrl:${config.repositoryUrl ? ' ' + config.repositoryUrl : ' (none)'}\n`,
+      `  repositoryUrl:${config.repositoryUrl ? ` ${config.repositoryUrl}` : ' (none)'}\n`,
     );
     process.stdout.write(`  skillDir:     ${config.skillDir}\n`);
     process.stdout.write('\nCommands to run:\n');

@@ -1,6 +1,5 @@
 import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:child_process', () => ({
   spawnSync: vi.fn(),
@@ -36,12 +35,6 @@ const mockFsExistsSync = vi.mocked(fs.existsSync);
 
 function makeSuccessResult() {
   return { status: 0, stdout: Buffer.from(''), stderr: Buffer.from('') } as ReturnType<
-    typeof spawnSync
-  >;
-}
-
-function makeFailResult() {
-  return { status: 1, stdout: Buffer.from(''), stderr: Buffer.from('error') } as ReturnType<
     typeof spawnSync
   >;
 }
