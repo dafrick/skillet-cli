@@ -1,0 +1,28 @@
+# Task: Install Skills from <repo-name>
+
+## Your Goal
+
+You want to install the AI agent skills from this repository into your agent environment:
+
+**Repository:** `<repo-url>`
+**Target environment:** <env>
+
+## Steps
+
+1. **Set up your environment** — Get everything you need to work with this repository.
+2. **Package the skills** — Prepare the skills for installation using the available tooling.
+3. **Install the skills** — Make the packaged skills available in your <env> environment.
+4. **Confirm the result** — Check that the skills landed where they should be.
+
+## What You Have Access To
+
+- A terminal inside a Docker container (Node and npm are available)
+- Internet access
+- The repository at the URL above
+
+## Guidance
+
+- Work from publicly available documentation. The tooling has documentation — find it and use it.
+- Document your steps and observations as you go.
+- If you hit a blocker on a step, document what you tried and why it failed, then continue to the next step if possible.
+- If you are completely blocked and cannot make any progress, stop and clearly describe what you tried and where you are stuck.
