@@ -3,7 +3,7 @@ SOCKET    ?= $(or $(TMPDIR),/tmp)/claude-tmux-sockets/skillet.sock
 SESSION   ?= skillet-test
 IMAGE     ?= ubuntu:24.04
 
-.PHONY: test-start test-teardown
+.PHONY: test-start test-teardown init-run
 
 test-start:
 	mkdir -p $(dir $(SOCKET))
@@ -25,3 +25,16 @@ test-start:
 test-teardown:
 	-tmux -S "$(SOCKET)" kill-session -t $(SESSION)
 	-docker rm -f $(CONTAINER)
+
+init-run:
+ifndef REPO
+	$(error REPO is required. Usage: make init-run REPO=<repo-slug>)
+endif
+	@RUN=tmp/$$(date +%Y-%m-%d)-$(REPO) && \
+	mkdir -p $$RUN/issues && \
+	cp templates/TASK.md.template $$RUN/TASK.md && \
+	cp templates/TEST-RUN.md.template $$RUN/TEST-RUN.md && \
+	cp templates/LOG.md.template $$RUN/LOG.md && \
+	echo "" && \
+	echo "Run folder created: $$RUN" && \
+	echo "Next: fill in $$RUN/TASK.md with the repo URL and target environment."
