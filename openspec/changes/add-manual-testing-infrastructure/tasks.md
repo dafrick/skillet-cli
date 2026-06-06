@@ -46,3 +46,50 @@
 - [x] 7.3 Run `make test-teardown` and confirm container and session are gone
 - [x] 7.4 Confirm `git status` shows no untracked files under `test-manual/tmp/` after placing a test file there; confirm `git ls-files test-manual/tmp/.gitkeep` lists the file
 - [x] 7.5 Run `wait-for-text.sh` against a live tmux pane that contains the target pattern and confirm exit 0; run it against a pane without the pattern with `-T 3` and confirm exit 1 with pane content printed to stderr
+
+## 8. Post-review restructure
+
+Changes made after initial implementation in response to design review.
+
+### 8.1 Role separation
+
+- [x] 8.1.1 Define Guide and Test user roles in README; document which files each receives
+- [x] 8.1.2 Reframe README as guide orientation only — remove step-by-step protocol, failure taxonomy table, and tmux reference
+
+### 8.2 AGENT-SUPPLEMENT.md
+
+- [x] 8.2.1 Create `test-manual/AGENT-SUPPLEMENT.md` with tmux private socket setup, send-keys -l usage, capture-pane flags, wait-for-text.sh usage, @inquirer/prompts key sequences, and cleanup commands
+- [x] 8.2.2 Update README to reference AGENT-SUPPLEMENT.md and instruct guide to attach it for coding-agent test users
+
+### 8.3 TASK.md.template
+
+- [x] 8.3.1 Create `test-manual/templates/TASK.md.template` with two tasks (Package the skills, Install the skills) in user-domain language; no expected paths, commands, or taxonomy
+- [x] 8.3.2 Template instructs test user to write observations in LOG.md and document clearly when blocked
+
+### 8.4 TEST-RUN.md.template updates
+
+- [x] 8.4.1 Add `version:` field to metadata block
+- [x] 8.4.2 Add 🔶 Mid fail — functional issue grade between 🟠 and 🔴 (six-grade taxonomy)
+- [x] 8.4.3 Add blockquote at top of protocol directing guide to file issues continuously, not at the end; remove Step 7
+- [x] 8.4.4 Reframe Steps 2–6 in guide-observation language (grade/observe/note) rather than as instructions to the test user
+- [x] 8.4.5 Remove tier definition table from Step 1; replace with a record field and pointer to README
+- [x] 8.4.6 Move expected-paths table (by environment) into Step 6
+- [x] 8.4.7 Remove edge cases / unhappy paths section
+
+### 8.5 LOG.md.template updates
+
+- [x] 8.5.1 Add `version:` field to metadata block
+- [x] 8.5.2 Reframe as test user's document with first-person format examples and instructions addressed to the test user
+- [x] 8.5.3 Update README "Keeping the Log" section to reflect guide-consultable (not guide-authored) ownership
+
+### 8.6 ISSUE.md.template updates
+
+- [x] 8.6.1 Add Expected result and Actual result as distinct fields; rename Reproduction steps to Steps to reproduce
+
+### 8.7 Makefile and README updates
+
+- [x] 8.7.1 Add `init-run REPO=<slug>` target to Makefile; creates run folder and copies TASK, TEST-RUN, LOG templates
+- [x] 8.7.2 Add before-you-start checklist to README including TEST-MATRIX consultation and init-run instruction
+- [x] 8.7.3 Add tier reference table (T1–T5 plus O tier) to README
+- [x] 8.7.4 Add fully-stuck guidance to README Running the Session section
+- [x] 8.7.5 Add consultation note to TEST-MATRIX.md

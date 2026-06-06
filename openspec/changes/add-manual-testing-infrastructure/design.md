@@ -9,7 +9,7 @@ Skillet's existing test suite exercises the codebase in isolation: unit tests mo
 - Provide a documented, repeatable process for running manual end-to-end tests against real GitHub skill repos
 - Support both human testers and coding agents (including tmux-driven agent sessions)
 - Isolate every test run inside a clean Docker container (no host environment pollution)
-- Produce structured artifacts during testing: a running log per session and one file per issue found
+- Produce structured artifacts during testing: a task brief for the test user, a running log of their session, a graded protocol sheet for the guide, and one file per issue found
 - Maintain a growing catalog of candidate repos and a running record of completed test runs
 - Require no custom Dockerfile — use a stock `ubuntu:24.04` image so testers must install Node from scratch (this IS the test)
 
@@ -59,9 +59,9 @@ The script is adapted (not forked) from `mitsuhiko/agent-stuff` with socket-awar
 
 Each test run uses a fresh copy of `TEST-RUN.md.template` filled in for the specific repo, tier, and environment. A high-level `TEST-MATRIX.md` catalogs candidate repos and accumulates a one-row-per-run log. This separates the "what we plan to test" concern from the "what we observed" concern, and keeps run artifacts small and focused.
 
-### 6. Tier identification as step 1 of the protocol
+### 6. Tier identification is a guide pre-session activity, not a test protocol step
 
-The test protocol starts with the tester cloning the repo and identifying its complexity tier (1–5) before running anything. Tier is a property of the repo structure, determined by the number and nesting of SKILL.md files and supporting resources. Recording it in the log allows future analysis across tiers.
+The guide classifies the repo's complexity tier (T1–T5, O) before the test session begins and records it in `TEST-RUN.md`. Tier is a property of the repo structure, not something the test user assesses. Tier definitions live in the README as a reference table the guide consults — they are not embedded in the TEST-RUN template.
 
 **Tier definitions:**
 - T1: Single `SKILL.md`, no resources
@@ -69,10 +69,45 @@ The test protocol starts with the tester cloning the repo and identifying its co
 - T3: Single skill + nested resources/scripts
 - T4: Multiple `SKILL.md` files in subdirectories (multi-skill)
 - T5: Multi-skill with scripts, templates, or deep nesting
+- O: Other — repo does not fit any tier above
 
 ### 7. Agent environment is selected at test time, not pre-assigned
 
-The target agent environment (Claude Code, GitHub Copilot CLI, a custom agent, etc.) is chosen by the tester at the start of each run and recorded in the `env:` field of `TEST-RUN.md`. The infrastructure does not mandate which environment to use for which tier. Testers should exercise variety across runs to build coverage over time — this is a matter of discipline, not enforcement. The README gives light guidance on what environment means in this context; the TEST-MATRIX run log accumulates the record.
+The target agent environment (Claude Code, GitHub Copilot CLI, a custom agent, etc.) is chosen by the guide at the start of each run and recorded in the `env:` field of `TEST-RUN.md`. The infrastructure does not mandate which environment to use for which tier. Guides should exercise variety across runs to build coverage over time — this is a matter of discipline, not enforcement.
+
+### 8. Two distinct roles: Guide and Test user
+
+The harness introduces an explicit separation between two roles with different documents and responsibilities:
+
+**Guide** — the person or agent orchestrating the session. Sets up the container, chooses the repo and environment, customizes TASK.md, hands off documents to the test user, observes the session, grades it in TEST-RUN.md, consults LOG.md, and files issues. The guide has access to all harness documentation.
+
+**Test user** — the person or coding agent performing the task. Receives only `TASK.md` (and `AGENT-SUPPLEMENT.md` if they are a coding agent). Has no access to README, TEST-RUN.md, the failure taxonomy, or expected install paths.
+
+This separation ensures the test user's experience is not contaminated by insider knowledge. The guide is responsible for grading based on observation, not by instructing the test user on what to find.
+
+### 9. TASK.md as the test user's task brief
+
+Each run produces a `TASK.md` (from `TASK.md.template`) that the guide customizes with the repo URL, target environment, and any run-specific context. The brief presents the task in user-domain terms — "package the skills" and "install them" — without naming specific tools or expected outcomes. The test user must discover the tooling from publicly available documentation.
+
+This is the primary instrument of the user study: what the test user does with only the brief and the public docs is what we observe.
+
+### 10. LOG.md is the test user's artifact, consulted by the guide
+
+The test user writes `LOG.md` as a running first-person narrative of their session. It captures what they did, tried, and observed — in the order it happened. The guide consults it to cross-reference with TEST-RUN.md grading and surface issues the test user noted but did not flag explicitly.
+
+**Alternative considered**: Guide writes the log as a third-person observation record. Rejected: the test user's own language reveals confusion and surprise that a third-person observation would flatten. Having the test user write it also reduces the guide's cognitive load during the session.
+
+### 11. AGENT-SUPPLEMENT.md separates coding-agent guidance from guide orientation
+
+Tmux operational guidance (send-keys, capture-pane, wait-for-text.sh, key sequences) is extracted from README into a standalone `AGENT-SUPPLEMENT.md`. The guide attaches it alongside `TASK.md` when the test user is a coding agent.
+
+This keeps README focused on guide orientation and prevents human test users from being confronted with irrelevant technical detail.
+
+### 12. make init-run scaffolds run folders from templates
+
+`make init-run REPO=<slug>` creates the run folder (`tmp/YYYY-MM-DD-<slug>/`), copies TASK.md, TEST-RUN.md, and LOG.md from templates, and creates `issues/`. The guide then fills in TASK.md before handing it to the test user.
+
+**Alternative considered**: Manual folder creation and template copying. Rejected: error-prone and inconsistent; init-run ensures the folder is complete and correctly named on the first attempt.
 
 ## Risks / Trade-offs
 
@@ -81,3 +116,4 @@ The target agent environment (Claude Code, GitHub Copilot CLI, a custom agent, e
 - **Candidate repos may move or be deleted** → The TEST-MATRIX.md notes repo state at time of testing. Re-verification is the tester's responsibility at the start of each run.
 - **wait-for-text.sh polling has a timeout** → If a prompt takes longer than the timeout (default 15s), the script exits 1 and the agent should investigate rather than blindly proceeding.
 - **ubuntu:24.04 apt mirrors can be slow** → Not mitigated; this is part of the real-user experience.
+- **Test user may not complete all steps** → The guide distinguishes a hard fail (test user blocked and documented it) from voluntary stopping (test user gave up without documenting); the harness provides guidance for both.
