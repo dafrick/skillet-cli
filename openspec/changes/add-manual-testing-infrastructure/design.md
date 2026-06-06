@@ -11,7 +11,7 @@ Skillet's existing test suite exercises the codebase in isolation: unit tests mo
 - Isolate every test run inside a clean Docker container (no host environment pollution)
 - Produce structured artifacts during testing: a task brief for the test user, a running log of their session, a graded protocol sheet for the guide, and one file per issue found
 - Maintain a growing catalog of candidate repos and a running record of completed test runs
-- Require no custom Dockerfile — use a stock `ubuntu:24.04` image so testers must install Node from scratch (this IS the test)
+- Require no custom Dockerfile — use a stock `ubuntu:24.04` image; `test-start` pre-installs Node 24 so test sessions begin with a working Node environment
 
 **Non-Goals:**
 
@@ -43,11 +43,13 @@ Agent tmux sessions MUST use a private socket under `${TMPDIR:-/tmp}/claude-tmux
 
 Socket path: `${TMPDIR:-/tmp}/claude-tmux-sockets/skillet.sock`
 
-### 3. Stock ubuntu:24.04 — no custom Dockerfile
+### 3. Stock ubuntu:24.04 — no custom Dockerfile; Node pre-installed by test-start
 
-`ubuntu:24.04` starts bare: no curl, no git, no Node. The tester installs everything from scratch following only the npm README for `create-skillet`. This is not a limitation — it IS the test. If `curl` or `git` must be installed first and that's not mentioned in the npm README, that is a soft fail to record.
+`ubuntu:24.04` starts bare: no curl, no git, no Node. `make test-start` installs Node 24 (via the NodeSource `setup_24.x` script) inside the container before opening the tmux session, so test users begin with a working Node environment.
 
-**Alternative considered**: A minimal Dockerfile with curl and git pre-installed to reduce setup noise. Rejected: this hides the exact bootstrap experience a real user would encounter.
+Node installation is not the test — discovering and using `create-skillet` is. Pre-installing Node removes an environmental obstacle that would generate noise (false soft-fails on Node setup) rather than signal about the skillet UX. `curl` and `git` are still not pre-installed; if either is needed and not mentioned in the npm README for `create-skillet`, that remains a valid soft fail to record.
+
+**Alternative considered**: Requiring test users to install Node from scratch as part of the session. Rejected: adds a setup burden that is orthogonal to what we are measuring, and causes `TASK.md`'s "Node and npm are available" contract to be false until the test user resolves it themselves.
 
 ### 4. wait-for-text.sh adapted from mitsuhiko/agent-stuff
 
@@ -105,7 +107,9 @@ This keeps README focused on guide orientation and prevents human test users fro
 
 ### 12. make init-run scaffolds run folders from templates
 
-`make init-run REPO=<slug>` creates the run folder (`tmp/YYYY-MM-DD-<slug>/`), copies TASK.md, TEST-RUN.md, and LOG.md from templates, and creates `issues/`. The guide then fills in TASK.md before handing it to the test user.
+`make init-run REPO=<slug>` creates the run folder (`tmp/YYYY-MM-DD-<slug>/`), copies TASK.md, TEST-RUN.md, LOG.md, and AGENT-SUPPLEMENT.md from their source locations, and creates `issues/`. The guide then fills in TASK.md, pre-fills LOG.md's frontmatter (repo, tier, env, create-skillet-version, date, docker-image — leaving `tester:` for the test user), and hands both to the test user. AGENT-SUPPLEMENT.md is provided to coding-agent test users alongside TASK.md and LOG.md.
+
+The `<slug>` uses `org-repo` format (replace `/` with `-`), e.g. `netresearch/agent-rules-skill` → `netresearch-agent-rules-skill`. This ensures run folder names are unambiguous when multiple orgs host repos with the same name.
 
 **Alternative considered**: Manual folder creation and template copying. Rejected: error-prone and inconsistent; init-run ensures the folder is complete and correctly named on the first attempt.
 

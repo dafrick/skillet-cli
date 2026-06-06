@@ -93,3 +93,43 @@ Changes made after initial implementation in response to design review.
 - [x] 8.7.3 Add tier reference table (T1–T5 plus O tier) to README
 - [x] 8.7.4 Add fully-stuck guidance to README Running the Session section
 - [x] 8.7.5 Add consultation note to TEST-MATRIX.md
+
+## 9. Post-grapevine-walkthrough fixes
+
+Changes made after a persona-driven walkthrough of the harness identified gaps in the Guide and Test User experience.
+
+### 9.1 Makefile
+
+- [x] 9.1.1 Install Node 24 (via NodeSource `setup_24.x`) inside the container as part of `test-start`; update design Decision 3 rationale
+- [x] 9.1.2 Copy `AGENT-SUPPLEMENT.md` into run folder as part of `init-run`
+
+### 9.2 README
+
+- [x] 9.2.1 Fix Prerequisites Node claim: replace "Node is installed inside the container as part of the test setup" with "`make test-start` installs Node 24 inside the container automatically"
+- [x] 9.2.2 Clarify Before You Start step 3: "Inspect the repo" (not "Clone the repo"); note this is pre-session work and the test user clones independently inside the container
+- [x] 9.2.3 Add `org-repo` slug format convention after step 4 (e.g. `netresearch/agent-rules-skill` → `netresearch-agent-rules-skill`)
+- [x] 9.2.4 Add LOG.md frontmatter pre-fill step (new step 6): guide fills all fields except `tester:` before handoff; renumber old step 6 to 7 with updated wording reflecting init-run now copies AGENT-SUPPLEMENT.md
+- [x] 9.2.5 Clarify file handoff in Running the Session step 2: Human vs Coding agent paths with concrete mechanics
+- [x] 9.2.6 Add observation instructions in Running the Session step 3: coding agent (tmux attach), human (second docker exec or alongside)
+
+### 9.3 TEST-RUN.md.template
+
+- [x] 9.3.1 Rename `version:` to `create-skillet-version:` in frontmatter
+- [x] 9.3.2 Reframe Step 1 from "Identify the tier" to "Confirm tier" (pre-session classification, update if assessment changes)
+- [x] 9.3.3 Add discoverability guide note to Step 2: test user does not know the tool name; tool discovery is part of what Step 2 measures
+- [x] 9.3.4 Add `@skillet-cli/core` npm README link to Step 5 as reference for "available documentation"
+- [x] 9.3.5 Scope Step 6 intro to structural verification inside the container (not active-in-agent-environment verification)
+- [x] 9.3.6 Add HTML comment above Soft-Fail Log table clarifying it is a quick-scan summary; per-step Outcome fields hold full notes
+
+### 9.4 LOG.md.template
+
+- [x] 9.4.1 Rename `version:` to `create-skillet-version:` in frontmatter (matches TEST-RUN.md.template)
+- [x] 9.4.2 Add frontmatter ownership comment: guide pre-fills all fields before handoff; test user fills `tester:` only
+
+### 9.5 AGENT-SUPPLEMENT.md
+
+- [x] 9.5.1 Add cleanup warning blockquote in `## Cleanup` section: teardown is the guide's responsibility (`make test-teardown`); coding agents must not run these commands during the session
+
+### 9.6 TEST-MATRIX.md
+
+- [x] 9.6.1 Add "After completing a run" paragraph to introductory blockquote: update Status column with date and brief outcome; include example format
