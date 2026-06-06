@@ -55,6 +55,8 @@ Use `wait-for-text.sh` to block until expected text appears:
 
 ## Cleanup
 
+> **Note:** Teardown is the guide's responsibility (`make test-teardown`). Do not run these commands during the session — they are provided for reference only.
+
 ```bash
 tmux -S "$SOCKET" kill-session -t skillet-test
 docker rm -f skillet-test-container
