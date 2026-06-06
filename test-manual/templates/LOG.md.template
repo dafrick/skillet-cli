@@ -12,7 +12,7 @@ docker-image:
 
 ---
 
-**This file is append-only.** Record observations as they happen, prefixed with `HH:MM`. Never edit or delete prior entries — if you need to correct something, add a new entry noting the correction.
+**This is your running log.** Record what you do and observe as you work, prefixed with `HH:MM`. This file is append-only — never edit or delete prior entries. If you need to correct something, add a new entry noting the correction.
 
 ---
 
@@ -20,11 +20,11 @@ docker-image:
 
 Format examples:
 
-14:32 Test user ran `npx create-skillet` unprompted. Wizard launched. Selected all defaults.
-14:35 Output directory present. Test user inspected contents without guidance from session.
-14:38 npm pack failed — "missing main field" error. Test user tried parent directory, same result. → ISS-001
-14:42 Test user found workaround by adding "main" field manually to package.json. Continued. → ISS-001 (workaround noted)
-14:47 Skill files landed at ~/.claude/skills/my-skill/. Matches expected path. Step 6 pass.
-14:50 Test user completely stuck on Step 5 — could not determine install path from available docs. Session ended.
+14:32 Ran `npx create-skillet`. Wizard launched. Selected all defaults.
+14:35 Output directory present. Inspected contents — structure looked reasonable.
+14:38 npm pack failed — "missing main field" error. Tried running from parent directory, same result. → ISS-001
+14:42 Added "main" field manually to package.json as a workaround. Continued. → ISS-001 (workaround noted)
+14:47 Skill files appeared at ~/.claude/skills/my-skill/. Install seemed to succeed.
+14:50 Could not determine where skills should land from the available docs. Stuck on Task 2.
 
 -->

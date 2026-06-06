@@ -52,8 +52,8 @@ Classify the repo before the session begins. Record the tier in `TEST-RUN.md`.
 ## Running the Session
 
 1. `make test-start` — builds and starts the container, then opens a tmux session inside it
-2. Hand the test user their `TASK.md` (and `AGENT-SUPPLEMENT.md` if applicable)
-3. Grade the session in real time using `TEST-RUN.md`; append to `LOG.md` as events happen
+2. Hand the test user `TASK.md` and `LOG.md` (and `AGENT-SUPPLEMENT.md` if they are a coding agent)
+3. Grade the session in real time using `TEST-RUN.md`; consult `LOG.md` to cross-reference the test user's narrative
 4. File issues in `issues/` as they arise — do not wait until the end
 5. If the test user is completely stuck and cannot proceed: ask them to clearly document what they tried and what happened, then file an issue — this distinguishes a hard fail from the test user voluntarily stopping
 6. `make test-teardown` — stops the container and removes it
@@ -67,7 +67,7 @@ Each test run lives at `test-manual/tmp/YYYY-MM-DD-<repo-slug>/`:
 | File / Dir | Owner | Purpose |
 |------------|-------|---------|
 | `TASK.md` | Guide fills in; test user receives | The task the test user follows |
-| `LOG.md` | Guide | Append-only running narrative of the session |
+| `LOG.md` | Test user writes; guide consults | Append-only running narrative of the session |
 | `TEST-RUN.md` | Guide | Structured pass/fail grading for each protocol step |
 | `issues/` | Guide | One `ISS-NNN.md` file per issue found |
 
@@ -75,16 +75,14 @@ Each test run lives at `test-manual/tmp/YYYY-MM-DD-<repo-slug>/`:
 
 ## Keeping the Log
 
-`LOG.md` is your running narrative. It is strictly **append-only** — never edit or delete prior entries. Each entry is prefixed with `HH:MM`:
+`LOG.md` is written by the test user as they work — it is their running narrative of what they did, tried, and observed. The test user receives it alongside `TASK.md` at the start of the session.
 
-```
-14:03 Test user ran the wizard. Launched successfully with default prompts.
-14:05 Wizard prompted for output directory — default was blank. → ISS-001
-```
+As a guide, consult it to:
+- Cross-reference with your `TEST-RUN.md` grading
+- Identify issues the test user noted but did not flag explicitly
+- Understand the sequence of events when a step failed or stalled
 
-When you file an issue, reference its identifier in the log entry that prompted it.
-
-`LOG.md` captures the unstructured narrative of what happened. `TEST-RUN.md` records structured pass/fail against each protocol step. They complement each other — keep both.
+`LOG.md` is append-only — the test user should never edit or delete prior entries. If they need to correct something, they add a new entry noting the correction.
 
 ---
 
