@@ -1,6 +1,12 @@
+import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@skillet-cli/ui': path.resolve('../ui/src/index.ts'),
+    },
+  },
   test: {
     pool: 'forks',
     // Integration tests run `npm install` via installFixturePackages which can
