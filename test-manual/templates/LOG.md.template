@@ -1,10 +1,11 @@
 # Session Log: <repo-name>
 
+<!-- Guide pre-fills this block before handing LOG.md to the test user. Test user fills in `tester:` only. -->
 ```
 repo:
 tier:
 env:
-version:
+create-skillet-version:
 date:
 tester:
 docker-image:
