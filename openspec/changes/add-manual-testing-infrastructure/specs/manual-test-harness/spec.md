@@ -25,13 +25,13 @@ The harness SHALL be designed around two distinct roles with separate documents 
 ### Requirement: Makefile provides test-start, test-teardown, and init-run targets
 `test-manual/Makefile` SHALL provide:
 
-- **`test-start`** — starts a stock `ubuntu:24.04` Docker container in the background under a fixed container name and opens a host-side tmux session (using a private socket) whose shell is connected to the container via `docker exec -it`. Prints a copy-pasteable `tmux attach` command so a human guide can observe the session.
+- **`test-start`** — starts a stock `ubuntu:24.04` Docker container in the background under a fixed container name, installs Node 24 inside the container (via NodeSource `setup_24.x`), and opens a host-side tmux session (using a private socket) whose shell is connected to the container via `docker exec -it`. Prints a copy-pasteable `tmux attach` command so a human guide can observe the session.
 - **`test-teardown`** — kills the tmux session and removes the container.
-- **`init-run REPO=<slug>`** — creates `tmp/YYYY-MM-DD-<slug>/issues/` and copies `TASK.md.template`, `TEST-RUN.md.template`, and `LOG.md.template` into the folder as `TASK.md`, `TEST-RUN.md`, and `LOG.md`. Errors with a usage message if `REPO` is not set.
+- **`init-run REPO=<slug>`** — creates `tmp/YYYY-MM-DD-<slug>/issues/` and copies `TASK.md.template`, `TEST-RUN.md.template`, `LOG.md.template`, and `AGENT-SUPPLEMENT.md` into the folder as `TASK.md`, `TEST-RUN.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md`. Errors with a usage message if `REPO` is not set. The `<slug>` should use `org-repo` format (replace `/` with `-`).
 
 #### Scenario: test-start launches container and tmux session
 - **WHEN** a guide runs `make test-start` from `test-manual/`
-- **THEN** a Docker container named `skillet-test-container` is running, a tmux session named `skillet-test` exists on the private socket, and the session's active pane is a bash shell inside the container
+- **THEN** a Docker container named `skillet-test-container` is running, Node 24 is installed inside the container, a tmux session named `skillet-test` exists on the private socket, and the session's active pane is a bash shell inside the container
 
 #### Scenario: test-teardown cleans up
 - **WHEN** a guide runs `make test-teardown` from `test-manual/`
@@ -39,7 +39,7 @@ The harness SHALL be designed around two distinct roles with separate documents 
 
 #### Scenario: init-run creates a complete run folder
 - **WHEN** a guide runs `make init-run REPO=my-skill-repo`
-- **THEN** `tmp/YYYY-MM-DD-my-skill-repo/` exists and contains `TASK.md`, `TEST-RUN.md`, `LOG.md`, and an empty `issues/` subdirectory
+- **THEN** `tmp/YYYY-MM-DD-my-skill-repo/` exists and contains `TASK.md`, `TEST-RUN.md`, `LOG.md`, `AGENT-SUPPLEMENT.md`, and an empty `issues/` subdirectory
 
 #### Scenario: init-run errors without REPO
 - **WHEN** a guide runs `make init-run` without a REPO argument
@@ -48,7 +48,7 @@ The harness SHALL be designed around two distinct roles with separate documents 
 ---
 
 ### Requirement: README is guide orientation
-`test-manual/README.md` SHALL serve as guide-only orientation. It SHALL document: the two roles (Guide and Test user), prerequisites (Docker, tmux), the tier reference table (T1–T5 plus O), a before-you-start checklist (consult TEST-MATRIX, choose repo and environment, identify tier, run init-run, fill in TASK.md, attach AGENT-SUPPLEMENT.md for coding agents), the session flow, the run-folder layout (including which documents belong to each role), guidance on keeping the log, and guidance on filing issues.
+`test-manual/README.md` SHALL serve as guide-only orientation. It SHALL document: the two roles (Guide and Test user), prerequisites (Docker, tmux), the tier reference table (T1–T5 plus O), a before-you-start checklist (consult TEST-MATRIX, choose repo and environment, inspect repo to identify tier, run init-run using `org-repo` slug format, fill in TASK.md, pre-fill LOG.md frontmatter leaving `tester:` for the test user, provide AGENT-SUPPLEMENT.md to coding-agent test users), the session flow (including how to hand files to human vs coding-agent test users, and how to observe each), the run-folder layout (including which documents belong to each role), guidance on keeping the log, and guidance on filing issues.
 
 The README SHALL NOT contain: the step-by-step test protocol (that lives in TEST-RUN.md), the failure taxonomy table (that lives in TEST-RUN.md), or tmux operational commands (those live in AGENT-SUPPLEMENT.md).
 
@@ -143,21 +143,21 @@ The harness SHALL use a six-grade failure taxonomy as the common language for re
 ---
 
 ### Requirement: TEST-RUN.md.template is the guide's grading sheet
-`test-manual/templates/TEST-RUN.md.template` SHALL include: session metadata block (repo, tier, env, **version**, date, tester), the full six-grade failure taxonomy key, a blockquote note at the top of the protocol directing the guide to file issues continuously rather than at the end, a **six-step happy-path protocol** in guide-observation language (the guide observes and grades what the test user does — not instructions to the test user), a soft-fail log table, an issues-filed list, and a UX quality observations section.
+`test-manual/templates/TEST-RUN.md.template` SHALL include: session metadata block (repo, tier, env, **create-skillet-version**, date, tester), the full six-grade failure taxonomy key, a blockquote note at the top of the protocol directing the guide to file issues continuously rather than at the end, a **six-step happy-path protocol** in guide-observation language (the guide observes and grades what the test user does — not instructions to the test user), a soft-fail log table (with a comment clarifying it is a quick-scan summary; per-step Outcome fields hold the full notes), an issues-filed list, and a UX quality observations section.
 
 The six steps SHALL be:
-1. Identify the tier (record result; tier definitions in README)
-2. Bootstrap (grade whether test user set up using only the npm README; include npm README link)
+1. Confirm tier (confirm the pre-session tier classification; update if assessment changes after inspecting the repo or create-skillet output)
+2. Bootstrap (grade whether test user set up using only the npm README; include npm README link; note that tool discoverability is intentional — the test user does not know the tool name in advance)
 3. Run create-skillet (grade wizard navigation and defaults)
 4. Verify output (observe what test user does; note whether tool output gave sufficient guidance)
-5. Install skill (grade whether test user found install path from available docs)
-6. Verify skill placement (confirm files landed correctly; include expected-paths table by environment)
+5. Install skill (grade whether test user found install path from available docs; reference @skillet-cli/core npm README)
+6. Verify skill placement (confirm files landed in the correct relative path inside the container — structural verification only, not confirmation the skill is active in a real agent environment; include expected-paths table by environment)
 
 The template SHALL NOT contain: the tier definition table (now in README), an edge cases / unhappy paths section, a Step 7 document issues step.
 
-#### Scenario: Template metadata includes version field
+#### Scenario: Template metadata includes create-skillet-version field
 - **WHEN** a guide fills in TEST-RUN.md
-- **THEN** they record the version of `create-skillet` used during the session
+- **THEN** they record the version of `create-skillet` used during the session in the `create-skillet-version:` field
 
 #### Scenario: Guide's grading language does not instruct the test user
 - **WHEN** a guide reads the happy-path protocol
@@ -174,7 +174,7 @@ The template SHALL NOT contain: the tier definition table (now in README), an ed
 ---
 
 ### Requirement: LOG.md.template is the test user's session narrative
-`test-manual/templates/LOG.md.template` SHALL be the test user's running narrative of what they did, tried, and observed. It SHALL be append-only. The header SHALL include: repo, tier, env, **version**, date, tester, and Docker base image. Format examples in the template SHALL be in first-person from the test user's perspective.
+`test-manual/templates/LOG.md.template` SHALL be the test user's running narrative of what they did, tried, and observed. It SHALL be append-only. The header SHALL include: repo, tier, env, **create-skillet-version**, date, tester, and Docker base image. A comment SHALL indicate that the guide pre-fills all frontmatter fields before handoff, and that the test user fills in `tester:` only. Format examples in the template SHALL be in first-person from the test user's perspective.
 
 The guide SHALL consult `LOG.md` to cross-reference with `TEST-RUN.md` grading, identify issues the test user noted but did not flag explicitly, and understand the sequence of events when a step failed.
 
