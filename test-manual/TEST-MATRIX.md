@@ -1,5 +1,7 @@
 # Test Matrix
 
+> **Before starting a run:** Consult this matrix to identify coverage gaps. Prioritize untested tiers and environments — the Status column and Test Run Log show where coverage is thin.
+
 ## Candidate Repos
 
 | Tier | Repo | Complexity Notes | Status |
