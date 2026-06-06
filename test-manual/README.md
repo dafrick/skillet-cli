@@ -19,7 +19,7 @@ This harness provides manual end-to-end testing for `create-skillet` and `@skill
 - **Docker** — runs the isolated test container
 - **tmux** — provides the interactive session inside the container
 
-> No Node.js is required on the host. Node is installed inside the container as part of the test setup.
+> No Node.js is required on the host. `make test-start` installs Node 24 inside the container automatically.
 
 ---
 
@@ -42,18 +42,26 @@ Classify the repo before the session begins. Record the tier in `TEST-RUN.md`.
 
 1. Consult `TEST-MATRIX.md` to identify coverage gaps — prioritize untested tiers and environments.
 2. Choose a candidate repo and a target agent environment (e.g., Claude Code, GitHub Copilot CLI).
-3. Clone the repo and identify its tier using the table above.
+3. Inspect the repo (on GitHub or by cloning locally) and identify its tier using the table above. This is pre-session work — the test user clones the repo themselves inside the container.
 4. Run `make init-run REPO=<repo-slug>` to create the run folder and copy all templates.
+
+   Use `org-repo` format for the slug (replace `/` with `-`). For example, `netresearch/agent-rules-skill` → `netresearch-agent-rules-skill`.
+
 5. Open `tmp/YYYY-MM-DD-<repo-slug>/TASK.md` and fill in the repo URL, target environment, and any repo-specific context.
-6. If the test user is a coding agent, attach `AGENT-SUPPLEMENT.md` alongside `TASK.md`.
+6. Pre-fill `LOG.md`'s frontmatter (`repo`, `tier`, `env`, `version`, `date`, `docker-image`) before handing it to the test user. The test user fills in `tester:` only and writes the append-only log entries.
+7. If the test user is a coding agent, the run folder already contains `AGENT-SUPPLEMENT.md` — include it alongside `TASK.md` in the agent's context.
 
 ---
 
 ## Running the Session
 
 1. `make test-start` — builds and starts the container, then opens a tmux session inside it
-2. Hand the test user `TASK.md` and `LOG.md` (and `AGENT-SUPPLEMENT.md` if they are a coding agent)
-3. Grade the session in real time using `TEST-RUN.md`; consult `LOG.md` to cross-reference the test user's narrative
+2. Hand the test user their files from `tmp/<run>/`:
+   - **Human:** Share the file paths and open them for editing. The human runs commands in the container and writes `LOG.md` from a separate terminal on the host.
+   - **Coding agent:** Provide `TASK.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md` as context at the start of the agent's session.
+3. Observe and grade the session in real time using `TEST-RUN.md`; consult `LOG.md` to cross-reference the test user's narrative.
+   - **Coding agent:** `tmux -S "$(SOCKET)" attach -t $(SESSION)` to watch.
+   - **Human:** The test user runs commands inside the container; the guide observes via a second `docker exec -it $(CONTAINER) bash` session or by sitting alongside.
 4. File issues in `issues/` as they arise — do not wait until the end
 5. If the test user is completely stuck and cannot proceed: ask them to clearly document what they tried and what happened, then file an issue — this distinguishes a hard fail from the test user voluntarily stopping
 6. `make test-teardown` — stops the container and removes it
