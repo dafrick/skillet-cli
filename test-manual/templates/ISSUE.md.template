@@ -4,11 +4,19 @@
 <!-- What happened — describe the symptom, not the cause. -->
 
 
-**Reproduction steps**
+**Steps to reproduce**
 
 1.
 2.
 3.
+
+**Expected result**
+<!-- What should have happened. -->
+
+
+**Actual result**
+<!-- What actually happened. -->
+
 
 **How encountered**
 <!-- Which test protocol step surfaced this issue, e.g. "Step 3 — running create-skillet" -->
