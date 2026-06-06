@@ -1,0 +1,61 @@
+# Agent Supplement: Tmux Session Interface
+
+This supplement is for **coding-agent test users only**. It explains how to interact with the tmux session inside the Docker container during your task.
+
+> **For Guides:** Attach this alongside `TASK.md` when the test user is a coding agent.
+
+---
+
+## Private socket setup
+
+Always use a private tmux socket so agent sessions do not pollute the developer's personal tmux server:
+
+```bash
+SOCKET="${TMPDIR:-/tmp}/claude-tmux-sockets/skillet.sock"
+```
+
+All tmux commands MUST pass `-S "$SOCKET"`.
+
+## Sending input
+
+Always use `-l` (literal mode) to prevent shell expansion. Because `-l` makes all arguments literal, send Enter as a separate non-literal call:
+
+```bash
+tmux -S "$SOCKET" send-keys -t skillet-test -l "npx create-skillet"
+tmux -S "$SOCKET" send-keys -t skillet-test Enter
+```
+
+## Reading output
+
+Always use `-J` (joins wrapped lines) and `-S -200` (200 lines of scrollback):
+
+```bash
+tmux -S "$SOCKET" capture-pane -p -J -S -200 -t skillet-test
+```
+
+`-J` prevents garbled output when parsing multi-line wizard prompts. `-S -200` ensures prompt text is not lost in scrollback.
+
+## Waiting for a prompt
+
+Use `wait-for-text.sh` to block until expected text appears:
+
+```bash
+./scripts/wait-for-text.sh -S "$SOCKET" -t skillet-test -p "Which skill" -T 15
+```
+
+## `@inquirer/prompts` key sequences
+
+| Action | Key |
+|--------|-----|
+| Navigate list | `Up` / `Down` |
+| Select checkbox item | `Space` |
+| Confirm / accept default | `Enter` |
+| Clear a text field | `C-u` (Ctrl+U) |
+| Cancel | `C-c` (Ctrl+C) |
+
+## Cleanup
+
+```bash
+tmux -S "$SOCKET" kill-session -t skillet-test
+docker rm -f skillet-test-container
+```
