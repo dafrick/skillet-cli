@@ -130,7 +130,7 @@ export async function executeBatchScaffold(config: WizardConfig): Promise<void> 
         bin: { [slug]: './bin/cli.js' },
       };
       if (config.repositoryUrl) {
-        pkgJson['repository'] = { type: 'git', url: config.repositoryUrl };
+        pkgJson.repository = { type: 'git', url: config.repositoryUrl };
       }
 
       await fsp.writeFile(
@@ -141,7 +141,7 @@ export async function executeBatchScaffold(config: WizardConfig): Promise<void> 
 
       const binPath = path.join(binDir, 'cli.js');
       // Path from dist/<slug>/bin/cli.js up to repo root, then into skillDir
-      await fsp.writeFile(binPath, buildBinCliJs('../../' + skillDir), 'utf8');
+      await fsp.writeFile(binPath, buildBinCliJs(`../../${skillDir}`), 'utf8');
       await fsp.chmod(binPath, 0o755);
 
       spinner.succeed(`Created dist/${slug}/`);
