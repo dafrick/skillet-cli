@@ -1,4 +1,4 @@
-import { input } from '@inquirer/prompts';
+import { input, select } from '@inquirer/prompts';
 import type { DetectionResult } from './detect.js';
 
 export interface WizardConfig {
@@ -42,10 +42,25 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
     default: 'MIT',
   });
 
-  const skillDir = await input({
-    message: 'Skill content path (relative to package root):',
-    default: detected.skillDir || 'skill/',
-  });
+  let skillDir: string;
+  if (detected.discoveredSkillDirs.length > 1) {
+    skillDir = await select({
+      message: 'Select skill content path (relative to package root):',
+      choices: detected.discoveredSkillDirs.map((d) => ({ name: d, value: d })),
+    });
+  } else {
+    if (detected.discoveredSkillDirs.length === 0 && !detected.skillDir) {
+      process.stdout.write(
+        "\nNo SKILL.md found. A SKILL.md file defines your skill's name, description, and\n" +
+          'usage instructions. Place it in a subdirectory (e.g. skills/my-skill/SKILL.md)\n' +
+          'before publishing.\n\n',
+      );
+    }
+    skillDir = await input({
+      message: 'Skill content path (relative to package root):',
+      default: detected.skillDir || 'skill/',
+    });
+  }
 
   return { name, version, description, author, repositoryUrl, license, skillDir };
 }
