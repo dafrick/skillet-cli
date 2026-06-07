@@ -1,6 +1,11 @@
 import { Chalk } from 'chalk';
 import figlet from 'figlet';
+import ansiShadowFontData from 'figlet/fonts/ANSI Shadow';
 import { ember500 } from './colors.js';
+
+// Pre-register font data so textSync works in bundled packages where figlet
+// cannot resolve its fonts/ directory from import.meta.url at runtime.
+figlet.parseFont('ANSI Shadow', ansiShadowFontData);
 
 export function deriveDisplayName(pkgName: string): string {
   const slashIndex = pkgName.indexOf('/');

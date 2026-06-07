@@ -1,14 +1,14 @@
 ## 1. Fix Font Loading
 
-- [ ] 1.1 In `packages/ui/src/wordmark.ts`, import ANSI Shadow font data from `figlet/fonts/ANSI Shadow`
-- [ ] 1.2 Call `figlet.parseFont('ANSI Shadow', ansiShadowFontData)` at module level before `generateWordmark` is defined
+- [x] 1.1 In `packages/ui/src/wordmark.ts`, import ANSI Shadow font data from `figlet/fonts/ANSI Shadow`
+- [x] 1.2 Call `figlet.parseFont('ANSI Shadow', ansiShadowFontData)` at module level before `generateWordmark` is defined
 
 ## 2. Tests
 
-- [ ] 2.1 Add a unit test in `packages/ui/test/unit/` verifying `generateWordmark` returns a non-empty string without throwing (covers the bundled/no-filesystem scenario)
+- [x] 2.1 Add a unit test in `packages/ui/test/unit/` verifying `generateWordmark` returns a non-empty string without throwing (covers the bundled/no-filesystem scenario)
 
 ## 3. Verify
 
-- [ ] 3.1 Run `pnpm build` in `packages/ui` and confirm it succeeds
-- [ ] 3.2 Run `pnpm build` in `packages/create` and confirm it succeeds
-- [ ] 3.3 Run `pnpm test` in `packages/ui` and confirm all tests pass
+- [x] 3.1 Run `pnpm build` in `packages/ui` and confirm it succeeds
+- [x] 3.2 Run `pnpm build` in `packages/create` and confirm it succeeds
+- [x] 3.3 Run `pnpm test` in `packages/ui` and confirm all tests pass
