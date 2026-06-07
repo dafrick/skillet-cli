@@ -140,7 +140,7 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
 3. **Dedup check** — before selecting, confirm no existing open PR references this issue:
    ```bash
    gh pr list --state open --json number,title,body \
-     | jq '[.[] | select(.body | test("#<N>"))]'
+     | jq '[.[] | select(.body | test("#<N>([^0-9]|$)"))]'
    ```
    Also check branch names:
    ```bash
@@ -171,7 +171,7 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
    ```
 
 2. Create the branch name:
-   - Format: `fix/#<N>-<slug>` for bugs, `feat/#<N>-<slug>` for enhancements
+   - Format: `fix/<N>-<slug>` for bugs, `feat/<N>-<slug>` for enhancements
    - `<slug>` is a short kebab-case summary of the issue title (3–5 words)
    - Examples: `fix/36-spurious-dep-warning`, `feat/35-default-install-target`
 
@@ -181,7 +181,13 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
    ```
    The worktree should be created from the latest `main` commit.
 
-4. Create the PR immediately (as a draft) to establish state tracking. Use the Agent Status template:
+4. Create an empty initial commit and push the branch so GitHub can create the PR:
+   ```bash
+   git commit --allow-empty -m "chore: initialize workspace for #<N>"
+   git push -u origin <branch>
+   ```
+
+5. Create the PR immediately (as a draft) to establish state tracking. Use the Agent Status template:
    ```bash
    gh pr create \
      --draft \
@@ -205,7 +211,7 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
    )"
    ```
 
-5. Record the PR number for use in subsequent phases.
+6. Record the PR number for use in subsequent phases.
 
 ---
 
@@ -323,7 +329,7 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
 
 3. **Commit frequently** — after each logical unit of work (completing a task group or a meaningful set of changes):
    ```bash
-   git add -p   # stage only relevant changes
+   git add <files>   # stage the relevant changed files explicitly
    git commit -m "<type>(<scope>): <description>"
    git push origin <branch>
    ```
@@ -356,7 +362,7 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
      - Update agent-state to `CI-BLOCKED` with `blocked: true`
      - **Stop.** Jump to Phase 8 (Teardown).
 
-6. Once all tasks in `tasks.md` are checked off and CI is passing, proceed to Phase 6.
+6. Once all tasks in `tasks.md` are checked off and CI is passing, proceed to Phase 6. The `ciFixes` counter will be reset to 0 as part of the Phase 6 state transition.
 
 ---
 
@@ -368,9 +374,9 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
 
 ### Steps
 
-1. Update the PR phase to `REVIEW`:
+1. Update the PR phase to `REVIEW` and reset `ciFixes` to 0 (the counter tracks attempts per phase, not cumulative):
    ```bash
-   gh pr edit <PR> --body "$(updated body with phase: REVIEW)"
+   gh pr edit <PR> --body "$(updated body with phase: REVIEW, ciFixes: 0, blocked: false)"
    ```
 
 2. Mark the PR as ready for review (remove draft status):
@@ -378,15 +384,12 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
    gh pr ready <PR>
    ```
 
-3. Invoke `/code-review` as an **independent sub-agent** — pass only the PR number, no other context. The sub-agent must derive all context from the PR itself:
+3. Invoke the `superpowers:requesting-code-review` skill as an **independent sub-agent** — pass only the PR number so the reviewer derives all context from the PR itself. Use the Agent tool to ensure a clean context window:
    ```
-   Invoke skill: superpowers:requesting-code-review
-   Arguments: PR #<PR> — review for correctness, scope adherence, and quality.
-              Do not implement anything; report findings only.
-   ```
-   Use the Agent tool so this runs with a clean context window:
-   ```
-   Agent(subagent_type="claude", prompt="Run /code-review on PR #<PR> in the skillet repository. Report all findings — correctness bugs, simplification opportunities, and anything out of scope for the issue. Do not fix anything.")
+   Agent(
+     subagent_type="claude",
+     prompt="Use the superpowers:requesting-code-review skill to review PR #<PR> in the skillet repository. Report all findings — correctness bugs, simplification opportunities, and anything out of scope for the issue. Do not fix anything."
+   )
    ```
 
 4. Review the sub-agent's findings. For each finding, assess:
@@ -400,7 +403,7 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
    git push origin <branch>
    ```
 
-6. **CI fix cycle** (3 attempts, same rules as Phase 5 — `ciFixes` counter resets for this phase):
+6. **CI fix cycle** (3 attempts, same rules as Phase 5 — `ciFixes` was reset to 0 at the start of this phase):
    - Monitor CI: `gh pr checks <PR> --watch --interval 30`
    - On failure: inspect, fix, commit, push, repeat up to 3 times
    - On 3rd failure: post CI-blocked comment (same format as Phase 5), set state to `CI-BLOCKED`, jump to Phase 8
@@ -471,17 +474,23 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
    cd <repo-root>
    ```
 
-2. Check out `main`:
+2. Remove the worktree to avoid accumulation:
+   ```bash
+   git worktree remove <worktree-path>
+   ```
+   If the worktree has uncommitted changes (e.g., a mid-run interrupt), add `--force` to remove it anyway and rely on the PR branch for recovery.
+
+3. Check out `main`:
    ```bash
    git checkout main
    ```
 
-3. Pull the latest from origin:
+4. Pull the latest from origin:
    ```bash
    git pull origin main
    ```
 
-4. The iteration is complete. If using `/loop` with self-paced scheduling, schedule the next wakeup now. A 30-minute interval is reasonable for active issue queues; 2 hours if no eligible issues were found this run.
+5. The iteration is complete. If using `/loop` with self-paced scheduling, schedule the next wakeup now. A 30-minute interval is reasonable for active issue queues; 2 hours if no eligible issues were found this run.
 
 ---
 

@@ -17,7 +17,6 @@ The key challenge is **resumability**: a loop run may be interrupted, CI may fai
 - Auto-installing OpenSpec or Superpowers (prerequisites are assumed present)
 - Handling issues that require major architecture changes
 - Parallel issue implementation (one active issue per loop run)
-- Managing worktree cleanup on failure (left for human recovery)
 
 ## Decisions
 
@@ -67,11 +66,11 @@ The key challenge is **resumability**: a loop run may be interrupted, CI may fai
 
 **Why 3**: Enough to handle flaky tests and straightforward linting errors; unlikely to spiral on a systematic failure. The human gets a clear explanation rather than an agent stuck in a loop.
 
-### D5: Teardown always returns to latest main
+### D5: Teardown always removes the worktree and returns to latest main
 
-**Decision**: Phase 8 exits the worktree, checks out main, and runs `git pull origin main` unconditionally.
+**Decision**: Phase 8 exits the worktree, removes it with `git worktree remove` (using `--force` if uncommitted changes exist), checks out main, and runs `git pull origin main` unconditionally.
 
-**Why**: Each loop iteration must start from the latest main to avoid branching from stale state. This is a simple invariant enforced at the end of every run regardless of success or failure in earlier phases.
+**Why**: Each loop iteration must start from the latest main to avoid branching from stale state. Worktrees must be removed on every exit path — success, NEEDS-INPUT, or CI-BLOCKED — to prevent accumulation. The branch and its PR are the durable artifacts; the worktree is disposable.
 
 ### D6: Reviewer assignment
 
@@ -94,4 +93,3 @@ The key challenge is **resumability**: a loop run may be interrupted, CI may fai
 ## Open Questions
 
 - Should the prompt support a `--dry-run` mode (triage only, no workspace creation)? Not included in v1.
-- Should worktrees be cleaned up on successful wrap-up, or left for the user to inspect? Left to user in v1 (teardown only exits and returns to main).
