@@ -23,7 +23,7 @@ export interface FixturePackage {
  * array) to `file:./fixtures/<name>`.
  *
  * Finally, runs `npm install --ignore-scripts` in `<sandbox.cwd>` so that
- * `createRequire` resolves packages identically to production.
+ * `import.meta.resolve` resolves packages identically to production.
  */
 export async function installFixturePackages(
   sandbox: Sandbox,
