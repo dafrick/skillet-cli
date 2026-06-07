@@ -20,16 +20,29 @@ afterEach(() => {
 const skill = { name: 'my-skill', sourceDir: '/some/source/dir' };
 
 describe('agentsAdapter', () => {
-  it('detect() always returns both scopes', () => {
+  it('detect() returns user scope when ~/.agents/ exists', () => {
+    fs.mkdirSync(path.join(tmpHome, '.agents'));
+    const result = agentsAdapter.detect({ home: tmpHome, cwd: tmpCwd });
+    expect(result.scopes).toContain('user');
+  });
+
+  it('detect() returns project scope when .agents/ exists in cwd', () => {
+    fs.mkdirSync(path.join(tmpCwd, '.agents'));
+    const result = agentsAdapter.detect({ home: tmpHome, cwd: tmpCwd });
+    expect(result.scopes).toContain('project');
+  });
+
+  it('detect() can return both scopes when both directories exist', () => {
+    fs.mkdirSync(path.join(tmpHome, '.agents'));
+    fs.mkdirSync(path.join(tmpCwd, '.agents'));
     const result = agentsAdapter.detect({ home: tmpHome, cwd: tmpCwd });
     expect(result.scopes).toContain('user');
     expect(result.scopes).toContain('project');
   });
 
-  it('detect() returns both scopes regardless of filesystem state', () => {
-    // No directories created — should still return both scopes
+  it('detect() returns empty scopes when neither directory exists', () => {
     const result = agentsAdapter.detect({ home: tmpHome, cwd: tmpCwd });
-    expect(result.scopes).toHaveLength(2);
+    expect(result.scopes).toHaveLength(0);
   });
 
   it('supportsScope() returns true for user scope', () => {

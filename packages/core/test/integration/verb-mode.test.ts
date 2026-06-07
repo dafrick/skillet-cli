@@ -34,7 +34,7 @@ describe('verbMode integration', () => {
         skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         verbMode: 'standard',
-        argv: ['node', 'test-skill', 'install', '--yes'],
+        argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
       });
 
       expect(combined).toContain('installing into');
@@ -74,7 +74,7 @@ describe('verbMode integration', () => {
         skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         verbMode: 'standard',
-        argv: ['node', 'test-skill', 'install', '--yes'],
+        argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
       });
 
       const combined = await captureRun({
@@ -110,7 +110,7 @@ describe('verbMode integration', () => {
           skillDir: helloSkillDir,
           pkg: { name: 'test-skill', version: '1.0.0' },
           // No verbMode = defaults to 'fun'
-          argv: ['node', 'test-skill', 'install', '--yes'],
+          argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
         });
 
         if (COOKING_INSTALL_ACTIVE.some((v) => combined.includes(v))) {
@@ -132,7 +132,7 @@ describe('verbMode integration', () => {
       await run({
         skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
-        argv: ['node', 'test-skill', 'install', '--yes'],
+        argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
       });
 
       const COOKING_UNINSTALL_ACTIVE = [

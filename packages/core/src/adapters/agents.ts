@@ -1,3 +1,4 @@
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Scope } from '../types.js';
 import type { Adapter, Context, NormalizedSkillBase } from './types.js';
@@ -6,8 +7,15 @@ export const agentsAdapter: Adapter = {
   id: 'agents',
   label: 'Agents (.agents/)',
 
-  detect(_ctx: Omit<Context, 'scope'>) {
-    return { scopes: ['user', 'project'] as Scope[] };
+  detect(ctx: Omit<Context, 'scope'>) {
+    const scopes: Scope[] = [];
+    if (fs.existsSync(path.join(ctx.home, '.agents'))) {
+      scopes.push('user');
+    }
+    if (fs.existsSync(path.join(ctx.cwd, '.agents'))) {
+      scopes.push('project');
+    }
+    return { scopes };
   },
 
   supportsScope(_scope: Scope): boolean {
