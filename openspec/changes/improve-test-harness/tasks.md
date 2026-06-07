@@ -1,7 +1,7 @@
 ## 1. Makefile — container setup
 
-- [ ] 1.1 Add `git` to the `apt-get install` block in the `test-start` target alongside Node 24
-- [ ] 1.2 Add `prep-run` target: derive slug using `org-repo` format (last two URL path components joined with `-`, matching `init-run`'s convention), run `docker exec $(CONTAINER) bash -c "mkdir -p /repo && git clone $(REPO_URL) /repo/<slug>"`, error with usage message if `REPO_URL` is unset
+- [x] 1.1 Add `git` to the `apt-get install` block in the `test-start` target alongside Node 24
+- [x] 1.2 Add `prep-run` target: derive slug using `org-repo` format (last two URL path components joined with `-`, matching `init-run`'s convention), run `docker exec $(CONTAINER) bash -c "mkdir -p /repo && git clone $(REPO_URL) /repo/<slug>"`, error with usage message if `REPO_URL` is unset
 
 ## 2. TASK.md template — pre-cloned repo
 
