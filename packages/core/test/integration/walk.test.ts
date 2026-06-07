@@ -2,9 +2,10 @@
  * Integration tests for findPackageRoot and resolveSkillPackageClosure.
  * Tasks 2.1, 2.8, 2.2–2.7, 2.9–2.11
  *
- * Uses installFixturePackages so that createRequire resolves packages
+ * Uses installFixturePackages so that import.meta.resolve resolves packages
  * identically to production, including npm's hoisting and nesting behaviour.
  */
+import { execSync } from 'node:child_process';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -61,6 +62,53 @@ describe('findPackageRoot', () => {
     const result = await findPackageRoot('non-existent-package-xyz', sandbox.cwd);
 
     expect(result).toBeNull();
+  });
+
+  it('resolves an ESM-only package (no main, only exports.import) without a warning', async () => {
+    // Simulates @skillet-cli/core's package structure: ESM-only exports, no main field.
+    // CJS require.resolve() fails for such packages; import.meta.resolve() handles them.
+    const fixturesDir = path.join(sandbox.cwd, 'fixtures');
+    const esmOnlyDir = path.join(fixturesDir, 'esm-only-pkg');
+    await fs.mkdir(path.join(esmOnlyDir, 'dist'), { recursive: true });
+    await fs.writeFile(path.join(esmOnlyDir, 'dist', 'index.js'), 'export {};\n', 'utf8');
+    await fs.writeFile(
+      path.join(esmOnlyDir, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'esm-only-pkg',
+          version: '1.0.0',
+          type: 'module',
+          exports: { '.': { import: './dist/index.js' } },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    await fs.writeFile(
+      path.join(sandbox.cwd, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'test-root',
+          version: '0.0.0',
+          private: true,
+          type: 'module',
+          dependencies: { 'esm-only-pkg': 'file:./fixtures/esm-only-pkg' },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    execSync('npm install --ignore-scripts', { cwd: sandbox.cwd, stdio: 'pipe' });
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const result = await findPackageRoot('esm-only-pkg', sandbox.cwd);
+    warnSpy.mockRestore();
+
+    expect(result).not.toBeNull();
+    const pkgJson = JSON.parse(await fs.readFile(path.join(result!, 'package.json'), 'utf8'));
+    expect(pkgJson.name).toBe('esm-only-pkg');
   });
 
   it('2.8: resolves a package when fromDir is set to a nested package directory', async () => {
@@ -245,6 +293,70 @@ describe('resolveSkillPackageClosure', () => {
     expect(packageNames).not.toContain('base-pkg');
     expect(packageNames).toContain('invoker-pkg');
     expect(closure).toHaveLength(1);
+  });
+
+  it('ESM-only unmarked dependency does not trigger "Could not resolve" warning', async () => {
+    // Reproduces the @skillet-cli/core spurious warning: a skill package lists core as
+    // a dependency; core is ESM-only (no main field). CJS require.resolve() fails and
+    // emits a spurious warning. With import.meta.resolve() no warning fires.
+    const fixturesDir = path.join(sandbox.cwd, 'fixtures');
+    const esmOnlyDir = path.join(fixturesDir, 'esm-only-dep');
+    await fs.mkdir(path.join(esmOnlyDir, 'dist'), { recursive: true });
+    await fs.writeFile(path.join(esmOnlyDir, 'dist', 'index.js'), 'export {};\n', 'utf8');
+    await fs.writeFile(
+      path.join(esmOnlyDir, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'esm-only-dep',
+          version: '1.0.0',
+          type: 'module',
+          exports: { '.': { import: './dist/index.js' } },
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+
+    await installFixturePackages(sandbox, [
+      {
+        name: 'skill-pkg',
+        version: '1.0.0',
+        skillet: { skills: 'skills' },
+        deps: [],
+      },
+    ]);
+
+    // Add esm-only-dep to fixture dir and patch skill-pkg's dependencies to include it
+    const skillPkgRoot = await findPackageRoot('skill-pkg', sandbox.cwd);
+    expect(skillPkgRoot).not.toBeNull();
+
+    // Install esm-only-dep into sandbox node_modules
+    const rootPkgPath = path.join(sandbox.cwd, 'package.json');
+    const rootPkg = JSON.parse(await fs.readFile(rootPkgPath, 'utf8'));
+    rootPkg.dependencies['esm-only-dep'] = 'file:./fixtures/esm-only-dep';
+    await fs.writeFile(rootPkgPath, JSON.stringify(rootPkg, null, 2), 'utf8');
+    execSync('npm install --ignore-scripts', { cwd: sandbox.cwd, stdio: 'pipe' });
+
+    // Patch skill-pkg's package.json to list esm-only-dep as a dependency
+    const skillPkgJsonPath = path.join(skillPkgRoot!, 'package.json');
+    const skillPkgJson = JSON.parse(await fs.readFile(skillPkgJsonPath, 'utf8'));
+    skillPkgJson.dependencies = { 'esm-only-dep': '1.0.0' };
+    await fs.writeFile(skillPkgJsonPath, JSON.stringify(skillPkgJson, null, 2), 'utf8');
+
+    await createSkillTree(path.join(skillPkgRoot!, 'skills'), 'my-skill');
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const ownSkillDirs = [path.join(skillPkgRoot!, 'skills', 'my-skill')];
+    const closure = await resolveSkillPackageClosure(skillPkgRoot!, ownSkillDirs);
+    const warnCalls = warnSpy.mock.calls.map((c) => String(c[0]));
+    warnSpy.mockRestore();
+
+    // No spurious warning about esm-only-dep (it exists, just has no skillet marker)
+    expect(warnCalls.some((w) => w.includes('esm-only-dep'))).toBe(false);
+    // Own skill still returned
+    expect(closure).toHaveLength(1);
+    expect(closure[0].packageName).toBe('skill-pkg');
   });
 
   it('2.9/2.7: unresolvable dependency → warning logged, walk continues', async () => {
