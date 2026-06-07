@@ -140,7 +140,10 @@ export async function executeBatchScaffold(config: WizardConfig): Promise<void> 
       );
 
       const binPath = path.join(binDir, 'cli.js');
-      // Path from dist/<slug>/bin/cli.js up to repo root, then into skillDir
+      // buildBinCliJs embeds the arg as `new URL('../<arg>', import.meta.url)`.
+      // From dist/<slug>/bin/cli.js: '../' goes to dist/<slug>/, '../../' to
+      // dist/, '../../../' to repo root. Batch packages are always at dist/<slug>/
+      // (depth 2), so '../../<skillDir>' always resolves to the repo-root-relative path.
       await fsp.writeFile(binPath, buildBinCliJs(`../../${skillDir}`), 'utf8');
       await fsp.chmod(binPath, 0o755);
 

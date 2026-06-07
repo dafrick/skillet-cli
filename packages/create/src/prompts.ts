@@ -47,6 +47,7 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
     skillDirs = await checkbox({
       message: 'Select skill content paths to package (relative to package root):',
       choices: detected.discoveredSkillDirs.map((d) => ({ name: d, value: d })),
+      validate: (answer) => answer.length > 0 || 'Select at least one skill.',
     });
   } else {
     if (detected.discoveredSkillDirs.length === 0 && !detected.skillDir) {
