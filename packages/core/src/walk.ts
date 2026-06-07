@@ -1,7 +1,6 @@
 import * as fs from 'node:fs/promises';
-import { createRequire } from 'node:module';
 import * as path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { discoverSkillTrees, readSkilletMarker } from './marker.js';
 
 export interface SkillEntry {
@@ -18,20 +17,20 @@ export interface SkillEntry {
 /**
  * Resolve a package name to its on-disk package root directory.
  *
- * Uses `createRequire` from `node:module` to resolve the package's main entry
- * relative to `fromDir`, then walks parent directories upward until finding
- * the directory that contains `package.json`. Returns that directory, or null
- * if resolution throws (package not installed).
+ * Uses `import.meta.resolve` with `fromDir` as the parent so ESM exports
+ * conditions (including `"import"`-only packages like `@skillet-cli/core`) are
+ * resolved correctly. CJS `require.resolve` would fail for such packages
+ * because it only matches `"require"` or `"default"` export conditions.
  */
 export async function findPackageRoot(
   packageName: string,
   fromDir: string,
 ): Promise<string | null> {
-  const require = createRequire(pathToFileURL(`${fromDir}/`).href);
-
   let resolvedEntry: string;
   try {
-    resolvedEntry = require.resolve(packageName);
+    resolvedEntry = fileURLToPath(
+      import.meta.resolve(packageName, pathToFileURL(`${fromDir}/`).href),
+    );
   } catch {
     return null;
   }
