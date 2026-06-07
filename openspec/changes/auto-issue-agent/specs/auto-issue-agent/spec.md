@@ -37,11 +37,11 @@ When no in-progress work is found, the agent SHALL select an open GitHub issue s
 - **THEN** the agent does not select that issue
 
 ### Requirement: Phase 2 — Workspace setup
-Before any exploration or code changes, the agent SHALL ensure it is on the latest `origin/main` (via `git pull origin main`), create a branch named `fix/#N-slug` for bugs or `feat/#N-slug` for enhancements (where N is the issue number and slug is a kebab-case summary), and create a git worktree for isolated work.
+Before any exploration or code changes, the agent SHALL ensure it is on the latest `origin/main` (via `git pull origin main`), create a branch named `fix/N-slug` for bugs or `feat/N-slug` for enhancements (where N is the issue number and slug is a kebab-case summary), create a git worktree for isolated work, push an empty initial commit to establish the branch on origin, and immediately create a draft PR for state tracking.
 
 #### Scenario: Branch created from latest main
 - **WHEN** the agent sets up workspace for issue #36
-- **THEN** a branch `fix/36-spurious-dep-warning` is created from the latest `origin/main` commit
+- **THEN** a branch `fix/36-spurious-dep-warning` is created from the latest `origin/main` commit with an empty initial commit, pushed to origin, and a draft PR is opened
 
 ### Requirement: Phase 3 — Exploration with question detection
 The agent SHALL invoke `/opsx:explore` on the selected issue, reading the issue body and relevant code. If the exploration surfaces critical open questions that block autonomous implementation, the agent SHALL create a PR on the current branch with those questions documented in the PR description and SHALL set the agent-state to NEEDS-INPUT. If no critical questions exist, the agent SHALL proceed to Phase 4.
@@ -62,22 +62,22 @@ The agent SHALL invoke `/opsx:propose` to create a change proposal, then commit 
 - **THEN** `openspec/changes/<name>/proposal.md` (and other artifacts) exist on the branch and are pushed to origin
 
 ### Requirement: Phase 5 — Implementation with TDD
-The agent SHALL invoke `/opsx:apply` using TDD sub-agents to implement the change. The agent SHALL commit and push frequently (after each logical unit of work). After each push the agent SHALL monitor CI status. If CI fails, the agent SHALL attempt a fix and push again, up to 3 total fix attempts. If CI still fails after 3 attempts, the agent SHALL post a PR comment explaining what was tried and stop Phase 5.
+The agent SHALL invoke `/opsx:apply` using TDD sub-agents to implement the change. The agent SHALL commit and push frequently (after each logical unit of work) using explicit file staging (not interactive). After each push the agent SHALL monitor CI status. If CI fails, the agent SHALL attempt a fix and push again, up to 3 total fix attempts. If CI still fails after 3 attempts, the agent SHALL post a PR comment explaining what was tried and stop Phase 5. When all tasks are complete and CI passes, the agent SHALL reset `ciFixes` to 0 in the agent-state as part of the transition to Phase 6.
 
 #### Scenario: CI passes within 3 attempts
 - **WHEN** CI fails once but a fix is applied and CI passes on the second run
-- **THEN** the agent proceeds to Phase 6
+- **THEN** the agent proceeds to Phase 6 with `ciFixes` reset to 0
 
 #### Scenario: CI fails 3 times
 - **WHEN** CI fails on all 3 fix attempts in Phase 5
 - **THEN** the agent posts a PR comment detailing the failure and the fixes attempted, and stops
 
 ### Requirement: Phase 6 — Code review
-The agent SHALL invoke `/code-review` as an independent sub-agent, passing only the PR number (so the sub-agent has no prior context). The agent SHALL implement all reasonable in-scope suggestions from the review, commit, and push. The agent SHALL then monitor CI and apply up to 3 fix cycles using the same rules as Phase 5.
+The agent SHALL invoke the `superpowers:requesting-code-review` skill as an independent sub-agent via the Agent tool, passing only the PR number (so the sub-agent has no prior context). The agent SHALL implement all reasonable in-scope suggestions from the review, commit, and push. The agent SHALL then monitor CI and apply up to 3 fix cycles using the same rules as Phase 5.
 
 #### Scenario: Review sub-agent is independent
 - **WHEN** Phase 6 begins
-- **THEN** `/code-review` is invoked via Agent tool with only the PR number, not the full conversation context
+- **THEN** `superpowers:requesting-code-review` is invoked via Agent tool with only the PR number, not the full conversation context
 
 ### Requirement: Phase 7 — Wrap-up
 After implementation and review pass, the agent SHALL update the PR description to reflect the final state of changes, review all OpenSpec artifacts (proposal, design, tasks) for accuracy and update them if needed, commit and push any artifact updates, invoke `/opsx:archive`, and assign `dafrick` as the PR reviewer.
@@ -87,11 +87,11 @@ After implementation and review pass, the agent SHALL update the PR description 
 - **THEN** GitHub user `dafrick` is assigned as a reviewer on the PR
 
 ### Requirement: Phase 8 — Teardown
-After every run (success or stop), the agent SHALL exit the worktree, return to the `main` branch, and run `git pull origin main` to ensure the next iteration starts from the latest state.
+After every run (success or stop), the agent SHALL exit the worktree, remove it with `git worktree remove` (using `--force` if needed), return to the `main` branch, and run `git pull origin main` to ensure the next iteration starts from the latest state. Worktrees SHALL NOT accumulate across runs.
 
 #### Scenario: Teardown after NEEDS-INPUT stop
 - **WHEN** Phase 3 stops due to NEEDS-INPUT
-- **THEN** Phase 8 still runs: agent exits worktree, checks out main, pulls origin/main
+- **THEN** Phase 8 still runs: agent exits worktree, removes it, checks out main, pulls origin/main
 
 ### Requirement: Agent state in PR description
 Every PR created by the agent SHALL contain an "Agent Status" section at the top of the description as a human-readable markdown table, followed immediately by an HTML comment containing the machine-parseable JSON state. The phase field SHALL be updated at every phase transition.

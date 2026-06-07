@@ -14,13 +14,14 @@
 
 - [x] 3.1 Write triage instructions: fetch open issues via `gh issue list --json`
 - [x] 3.2 Write scoring criteria: clear issue body, no unanswered comments, minor scope, no architecture changes
-- [x] 3.3 Write dedup check: verify no existing open PR references the candidate issue number
+- [x] 3.3 Write dedup check: verify no existing open PR references the candidate issue number (use regex with word boundary to avoid partial matches)
 
 ## 4. Phase 2 — Workspace Setup
 
 - [x] 4.1 Write workspace instructions: `git pull origin main` before branching
-- [x] 4.2 Write branch naming rule: `fix/#N-slug` for bugs, `feat/#N-slug` for enhancements
+- [x] 4.2 Write branch naming rule: `fix/N-slug` for bugs, `feat/N-slug` for enhancements (no `#` in branch name)
 - [x] 4.3 Write worktree creation instructions via `superpowers:using-git-worktrees` skill
+- [x] 4.4 Write empty initial commit (`git commit --allow-empty`) and push before `gh pr create`
 
 ## 5. Phase 3 — Exploration
 
@@ -38,14 +39,15 @@
 ## 7. Phase 5 — Implementation
 
 - [x] 7.1 Write Phase 5 instructions: invoke `/opsx:apply` with TDD sub-agents (`superpowers:test-driven-development`)
-- [x] 7.2 Write frequent-commit instructions: commit after each logical unit, push
+- [x] 7.2 Write frequent-commit instructions: commit after each logical unit using explicit file staging (not `git add -p`), push
 - [x] 7.3 Write CI monitoring loop: check CI status after each push, wait for result
 - [x] 7.4 Write CI fix cycle: up to 3 attempts — diagnose failure, apply fix, commit & push
 - [x] 7.5 Write CI cap behaviour: on 3rd failure post PR comment with failure summary and attempted fixes, stop
+- [x] 7.6 Write ciFixes reset: reset `ciFixes` to 0 in agent-state as part of Phase 5 → Phase 6 transition
 
 ## 8. Phase 6 — Code Review
 
-- [x] 8.1 Write Phase 6 instructions: invoke `/code-review` as independent sub-agent with PR number only (Agent tool, no prior context)
+- [x] 8.1 Write Phase 6 instructions: invoke `superpowers:requesting-code-review` as independent sub-agent via Agent tool with PR number only (no prior context)
 - [x] 8.2 Write change application: implement all reasonable in-scope review suggestions, commit & push
 - [x] 8.3 Write CI monitoring + fix cycle (same 3-attempt cap as Phase 5)
 
@@ -59,9 +61,10 @@
 ## 10. Phase 8 — Teardown
 
 - [x] 10.1 Write teardown instructions: exit worktree (`ExitWorktree` or equivalent)
-- [x] 10.2 Write return-to-main step: `git checkout main`
-- [x] 10.3 Write pull step: `git pull origin main`
-- [x] 10.4 Confirm teardown runs on every exit path (success, NEEDS-INPUT stop, CI cap stop)
+- [x] 10.2 Write worktree removal step: `git worktree remove <path>` (with `--force` if uncommitted changes)
+- [x] 10.3 Write return-to-main step: `git checkout main`
+- [x] 10.4 Write pull step: `git pull origin main`
+- [x] 10.5 Confirm teardown runs on every exit path (success, NEEDS-INPUT stop, CI cap stop)
 
 ## 11. Agent State Schema
 
@@ -73,5 +76,5 @@
 
 - [x] 12.1 Review completed `prompts/auto-issue.md` against all spec scenarios
 - [x] 12.2 Confirm prerequisites section is present and accurate
-- [x] 12.3 Confirm all 8 phases are present with correct ordering (workspace before explore)
+- [x] 12.3 Confirm all 9 phases (0–8) are present with correct ordering (workspace before explore)
 - [x] 12.4 Confirm agent-state schema appears in both PR description template and parsing instructions
