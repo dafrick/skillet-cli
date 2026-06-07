@@ -42,7 +42,7 @@ Classify the repo before the session begins. Record the tier in `TEST-RUN.md`.
 
 1. Consult `TEST-MATRIX.md` to identify coverage gaps — prioritize untested tiers and environments.
 2. Choose a candidate repo and a target agent environment (e.g., Claude Code, GitHub Copilot CLI).
-3. Re-inspect the repo (on GitHub or by cloning locally) and confirm the tier matches the matrix entry. Correct the matrix entry if it is wrong before proceeding.
+3. Re-inspect the repo and confirm the tier matches the matrix entry. Correct the matrix entry if it is wrong before proceeding.
 4. Run `make init-run REPO=<repo-slug>` to create the run folder and copy all templates.
 
    Use `org-repo` format for the slug (replace `/` with `-`). For example, `netresearch/agent-rules-skill` → `netresearch-agent-rules-skill`.
