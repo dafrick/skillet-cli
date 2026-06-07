@@ -21,7 +21,7 @@ Use the package you created to install the skills into your <env> environment.
 
 - A terminal inside a Docker container (Node and npm are available)
 - Internet access
-- The repository at the URL above
+- The repository, pre-cloned at `/repo/<slug>` inside the container
 
 ## Guidance
 
