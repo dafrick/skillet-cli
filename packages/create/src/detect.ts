@@ -99,7 +99,9 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
       const raw = fs.readFileSync(pkgJsonPath, 'utf8');
       const pkg = JSON.parse(raw) as PackageJson;
       pkgName = pkg.name ?? '';
-      version = pkg.version ?? '';
+      const rawVersion = pkg.version ?? '';
+      // 0.0.0-* (e.g. "0.0.0-source") is a pnpm workspace placeholder, not a real version
+      version = /^0\.0\.0(-|$)/.test(rawVersion) ? '' : rawVersion;
       author = pkg.author ?? '';
       description = pkg.description ?? '';
       if (pkg.skillet?.skillDir) {

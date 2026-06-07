@@ -155,6 +155,30 @@ describe('detectEnvironment — existing package.json', () => {
     const result = detectEnvironment('override-name');
     expect(result.name).toBe('override-name');
   });
+
+  it('0.0.0-source placeholder version is returned as empty string', async () => {
+    const pkgData = { name: 'my-skill', version: '0.0.0-source' };
+    await fsp.writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(pkgData));
+
+    const result = detectEnvironment();
+    expect(result.version).toBe('');
+  });
+
+  it('0.0.0 exact version is returned as empty string', async () => {
+    const pkgData = { name: 'my-skill', version: '0.0.0' };
+    await fsp.writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(pkgData));
+
+    const result = detectEnvironment();
+    expect(result.version).toBe('');
+  });
+
+  it('real pre-release version like 1.0.0-beta.1 is preserved', async () => {
+    const pkgData = { name: 'my-skill', version: '1.0.0-beta.1' };
+    await fsp.writeFile(path.join(tmpDir, 'package.json'), JSON.stringify(pkgData));
+
+    const result = detectEnvironment();
+    expect(result.version).toBe('1.0.0-beta.1');
+  });
 });
 
 describe('detectEnvironment — no package.json, kebab-case from directory name', () => {
