@@ -8,7 +8,7 @@
 
 | Tier | Repo | Complexity Notes | Status |
 |------|------|-----------------|--------|
-| T1 | `netresearch/agent-rules-skill` | Single SKILL.md, no resources | Untested |
+| T3 | `netresearch/agent-rules-skill` | Single skill + nested resources/scripts (scripts/, references/, assets/ all deeply nested) | 2026-06-07 mid fail — Step 3 crash (ISS-001), Steps 4–6 pass |
 | T2 | `netresearch/skill-repo-skill` | Single skill + flat supporting files | Untested |
 | T3 | `harness/harness-skills` | Single skill + nested resources/scripts | Untested |
 | T4 | `addyosmani/agent-skills` | Multiple SKILL.md files in subdirs | Untested |
@@ -18,4 +18,4 @@
 
 | Date | Repo | Tier | Env | Outcome | Run Folder |
 |------|------|------|-----|---------|------------|
-| — | — | — | — | — | — |
+| 2026-06-07 | `netresearch/agent-rules-skill` | T3 | Claude Code | 🔶 Mid fail — ISS-001 (missing fonts in npm package); Steps 4–6 ✅ | `runs/2026-06-07-netresearch-agent-rules-skill` |
