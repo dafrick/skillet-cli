@@ -73,7 +73,7 @@ function gitOutput(args: string[]): string {
   }
 }
 
-const SCAN_SKIP_DIRS = new Set(['node_modules']);
+const SCAN_SKIP_DIRS = new Set(['node_modules', 'dist']);
 
 /**
  * Recursively scan `baseDir` for `SKILL.md` files and return the containing

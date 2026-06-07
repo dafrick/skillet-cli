@@ -395,4 +395,20 @@ describe('detectEnvironment — discoveredSkillDirs', () => {
     // scan still runs; discoveredSkillDirs is still populated
     expect(result.discoveredSkillDirs).toEqual(['skills/my-skill/']);
   });
+
+  it('package.json skillet.skillDir takes precedence even when multiple SKILL.md found', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'a'), { recursive: true });
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'b'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'a', 'SKILL.md'), '# A');
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'b', 'SKILL.md'), '# B');
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'pkg', version: '1.0.0', skillet: { skillDir: 'override/' } }),
+    );
+
+    const result = detectEnvironment();
+
+    expect(result.skillDir).toBe('override/');
+    expect(result.discoveredSkillDirs).toHaveLength(2);
+  });
 });
