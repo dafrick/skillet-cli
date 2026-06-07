@@ -91,16 +91,16 @@ The `create-skillet` package SHALL live at `packages/create/` with its own `pack
 
 ---
 
-### Requirement: Root .gitignore uses contents pattern for test-manual/tmp/
-The root `.gitignore` SHALL contain the entry `test-manual/tmp/*` (contents pattern, not `test-manual/tmp/` directory pattern) so that `tmp/.gitkeep` remains committable while all ephemeral test content is excluded.
+### Requirement: Root .gitignore excludes test-manual/tmp/ contents
+The root `.gitignore` SHALL contain the entry `test-manual/tmp/*` so that any scratchpad content under `tmp/` is never accidentally committed. Test run artifacts (run folders, LOG.md, TEST-RUN.md, issue files) live under `test-manual/runs/`, which is tracked by git and not gitignored.
 
-#### Scenario: Ephemeral test content is not tracked
+#### Scenario: Scratchpad content is not tracked
 - **WHEN** files are created under `test-manual/tmp/` during a test run
 - **THEN** `git status` shows no untracked files for that content
 
-#### Scenario: .gitkeep is not excluded by the ignore pattern
-- **WHEN** the `.gitignore` entry `test-manual/tmp/*` is in place
-- **THEN** `git ls-files test-manual/tmp/.gitkeep` lists the file (it is not ignored)
+#### Scenario: Run artifacts are tracked
+- **WHEN** a guide completes a session
+- **THEN** the run folder under `test-manual/runs/` appears in `git status` as untracked, and `git ls-files test-manual/runs/.gitkeep` lists the placeholder file
 
 ---
 

@@ -34,14 +34,14 @@ _Alternative considered:_ Separate `make install-deps` target. Rejected — the 
 
 ### 2. New `make prep-run` target for repo pre-cloning
 
-A new `prep-run REPO_URL=<url>` Makefile target runs `docker exec` to clone the specified URL into `/repo/<slug>` inside the running container (where `<slug>` is derived from the URL's last path component). The container must already be running (i.e., `test-start` must have been called first).
+A new `prep-run REPO_URL=<url>` Makefile target runs `docker exec` to clone the specified URL into `/repo/<slug>` inside the running container (where `<slug>` uses the same `org-repo` format as `init-run` — derived from the last two path components of the URL joined with `-`). The target creates `/repo` inside the container if it does not already exist before running the clone. The container must already be running (i.e., `test-start` must have been called first).
 
 Guide workflow becomes:
 ```
 make test-start
-make init-run REPO=<slug>
+make init-run REPO=<org>-<repo>
 make prep-run REPO_URL=https://github.com/<org>/<repo>
-# fill in TASK.md, hand off to test user
+# both commands use the same org-repo slug; fill in TASK.md with /repo/<org>-<repo>, hand off to test user
 ```
 
 The tmux session's working directory is left at the container shell's default (`/`); the guide hands the test user a starting path in TASK.md rather than `cd`-ing for them, preserving the test user's agency to navigate.
@@ -64,9 +64,9 @@ _Alternative considered:_ Running separate Claude Code sessions for Guide and Te
 
 The current template has a single `<!-- ... -->` comment block that contains the format examples. The closing `-->` appears at the end of the examples, but the append region begins inside the same block structure. In practice, the comment is never properly closed before the test user starts appending entries.
 
-Fix: Place the format examples inside a fully self-contained `<!-- ... -->` comment that is explicitly closed before the line `<!-- Append entries below. -->`. The append region is then outside any comment.
+Fix: Place the format examples inside a fully self-contained `<!-- ... -->` comment that is explicitly closed before the line `<!-- Append entries below. -->`. The examples comment and the append marker are adjacent — no blank line between them — so there is no ambiguous insertion zone where a user might begin writing before reaching the marker. The append region is then outside any comment.
 
-No new syntax — just restructuring the template so the HTML comment boundaries are unambiguous.
+No new syntax — just restructuring the template so the HTML comment boundaries are unambiguous. AGENT-SUPPLEMENT.md will also note that log entries are plain text and must not be wrapped in `<!-- -->` comment syntax, since a coding agent reading both comment blocks could otherwise infer that entries follow the same comment pattern.
 
 ### 5. Pre-session re-inspection: mandatory step in README and TEST-RUN template
 
@@ -87,9 +87,19 @@ HARNESS_DIR="$(git rev-parse --show-toplevel)/test-manual"
 
 This works regardless of where the agent's working directory is at the time of the call.
 
+### 7. Move run folders from `tmp/` (gitignored) to `runs/` (committed)
+
+Run folders created by `init-run` currently land in `test-manual/tmp/`, which is gitignored. This means session logs, grading records, and issue files are lost after each run. The permanent artifact store for test sessions is valuable — it allows tracking coverage over time and reviewing past grading decisions.
+
+Change: `init-run` creates run folders under `test-manual/runs/` instead of `test-manual/tmp/`. `runs/` is a tracked directory with a committed `.gitkeep`. The gitignore entry for `test-manual/tmp/*` remains, keeping `tmp/` available as a scratchpad for anything that should not be committed.
+
+The session's cloned repo lands inside the Docker container at `/repo/<slug>` and is torn down with the container — it never touches the host filesystem, so there is nothing repo-clone-like to gitignore under `runs/`.
+
+_Alternative considered:_ Selectively gitignore non-markdown files under `tmp/` (e.g., `!tmp/**/*.md`). Rejected — gitignore negation for nested directories is fragile, and the intent is straightforwardly "these .md records should be kept." A dedicated `runs/` directory makes the intent unambiguous.
+
 ## Risks / Trade-offs
 
-**`prep-run` is a new required step** → Guides who skip it will have the test user clone manually again (same problem as before). Mitigation: README checklist makes it explicit; the TASK.md template can note "the repository has been pre-cloned for you at `/repo/<slug>`."
+**`prep-run` is a new required step** → Guides who skip it will have the test user clone manually again (same problem as before). Mitigation: README checklist makes it explicit; the TASK.md template notes "the repository has been pre-cloned for you at `/repo/<org>-<repo>`." Because `prep-run` and `init-run` both use the same `org-repo` slug derived from the URL, the path in TASK.md will always match the actual clone location.
 
 **Sub-agent role separation is not enforced by tooling** → A guide agent that has prior run context can still play both roles with that knowledge intact. Mitigation: The README documents this clearly as a hard requirement, not a suggestion. Guides who conflate roles should note it in the run metadata.
 

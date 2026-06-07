@@ -32,7 +32,7 @@ init-run:
 ifndef REPO
 	$(error REPO is required. Usage: make init-run REPO=<repo-slug>)
 endif
-	@RUN=tmp/$$(date +%Y-%m-%d)-$(REPO) && \
+	@RUN=runs/$$(date +%Y-%m-%d)-$(REPO) && \
 	mkdir -p $$RUN/issues && \
 	cp templates/TASK.md.template $$RUN/TASK.md && \
 	cp templates/TEST-RUN.md.template $$RUN/TEST-RUN.md && \
@@ -40,4 +40,4 @@ endif
 	cp AGENT-SUPPLEMENT.md $$RUN/AGENT-SUPPLEMENT.md && \
 	echo "" && \
 	echo "Run folder created: $$RUN" && \
-	echo "Next: fill in $$RUN/TASK.md with the repo URL and target environment."
+	echo "Next: fill in $$RUN/TASK.md with the repo URL and target environment, then run make prep-run REPO_URL=<url>."

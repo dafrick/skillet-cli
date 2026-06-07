@@ -5,7 +5,7 @@
 
 - **`test-start`** — starts a stock `ubuntu:24.04` Docker container in the background under a fixed container name, installs Node 24 inside the container (via NodeSource `setup_24.x`) **and Git**, and opens a host-side tmux session (using a private socket) whose shell is connected to the container via `docker exec -it`. Prints a copy-pasteable `tmux attach` command so a human guide can observe the session.
 - **`test-teardown`** — kills the tmux session and removes the container.
-- **`init-run REPO=<slug>`** — creates `tmp/YYYY-MM-DD-<slug>/issues/` and copies `TASK.md.template`, `TEST-RUN.md.template`, `LOG.md.template`, and `AGENT-SUPPLEMENT.md` into the folder as `TASK.md`, `TEST-RUN.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md`. Errors with a usage message if `REPO` is not set. The `<slug>` should use `org-repo` format (replace `/` with `-`).
+- **`init-run REPO=<slug>`** — creates `runs/YYYY-MM-DD-<slug>/issues/` and copies `TASK.md.template`, `TEST-RUN.md.template`, `LOG.md.template`, and `AGENT-SUPPLEMENT.md` into the folder as `TASK.md`, `TEST-RUN.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md`. Errors with a usage message if `REPO` is not set. The `<slug>` should use `org-repo` format (replace `/` with `-`).
 
 #### Scenario: test-start launches container and tmux session
 - **WHEN** a guide runs `make test-start` from `test-manual/`
@@ -17,7 +17,7 @@
 
 #### Scenario: init-run creates a complete run folder
 - **WHEN** a guide runs `make init-run REPO=my-skill-repo`
-- **THEN** `tmp/YYYY-MM-DD-my-skill-repo/` exists and contains `TASK.md`, `TEST-RUN.md`, `LOG.md`, `AGENT-SUPPLEMENT.md`, and an empty `issues/` subdirectory
+- **THEN** `runs/YYYY-MM-DD-my-skill-repo/` exists and contains `TASK.md`, `TEST-RUN.md`, `LOG.md`, `AGENT-SUPPLEMENT.md`, and an empty `issues/` subdirectory
 
 #### Scenario: init-run errors without REPO
 - **WHEN** a guide runs `make init-run` without a REPO argument
@@ -84,7 +84,7 @@ The README SHALL NOT contain: the step-by-step test protocol (that lives in TEST
 ---
 
 ### Requirement: AGENT-SUPPLEMENT.md provides tmux guidance for coding-agent test users
-`test-manual/AGENT-SUPPLEMENT.md` SHALL document: the private tmux socket setup, `send-keys -l` (literal mode) for sending wizard input, `capture-pane -p -J -S -200` for reading output (with explanation of `-J` and `-S -200`), `wait-for-text.sh` usage **with a note that the script path must be resolved relative to the `test-manual/` directory (e.g., using `$(git rev-parse --show-toplevel)/test-manual/scripts/wait-for-text.sh`) since the agent's working directory may differ**, `@inquirer/prompts` key sequences (navigate list, select checkbox, confirm, clear field, cancel), and cleanup commands. The guide attaches this alongside `TASK.md` when the test user is a coding agent.
+`test-manual/AGENT-SUPPLEMENT.md` SHALL document: the private tmux socket setup, `send-keys -l` (literal mode) for sending wizard input, `capture-pane -p -J -S -200` for reading output (with explanation of `-J` and `-S -200`), `wait-for-text.sh` usage **with a note that the script path must be resolved relative to the `test-manual/` directory (e.g., using `$(git rev-parse --show-toplevel)/test-manual/scripts/wait-for-text.sh`) since the agent's working directory may differ**, `@inquirer/prompts` key sequences (navigate list, select checkbox, confirm, clear field, cancel), cleanup commands, **and a note that log entries written to `LOG.md` are plain-text lines (`HH:MM ...` format) and must not be wrapped in HTML comment syntax (`<!-- ... -->`)**. The guide attaches this alongside `TASK.md` when the test user is a coding agent.
 
 #### Scenario: Coding-agent test user can drive the wizard from the supplement alone
 - **WHEN** a coding agent reads `AGENT-SUPPLEMENT.md`
@@ -98,10 +98,14 @@ The README SHALL NOT contain: the step-by-step test protocol (that lives in TEST
 - **WHEN** a coding-agent test user calls `wait-for-text.sh` from any working directory
 - **THEN** the script path resolves correctly using the pattern documented in AGENT-SUPPLEMENT.md
 
+#### Scenario: Agent does not wrap log entries in comment syntax
+- **WHEN** a coding-agent test user reads AGENT-SUPPLEMENT.md before writing to LOG.md
+- **THEN** the supplement makes clear that entries are plain-text lines, not HTML comment blocks, preventing the agent from mirroring the comment syntax of the format-examples block
+
 ---
 
 ### Requirement: LOG.md.template is the test user's session narrative
-`test-manual/templates/LOG.md.template` SHALL be the test user's running narrative of what they did, tried, and observed. It SHALL be append-only. The header SHALL include: repo, tier, env, **create-skillet-version**, date, tester, and Docker base image. A comment SHALL indicate that the guide pre-fills all frontmatter fields before handoff, and that the test user fills in `tester:` only. Format examples in the template SHALL be in first-person from the test user's perspective **and SHALL appear in a fully self-contained HTML comment block that is explicitly closed before the append region begins, so that test user entries are never inadvertently placed inside the comment**.
+`test-manual/templates/LOG.md.template` SHALL be the test user's running narrative of what they did, tried, and observed. It SHALL be append-only. The header fields (repo, tier, env, create-skillet-version, date, tester, docker-image) and the guide pre-fill annotation are unchanged from the current template. The new requirement for this change is: format examples in the template SHALL appear in a fully self-contained HTML comment block that is explicitly closed before the append region begins, **with no blank line between the closing `-->` of the examples block and the `<!-- Append entries below. -->` marker**, so there is no ambiguous insertion zone between the two comment blocks and test user entries are never inadvertently placed inside a comment.
 
 The guide SHALL consult `LOG.md` to cross-reference with `TEST-RUN.md` grading, identify issues the test user noted but did not flag explicitly, and understand the sequence of events when a step failed.
 
@@ -120,3 +124,7 @@ The guide SHALL consult `LOG.md` to cross-reference with `TEST-RUN.md` grading, 
 #### Scenario: Format examples do not swallow log entries
 - **WHEN** a test user appends their first log entry to a fresh LOG.md
 - **THEN** the entry appears as visible Markdown content, not inside an HTML comment block
+
+#### Scenario: Log entries are plain text, not comment-wrapped
+- **WHEN** a coding-agent test user appends a log entry
+- **THEN** the entry is a plain-text `HH:MM ...` line, not wrapped in `<!-- -->` comment syntax

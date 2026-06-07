@@ -47,7 +47,7 @@ Classify the repo before the session begins. Record the tier in `TEST-RUN.md`.
 
    Use `org-repo` format for the slug (replace `/` with `-`). For example, `netresearch/agent-rules-skill` → `netresearch-agent-rules-skill`.
 
-5. Open `tmp/YYYY-MM-DD-<repo-slug>/TASK.md` and fill in the repo URL, target environment, and any repo-specific context.
+5. Open `runs/YYYY-MM-DD-<repo-slug>/TASK.md` and fill in the repo URL, target environment, and any repo-specific context.
 6. Pre-fill `LOG.md`'s frontmatter (`repo`, `tier`, `env`, `create-skillet-version`, `date`, `docker-image`) before handing it to the test user. The test user fills in `tester:` only and writes the append-only log entries.
 7. If the test user is a coding agent, the run folder already contains `AGENT-SUPPLEMENT.md` — include it alongside `TASK.md` in the agent's context.
 
@@ -56,7 +56,7 @@ Classify the repo before the session begins. Record the tier in `TEST-RUN.md`.
 ## Running the Session
 
 1. `make test-start` — builds and starts the container, then opens a tmux session inside it
-2. Hand the test user their files from `tmp/<run>/`:
+2. Hand the test user their files from `runs/<run>/`:
    - **Human:** Share the file paths and open them for editing. The human runs commands in the container and writes `LOG.md` from a separate terminal on the host.
    - **Coding agent:** Provide `TASK.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md` as context at the start of the agent's session.
 3. Observe and grade the session in real time using `TEST-RUN.md`; consult `LOG.md` to cross-reference the test user's narrative.
@@ -70,7 +70,7 @@ Classify the repo before the session begins. Record the tier in `TEST-RUN.md`.
 
 ## Run Folder Layout
 
-Each test run lives at `test-manual/tmp/YYYY-MM-DD-<repo-slug>/`:
+Each test run lives at `test-manual/runs/YYYY-MM-DD-<repo-slug>/`:
 
 | File / Dir | Owner | Purpose |
 |------------|-------|---------|
@@ -96,7 +96,7 @@ As a guide, consult it to:
 
 ## Documenting Issues
 
-Issue files are named `ISS-001.md`, `ISS-002.md`, etc. — sequential, zero-padded to three digits — and live in `tmp/<run>/issues/`.
+Issue files are named `ISS-001.md`, `ISS-002.md`, etc. — sequential, zero-padded to three digits — and live in `runs/<run>/issues/`.
 
 File issues as they arise, not at the end of the session.
 

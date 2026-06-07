@@ -27,7 +27,7 @@ The harness SHALL be designed around two distinct roles with separate documents 
 
 - **`test-start`** — starts a stock `ubuntu:24.04` Docker container in the background under a fixed container name, installs Node 24 inside the container (via NodeSource `setup_24.x`), and opens a host-side tmux session (using a private socket) whose shell is connected to the container via `docker exec -it`. Prints a copy-pasteable `tmux attach` command so a human guide can observe the session.
 - **`test-teardown`** — kills the tmux session and removes the container.
-- **`init-run REPO=<slug>`** — creates `tmp/YYYY-MM-DD-<slug>/issues/` and copies `TASK.md.template`, `TEST-RUN.md.template`, `LOG.md.template`, and `AGENT-SUPPLEMENT.md` into the folder as `TASK.md`, `TEST-RUN.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md`. Errors with a usage message if `REPO` is not set. The `<slug>` should use `org-repo` format (replace `/` with `-`).
+- **`init-run REPO=<slug>`** — creates `runs/YYYY-MM-DD-<slug>/issues/` and copies `TASK.md.template`, `TEST-RUN.md.template`, `LOG.md.template`, and `AGENT-SUPPLEMENT.md` into the folder as `TASK.md`, `TEST-RUN.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md`. Errors with a usage message if `REPO` is not set. The `<slug>` should use `org-repo` format (replace `/` with `-`).
 
 #### Scenario: test-start launches container and tmux session
 - **WHEN** a guide runs `make test-start` from `test-manual/`
@@ -39,7 +39,7 @@ The harness SHALL be designed around two distinct roles with separate documents 
 
 #### Scenario: init-run creates a complete run folder
 - **WHEN** a guide runs `make init-run REPO=my-skill-repo`
-- **THEN** `tmp/YYYY-MM-DD-my-skill-repo/` exists and contains `TASK.md`, `TEST-RUN.md`, `LOG.md`, `AGENT-SUPPLEMENT.md`, and an empty `issues/` subdirectory
+- **THEN** `runs/YYYY-MM-DD-my-skill-repo/` exists and contains `TASK.md`, `TEST-RUN.md`, `LOG.md`, `AGENT-SUPPLEMENT.md`, and an empty `issues/` subdirectory
 
 #### Scenario: init-run errors without REPO
 - **WHEN** a guide runs `make init-run` without a REPO argument
@@ -193,10 +193,10 @@ The guide SHALL consult `LOG.md` to cross-reference with `TEST-RUN.md` grading, 
 ---
 
 ### Requirement: ISSUE.md template captures structured issue detail with sequential identifiers
-Issue files SHALL be named `ISS-001.md`, `ISS-002.md`, etc. — sequentially numbered within a run, zero-padded to three digits — and placed in `tmp/<run>/issues/`. `test-manual/templates/ISSUE.md.template` SHALL include fields for: issue title, Description (symptom), Steps to reproduce (numbered list), Expected result, Actual result, How encountered, Why it is bad (user impact), Severity (critical/high/medium/low), and Workaround.
+Issue files SHALL be named `ISS-001.md`, `ISS-002.md`, etc. — sequentially numbered within a run, zero-padded to three digits — and placed in `runs/<run>/issues/`. `test-manual/templates/ISSUE.md.template` SHALL include fields for: issue title, Description (symptom), Steps to reproduce (numbered list), Expected result, Actual result, How encountered, Why it is bad (user impact), Severity (critical/high/medium/low), and Workaround.
 
 #### Scenario: Filled issue file is self-contained
-- **WHEN** a developer reads a completed issue file from `tmp/<run>/issues/`
+- **WHEN** a developer reads a completed issue file from `runs/<run>/issues/`
 - **THEN** they can understand the issue, reproduce it, and assess its severity without referring to the session log
 
 #### Scenario: Issue template separates expected from actual outcome
@@ -219,21 +219,21 @@ Issue files SHALL be named `ISS-001.md`, `ISS-002.md`, etc. — sequentially num
 ---
 
 ### Requirement: Run folders are named by date and repo slug
-Test run folders under `test-manual/tmp/` SHALL be named `YYYY-MM-DD-<repo-slug>/` where `<repo-slug>` is a kebab-case identifier for the repo. Each run folder SHALL contain at minimum a `TASK.md`, a `LOG.md`, a `TEST-RUN.md`, and an `issues/` subdirectory. Run folders are created via `make init-run REPO=<slug>`.
+Test run folders under `test-manual/runs/` SHALL be named `YYYY-MM-DD-<repo-slug>/` where `<repo-slug>` is a kebab-case identifier for the repo. Each run folder SHALL contain at minimum a `TASK.md`, a `LOG.md`, a `TEST-RUN.md`, and an `issues/` subdirectory. Run folders are created via `make init-run REPO=<slug>`.
 
 #### Scenario: Run folder is identifiable by date and repo
-- **WHEN** a guide lists `test-manual/tmp/`
+- **WHEN** a guide lists `test-manual/runs/`
 - **THEN** each folder name indicates when the run occurred and which repo was tested, without opening any file
 
 ---
 
-### Requirement: tmp/ is gitignored and never committed
-The root `.gitignore` SHALL contain `test-manual/tmp/*` (contents pattern, not directory pattern) so that `tmp/.gitkeep` can be committed while all ephemeral test content is excluded. All cloned repos, run folders, logs, and issue files SHALL live under `tmp/` and SHALL never be committed.
+### Requirement: runs/ is committed to the repository
+Run folders, logs, and issue files SHALL live under `test-manual/runs/` and SHALL be committed to the repository so that completed test sessions are preserved as a permanent record. The `test-manual/tmp/` directory remains gitignored and may be used as a scratchpad during a session, but SHALL NOT be used for any test artifacts that must be retained.
 
-#### Scenario: test-manual/tmp/ contents are not tracked by git
-- **WHEN** a tester clones a repo into `test-manual/tmp/` and runs `git status`
-- **THEN** the cloned content does not appear as untracked files
+#### Scenario: Completed run folder is visible in git
+- **WHEN** a guide completes a session and runs `git status`
+- **THEN** the run folder under `test-manual/runs/` appears as untracked (and can be staged and committed)
 
-#### Scenario: tmp/.gitkeep is committed
+#### Scenario: runs/.gitkeep is committed
 - **WHEN** the harness is first added to the repo
-- **THEN** `test-manual/tmp/.gitkeep` exists in the repository and `git ls-files test-manual/tmp/` lists it
+- **THEN** `test-manual/runs/.gitkeep` exists in the repository and `git ls-files test-manual/runs/` lists it
