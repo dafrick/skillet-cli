@@ -14,6 +14,19 @@ The following must be present before running this prompt. This agent does **not*
 - **Superpowers skills** — `superpowers:using-git-worktrees`, `superpowers:test-driven-development`, `superpowers:requesting-code-review`, `superpowers:verification-before-completion` must be available
 - **`gh` CLI** — authenticated with write access to this repository (`gh auth status` should show the repo)
 - **Git** — working tree is clean on `main` before starting
+- **Claude Code permissions** — add the following to `.claude/settings.json` in the repo root so git push and `gh` commands run without prompting:
+  ```json
+  {
+    "permissions": {
+      "allow": [
+        "Bash(git push *)",
+        "Bash(gh pr *)",
+        "Bash(gh issue *)",
+        "Bash(gh run *)"
+      ]
+    }
+  }
+  ```
 
 ---
 
@@ -327,20 +340,33 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
    ```
    When implementing each task, invoke the `superpowers:test-driven-development` skill to write tests before implementation code.
 
-3. **Commit frequently** — after each logical unit of work (completing a task group or a meaningful set of changes):
+3. **Per-task attempt cap** — if you attempt to implement a single task more than 3 times without local tests passing, stop Phase 5 immediately. Post a PR comment explaining what was tried and where it stalled:
+   ```bash
+   gh pr comment <PR> --body "## Implementation Blocked
+
+   Stuck on task: <task description>. Made 3 attempts without getting tests to pass.
+
+   ### What was tried
+   <summary of each attempt>
+
+   @dafrick — please review and advise."
+   ```
+   Update agent-state to `CI-BLOCKED` with `blocked: true`, then jump to Phase 8.
+
+4. **Commit frequently** — after each logical unit of work (completing a task group or a meaningful set of changes):
    ```bash
    git add <files>   # stage the relevant changed files explicitly
    git commit -m "<type>(<scope>): <description>"
    git push origin <branch>
    ```
 
-4. **Monitor CI** after each push:
+5. **Monitor CI** after each push:
    ```bash
    gh pr checks <PR> --watch --interval 30
    ```
    Wait for all checks to complete before proceeding.
 
-5. **CI fix cycle** (tracked across this phase; resets at Phase 6):
+6. **CI fix cycle** (tracked across this phase; resets at Phase 6):
    - If CI passes → continue to next task group
    - If CI fails:
      - Increment the `ciFixes` counter in the agent-state (update PR description)
@@ -362,7 +388,7 @@ echo "$PR_BODY" | grep -o '<!-- agent-state: {.*} -->' | sed 's/<!-- agent-state
      - Update agent-state to `CI-BLOCKED` with `blocked: true`
      - **Stop.** Jump to Phase 8 (Teardown).
 
-6. Once all tasks in `tasks.md` are checked off and CI is passing, proceed to Phase 6. The `ciFixes` counter will be reset to 0 as part of the Phase 6 state transition.
+7. Once all tasks in `tasks.md` are checked off and CI is passing, proceed to Phase 6. The `ciFixes` counter will be reset to 0 as part of the Phase 6 state transition.
 
 ---
 
