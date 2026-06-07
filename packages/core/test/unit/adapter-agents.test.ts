@@ -20,16 +20,16 @@ afterEach(() => {
 const skill = { name: 'my-skill', sourceDir: '/some/source/dir' };
 
 describe('agentsAdapter', () => {
-  it('detect() returns user scope when ~/.agents/ exists', () => {
+  it('detect() returns only user scope when ~/.agents/ exists', () => {
     fs.mkdirSync(path.join(tmpHome, '.agents'));
     const result = agentsAdapter.detect({ home: tmpHome, cwd: tmpCwd });
-    expect(result.scopes).toContain('user');
+    expect(result.scopes).toEqual(['user']);
   });
 
-  it('detect() returns project scope when .agents/ exists in cwd', () => {
+  it('detect() returns only project scope when .agents/ exists in cwd', () => {
     fs.mkdirSync(path.join(tmpCwd, '.agents'));
     const result = agentsAdapter.detect({ home: tmpHome, cwd: tmpCwd });
-    expect(result.scopes).toContain('project');
+    expect(result.scopes).toEqual(['project']);
   });
 
   it('detect() can return both scopes when both directories exist', () => {
