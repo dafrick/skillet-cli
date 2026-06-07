@@ -52,7 +52,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       `license=${config.license}`,
       'type=module',
       `engines.node=>=24`,
-      `skillet.skillDir=${config.skillDir}`,
+      `skillet.skillDir=${config.skillDirs[0]}`,
       `bin.${config.name}=./bin/cli.js`,
     ];
 
@@ -75,7 +75,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     const binDir = path.join(process.cwd(), 'bin');
     await fsp.mkdir(binDir, { recursive: true });
     const binPath = path.join(binDir, 'cli.js');
-    await fsp.writeFile(binPath, buildBinCliJs(config.skillDir), 'utf8');
+    await fsp.writeFile(binPath, buildBinCliJs(config.skillDirs[0]), 'utf8');
 
     // Step 5: chmod 755
     await fsp.chmod(binPath, 0o755);
@@ -97,6 +97,71 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     spinner.fail('Setup failed');
     const message = err instanceof Error ? err.message : String(err);
     process.stderr.write(`Error during setup: ${message}\n`);
+    process.exit(1);
+  }
+}
+
+function deriveSlug(skillDir: string): string {
+  return path.basename(skillDir.replace(/\/$/, ''));
+}
+
+export async function executeBatchScaffold(config: WizardConfig): Promise<void> {
+  const spinner = createSpinner();
+
+  try {
+    for (const skillDir of config.skillDirs) {
+      const slug = deriveSlug(skillDir);
+      const distPkgDir = path.join(process.cwd(), 'dist', slug);
+      const binDir = path.join(distPkgDir, 'bin');
+
+      spinner.start(`Creating dist/${slug}/…`);
+
+      await fsp.mkdir(binDir, { recursive: true });
+
+      const pkgJson: Record<string, unknown> = {
+        name: slug,
+        version: config.version,
+        description: config.description,
+        author: config.author,
+        license: config.license,
+        type: 'module',
+        engines: { node: '>=24' },
+        skillet: { skillDir },
+        bin: { [slug]: './bin/cli.js' },
+      };
+      if (config.repositoryUrl) {
+        pkgJson['repository'] = { type: 'git', url: config.repositoryUrl };
+      }
+
+      await fsp.writeFile(
+        path.join(distPkgDir, 'package.json'),
+        JSON.stringify(pkgJson, null, 2),
+        'utf8',
+      );
+
+      const binPath = path.join(binDir, 'cli.js');
+      // Path from dist/<slug>/bin/cli.js up to repo root, then into skillDir
+      await fsp.writeFile(binPath, buildBinCliJs('../../' + skillDir), 'utf8');
+      await fsp.chmod(binPath, 0o755);
+
+      spinner.succeed(`Created dist/${slug}/`);
+    }
+
+    spinner.start('Installing @skillet-cli/core…');
+    const installResult = spawnSync('npm install @skillet-cli/core', [], {
+      stdio: 'inherit',
+      shell: true,
+    });
+    if (installResult.status !== 0) {
+      throw new Error(
+        `npm install @skillet-cli/core exited with code ${installResult.status ?? 'null'}`,
+      );
+    }
+    spinner.succeed('Installation done');
+  } catch (err) {
+    spinner.fail('Batch setup failed');
+    const message = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`Error during batch setup: ${message}\n`);
     process.exit(1);
   }
 }

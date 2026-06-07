@@ -1,4 +1,4 @@
-import { input, select } from '@inquirer/prompts';
+import { checkbox, input } from '@inquirer/prompts';
 import type { DetectionResult } from './detect.js';
 
 export interface WizardConfig {
@@ -8,7 +8,7 @@ export interface WizardConfig {
   author: string;
   repositoryUrl: string;
   license: string;
-  skillDir: string;
+  skillDirs: string[];
 }
 
 export async function collectConfig(detected: DetectionResult): Promise<WizardConfig> {
@@ -42,10 +42,10 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
     default: 'MIT',
   });
 
-  let skillDir: string;
+  let skillDirs: string[];
   if (detected.discoveredSkillDirs.length > 1) {
-    skillDir = await select({
-      message: 'Select skill content path (relative to package root):',
+    skillDirs = await checkbox({
+      message: 'Select skill content paths to package (relative to package root):',
       choices: detected.discoveredSkillDirs.map((d) => ({ name: d, value: d })),
     });
   } else {
@@ -56,11 +56,12 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
           'before publishing.\n\n',
       );
     }
-    skillDir = await input({
+    const skillDir = await input({
       message: 'Skill content path (relative to package root):',
       default: detected.skillDir || 'skill/',
     });
+    skillDirs = [skillDir];
   }
 
-  return { name, version, description, author, repositoryUrl, license, skillDir };
+  return { name, version, description, author, repositoryUrl, license, skillDirs };
 }

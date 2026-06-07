@@ -13,7 +13,7 @@ const baseConfig: WizardConfig = {
   author: 'Test Author',
   repositoryUrl: '',
   license: 'MIT',
-  skillDir: 'skill/',
+  skillDirs: ['skill/'],
 };
 
 describe('executeScaffold — integration (filesystem)', () => {
@@ -38,7 +38,7 @@ describe('executeScaffold — integration (filesystem)', () => {
       JSON.stringify({ name: 'my-skill', version: '1.0.0' }),
     );
 
-    await executeScaffold({ ...baseConfig, skillDir: 'skill/' });
+    await executeScaffold({ ...baseConfig, skillDirs: ['skill/'] });
 
     const binPath = path.join(sandbox.dir, 'bin', 'cli.js');
     const content = await fsp.readFile(binPath, 'utf8');
@@ -51,7 +51,7 @@ describe('executeScaffold — integration (filesystem)', () => {
       JSON.stringify({ name: 'my-skill', version: '1.0.0' }),
     );
 
-    await executeScaffold({ ...baseConfig, skillDir: 'skill/' });
+    await executeScaffold({ ...baseConfig, skillDirs: ['skill/'] });
 
     const binPath = path.join(sandbox.dir, 'bin', 'cli.js');
     const stat = await fsp.stat(binPath);

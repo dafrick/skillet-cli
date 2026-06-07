@@ -4,7 +4,7 @@ import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
 import { detectEnvironment } from './detect.js';
 import { collectConfig } from './prompts.js';
-import { executeScaffold } from './scaffold.js';
+import { executeBatchScaffold, executeScaffold } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
 
 const _require = createRequire(import.meta.url);
@@ -68,12 +68,22 @@ program
     process.stdout.write(
       `  repositoryUrl:${config.repositoryUrl ? ` ${config.repositoryUrl}` : ' (none)'}\n`,
     );
-    process.stdout.write(`  skillDir:     ${config.skillDir}\n`);
+    process.stdout.write(
+      config.skillDirs.length === 1
+        ? `  skillDir:     ${config.skillDirs[0]}\n`
+        : `  skillDirs:    ${config.skillDirs.join(', ')}\n`,
+    );
     process.stdout.write('\nCommands to run:\n');
-    if (!detected.hasPackageJson) {
-      process.stdout.write('  npm init -y\n');
+    if (config.skillDirs.length > 1) {
+      process.stdout.write(
+        `  # Creates dist/<slug>/ for each of ${config.skillDirs.length} skills\n`,
+      );
+    } else {
+      if (!detected.hasPackageJson) {
+        process.stdout.write('  npm init -y\n');
+      }
+      process.stdout.write('  npm pkg set name=... version=... (and other fields)\n');
     }
-    process.stdout.write('  npm pkg set name=... version=... (and other fields)\n');
     process.stdout.write('  npm install @skillet-cli/core\n');
     process.stdout.write('\n');
 
@@ -89,7 +99,11 @@ program
     }
 
     // Step 6: Execute scaffold
-    await executeScaffold(config);
+    if (config.skillDirs.length > 1) {
+      await executeBatchScaffold(config);
+    } else {
+      await executeScaffold(config);
+    }
 
     // Step 7: Skill directory setup
     await setupSkillDir(detected);
