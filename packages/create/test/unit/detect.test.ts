@@ -9,7 +9,7 @@ vi.mock('node:child_process', () => ({
 }));
 
 import { spawnSync } from 'node:child_process';
-import { detectEnvironment } from '../../src/detect.js';
+import { detectEnvironment, scanForSkillMds } from '../../src/detect.js';
 
 const mockSpawnSync = vi.mocked(spawnSync);
 
@@ -265,5 +265,134 @@ describe('detectEnvironment — skill/ subfolder detection', () => {
   it('no SKILL.md → hasSkillMd: false', () => {
     const result = detectEnvironment();
     expect(result.hasSkillMd).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// scanForSkillMds
+// ---------------------------------------------------------------------------
+
+describe('scanForSkillMds', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'scan-test-')));
+  });
+
+  afterEach(async () => {
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('returns empty array when no SKILL.md exists', () => {
+    expect(scanForSkillMds(tmpDir)).toEqual([]);
+  });
+
+  it('returns root path for SKILL.md at base dir', async () => {
+    await fsp.writeFile(path.join(tmpDir, 'SKILL.md'), '# Skill');
+    expect(scanForSkillMds(tmpDir)).toEqual(['./']);
+  });
+
+  it('returns relative path for a single nested SKILL.md', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'agent-rules'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'agent-rules', 'SKILL.md'), '# Skill');
+    expect(scanForSkillMds(tmpDir)).toEqual(['skills/agent-rules/']);
+  });
+
+  it('returns multiple paths when multiple SKILL.md files are found', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'skill-a'), { recursive: true });
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'skill-b'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'skill-a', 'SKILL.md'), '# A');
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'skill-b', 'SKILL.md'), '# B');
+    const result = scanForSkillMds(tmpDir);
+    expect(result).toHaveLength(2);
+    expect(result).toContain('skills/skill-a/');
+    expect(result).toContain('skills/skill-b/');
+  });
+
+  it('skips node_modules', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'node_modules', 'some-pkg'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, 'node_modules', 'some-pkg', 'SKILL.md'), '# Skill');
+    expect(scanForSkillMds(tmpDir)).toEqual([]);
+  });
+
+  it('skips dot-directories', async () => {
+    await fsp.mkdir(path.join(tmpDir, '.hidden', 'skills'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, '.hidden', 'skills', 'SKILL.md'), '# Skill');
+    expect(scanForSkillMds(tmpDir)).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// detectEnvironment — discoveredSkillDirs
+// ---------------------------------------------------------------------------
+
+describe('detectEnvironment — discoveredSkillDirs', () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tmpDir = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'detect-test-')));
+    originalCwd = process.cwd();
+    process.chdir(tmpDir);
+    vi.clearAllMocks();
+    mockGitFailure();
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('single nested SKILL.md → discoveredSkillDirs has that path, skillDir is set', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'my-skill'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'my-skill', 'SKILL.md'), '# Skill');
+
+    const result = detectEnvironment();
+
+    expect(result.discoveredSkillDirs).toEqual(['skills/my-skill/']);
+    expect(result.skillDir).toBe('skills/my-skill/');
+  });
+
+  it('multiple nested SKILL.md → discoveredSkillDirs has all, skillDir is null', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'a'), { recursive: true });
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'b'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'a', 'SKILL.md'), '# A');
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'b', 'SKILL.md'), '# B');
+
+    const result = detectEnvironment();
+
+    expect(result.discoveredSkillDirs).toHaveLength(2);
+    expect(result.skillDir).toBeNull();
+  });
+
+  it('no SKILL.md, skill/ dir exists → discoveredSkillDirs is empty, skillDir is "skill/"', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'skill'));
+
+    const result = detectEnvironment();
+
+    expect(result.discoveredSkillDirs).toEqual([]);
+    expect(result.skillDir).toBe('skill/');
+  });
+
+  it('no SKILL.md at all → discoveredSkillDirs empty, skillDir null', () => {
+    const result = detectEnvironment();
+
+    expect(result.discoveredSkillDirs).toEqual([]);
+    expect(result.skillDir).toBeNull();
+  });
+
+  it('package.json skillet.skillDir takes precedence over discovered SKILL.md', async () => {
+    await fsp.mkdir(path.join(tmpDir, 'skills', 'my-skill'), { recursive: true });
+    await fsp.writeFile(path.join(tmpDir, 'skills', 'my-skill', 'SKILL.md'), '# Skill');
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'pkg', version: '1.0.0', skillet: { skillDir: 'custom/' } }),
+    );
+
+    const result = detectEnvironment();
+
+    expect(result.skillDir).toBe('custom/');
+    // scan still runs; discoveredSkillDirs is still populated
+    expect(result.discoveredSkillDirs).toEqual(['skills/my-skill/']);
   });
 });

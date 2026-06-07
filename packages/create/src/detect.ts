@@ -11,6 +11,8 @@ export interface DetectionResult {
   hasPackageJson: boolean;
   hasSkillMd: boolean;
   skillDir: string | null;
+  /** All skill dirs discovered by scanning for SKILL.md files, as relative paths with trailing slash. */
+  discoveredSkillDirs: string[];
   repositoryUrl: string;
   gitUser: string;
 }
@@ -71,6 +73,40 @@ function gitOutput(args: string[]): string {
   }
 }
 
+const SCAN_SKIP_DIRS = new Set(['node_modules']);
+
+/**
+ * Recursively scan `baseDir` for `SKILL.md` files and return the containing
+ * directories as paths relative to `baseDir` with a trailing slash.
+ * Skips dot-directories and `node_modules`.
+ */
+export function scanForSkillMds(baseDir: string, _currentDir?: string): string[] {
+  const currentDir = _currentDir ?? baseDir;
+  const results: string[] = [];
+
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(currentDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name === 'SKILL.md') {
+      const rel = path.relative(baseDir, currentDir);
+      results.push(rel ? `${rel}/` : './');
+    } else if (
+      entry.isDirectory() &&
+      !entry.name.startsWith('.') &&
+      !SCAN_SKIP_DIRS.has(entry.name)
+    ) {
+      results.push(...scanForSkillMds(baseDir, path.join(currentDir, entry.name)));
+    }
+  }
+
+  return results;
+}
+
 interface PackageJson {
   name?: string;
   version?: string;
@@ -125,12 +161,18 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
   // --- SKILL.md ---
   const hasSkillMd = fs.existsSync(path.join(cwd, 'SKILL.md'));
 
+  // --- Scan for SKILL.md files ---
+  const discoveredSkillDirs = scanForSkillMds(cwd);
+
   // --- skillDir ---
   let skillDir: string | null = null;
   if (pkgSkillDir !== null) {
     // package.json takes precedence
     skillDir = pkgSkillDir;
+  } else if (discoveredSkillDirs.length === 1) {
+    skillDir = discoveredSkillDirs[0];
   } else if (
+    discoveredSkillDirs.length === 0 &&
     fs.existsSync(path.join(cwd, 'skill')) &&
     fs.statSync(path.join(cwd, 'skill')).isDirectory()
   ) {
@@ -154,6 +196,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
     hasPackageJson,
     hasSkillMd,
     skillDir,
+    discoveredSkillDirs,
     repositoryUrl,
     gitUser,
   };
