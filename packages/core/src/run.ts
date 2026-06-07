@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
+import { ExitPromptError } from '@inquirer/core';
 import { checkbox, select } from '@inquirer/prompts';
 import { Command } from 'commander';
 import updateNotifier from 'update-notifier';
@@ -641,7 +642,16 @@ export async function run(options: RunOptions): Promise<void> {
   }
 
   // Parse
-  await program.parseAsync(argv);
+  try {
+    await program.parseAsync(argv);
+  } catch (err) {
+    if (err instanceof ExitPromptError) {
+      process.stderr.write('\nExiting...\n');
+      process.exit(0);
+    } else {
+      throw err;
+    }
+  }
 
   // Update notifier — after command output, TTY only
   if (process.stdout.isTTY) {
