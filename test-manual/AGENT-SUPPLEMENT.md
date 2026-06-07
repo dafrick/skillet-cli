@@ -40,8 +40,11 @@ tmux -S "$SOCKET" capture-pane -p -J -S -200 -t skillet-test
 Use `wait-for-text.sh` to block until expected text appears:
 
 ```bash
-./scripts/wait-for-text.sh -S "$SOCKET" -t skillet-test -p "Which skill" -T 15
+HARNESS_DIR="$(git rev-parse --show-toplevel)/test-manual"
+"$HARNESS_DIR/scripts/wait-for-text.sh" -S "$SOCKET" -t skillet-test -p "Which skill" -T 15
 ```
+
+The relative path `./scripts/wait-for-text.sh` fails when the agent's working directory is not `test-manual/`. Resolve from the repo root with `git rev-parse --show-toplevel` so the call works regardless of where the agent is.
 
 ## `@inquirer/prompts` key sequences
 
@@ -52,6 +55,10 @@ Use `wait-for-text.sh` to block until expected text appears:
 | Confirm / accept default | `Enter` |
 | Clear a text field | `C-u` (Ctrl+U) |
 | Cancel | `C-c` (Ctrl+C) |
+
+## Keeping the log
+
+Log entries are plain-text lines in the format `HH:MM <description>` — do **not** wrap them in `<!-- -->` HTML comment syntax. The format-examples block in `LOG.md` uses HTML comment syntax only to hide the examples from rendered output; actual entries must be visible text.
 
 ## Cleanup
 
