@@ -15,6 +15,8 @@ jobs:
     concurrency:
       group: release-core-${{ github.event.workflow_run.head_sha }}
       cancel-in-progress: false
+    permissions:
+      id-token: write  # required for npm provenance via OIDC Trusted Publishers
     steps:
       - name: Validate semver tag
         run: |
@@ -34,6 +36,4 @@ jobs:
         env:
           LEFTHOOK: 0
       - run: pnpm --filter @skillet-cli/ui build
-      - run: pnpm -F @skillet-cli/core publish --access public --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - run: pnpm -F @skillet-cli/core publish --access public --no-git-checks --provenance
