@@ -94,11 +94,19 @@ The wizard SHALL set up the npm package using only `npm init -y` and `npm pkg se
 ---
 
 ### Requirement: bin/cli.js is created and made executable
-The wizard SHALL write `bin/cli.js` as a valid ESM entry point with a `#!/usr/bin/env node` shebang, loading `pkg` from `package.json` via `createRequire`, importing `run` from `@skillet-cli/core`, and calling `run({ skillDir, pkg })`. The file SHALL be made executable (`chmod 755`).
+The wizard SHALL write `bin/cli.js` as a valid ESM entry point with a `#!/usr/bin/env node` shebang, loading `pkg` from `package.json` via `createRequire`, importing `run` from `@skillet-cli/core`, and calling `run({ pkg })` with no `skillDir` argument. The file SHALL be made executable (`chmod 755`). The skill location is read at runtime from `package.json`'s `skillet.skillDir` field.
 
-#### Scenario: bin/cli.js is written correctly
-- **WHEN** execution completes
-- **THEN** `bin/cli.js` exists, starts with `#!/usr/bin/env node`, loads `pkg` via `createRequire(import.meta.url)('../package.json')`, imports `run` from `@skillet-cli/core`, and calls `run({ skillDir: fileURLToPath(new URL('../skill/', import.meta.url)), pkg })` where `skill/` is replaced with the configured skill content path value from the wizard
+#### Scenario: Generated `bin/cli.js` contains no skillDir argument
+- **WHEN** the wizard completes and `bin/cli.js` is written
+- **THEN** the file calls `await run({ pkg })` with no `skillDir` property
+
+#### Scenario: Generated `bin/cli.js` contains no URL or path resolution
+- **WHEN** the wizard completes and `bin/cli.js` is written
+- **THEN** the file does not import `fileURLToPath` or use `new URL(...)` for path resolution
+
+#### Scenario: `package.json` is the source of truth after wizard completes
+- **WHEN** the wizard has run and `package.json` contains `skillet.skillDir` and `bin/cli.js` contains `await run({ pkg })`
+- **THEN** running `npx . install` succeeds, reading skill location from `package.json`
 
 #### Scenario: bin/cli.js is executable
 - **WHEN** execution completes
@@ -116,7 +124,7 @@ After writing `bin/cli.js`, the wizard SHALL run `npm install @skillet-cli/core`
 ---
 
 ### Requirement: Skill directory setup when SKILL.md is in root
-After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary. After files are moved, the wizard SHALL update `bin/cli.js` to reference `skill/` as the skill URL and SHALL update `package.json`'s `skillet.skillDir` field to `./skill/` so that both artifacts reflect the actual post-move skill location.
+After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary. After files are moved, the wizard SHALL update `package.json`'s `skillet.skillDir` field to `./skill/`. The wizard SHALL NOT rewrite `bin/cli.js` after the move step — since `bin/cli.js` no longer embeds the skill path, it remains valid regardless of the move outcome.
 
 #### Scenario: skill/ subfolder already exists
 - **WHEN** a `skill/` subfolder already exists in the current directory
@@ -138,9 +146,9 @@ After npm execution completes, when `SKILL.md` exists in the current directory r
 - **WHEN** the user confirms the skilletize preview
 - **THEN** the selected files and folders are moved into a newly created `skill/` subfolder and the wizard prints which files were moved
 
-#### Scenario: Post-move bin/cli.js update
-- **WHEN** the user confirms the file move and all files are moved successfully
-- **THEN** the wizard rewrites `bin/cli.js` so that the `skillDir` URL points to `skill/` (i.e., `new URL('../skill/', import.meta.url)`)
+#### Scenario: `bin/cli.js` is not modified after the file-move step
+- **WHEN** the user confirms the file move and files are moved into `skill/`
+- **THEN** `bin/cli.js` is not rewritten; its content is identical to what was written during scaffold
 
 #### Scenario: Post-move package.json update
 - **WHEN** the user confirms the file move and all files are moved successfully
@@ -152,7 +160,7 @@ After npm execution completes, when `SKILL.md` exists in the current directory r
 
 #### Scenario: No files selected
 - **WHEN** the user selects no files in the checkbox
-- **THEN** the wizard prints "No files selected. Your npm package is set up." and returns without updating bin/cli.js or package.json
+- **THEN** the wizard prints "No files selected. Your npm package is set up." and returns without updating package.json
 
 ---
 
