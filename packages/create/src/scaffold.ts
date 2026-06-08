@@ -10,7 +10,7 @@ import type { WizardConfig } from './prompts.js';
 // and double-quote every arg so shell metacharacters (>, |, &, spaces) in
 // values like "engines.node=>=24" or "description=A test skill" are not
 // interpreted by the shell.
-function runSync(cmd: string, args: string[], stepName: string): void {
+export function runSync(cmd: string, args: string[], stepName: string): void {
   const cmdStr = [cmd, ...args.map((a) => `"${a}"`)].join(' ');
   const result = spawnSync(cmdStr, [], { stdio: 'inherit', shell: true });
   if (result.status !== 0) {
@@ -18,7 +18,7 @@ function runSync(cmd: string, args: string[], stepName: string): void {
   }
 }
 
-function buildBinCliJs(skillDir: string): string {
+export function buildBinCliJs(skillDir: string): string {
   return `#!/usr/bin/env node
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
