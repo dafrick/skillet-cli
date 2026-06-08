@@ -116,7 +116,7 @@ After writing `bin/cli.js`, the wizard SHALL run `npm install @skillet-cli/core`
 ---
 
 ### Requirement: Skill directory setup when SKILL.md is in root
-After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary.
+After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary. After files are moved, the wizard SHALL update `bin/cli.js` to reference `skill/` as the skill URL and SHALL update `package.json`'s `skillet.skillDir` field to `./skill/` so that both artifacts reflect the actual post-move skill location.
 
 #### Scenario: skill/ subfolder already exists
 - **WHEN** a `skill/` subfolder already exists in the current directory
@@ -138,9 +138,21 @@ After npm execution completes, when `SKILL.md` exists in the current directory r
 - **WHEN** the user confirms the skilletize preview
 - **THEN** the selected files and folders are moved into a newly created `skill/` subfolder and the wizard prints which files were moved
 
+#### Scenario: Post-move bin/cli.js update
+- **WHEN** the user confirms the file move and all files are moved successfully
+- **THEN** the wizard rewrites `bin/cli.js` so that the `skillDir` URL points to `skill/` (i.e., `new URL('../skill/', import.meta.url)`)
+
+#### Scenario: Post-move package.json update
+- **WHEN** the user confirms the file move and all files are moved successfully
+- **THEN** the wizard runs `npm pkg set skillet.skillDir=./skill/` so that `package.json`'s `skillet.skillDir` field reflects the new skill location
+
 #### Scenario: User declines at skilletize preview
 - **WHEN** the user answers "no" at the skilletize preview
 - **THEN** the wizard prints "No files moved. Your npm package is set up." and exits with code 0
+
+#### Scenario: No files selected
+- **WHEN** the user selects no files in the checkbox
+- **THEN** the wizard prints "No files selected. Your npm package is set up." and returns without updating bin/cli.js or package.json
 
 ---
 
