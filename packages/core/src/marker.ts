@@ -5,13 +5,23 @@ import type { SkilletPackageJson } from './types.js';
 
 export interface SkilletMarker {
   skillsDirs: string[];
+  /**
+   * When `skillet.skillDir` is present in package.json, this is the resolved
+   * absolute path to the skill directory. When set, it takes precedence over
+   * `skillsDirs` and subdirectory discovery is skipped.
+   */
+  directSkillDir?: string;
 }
 
 /**
  * Reads `<packageRoot>/package.json` and returns a `SkilletMarker` if the
  * `skillet` key is present, or `null` if it is absent.
  *
- * Normalises the `skills` sub-key:
+ * When `skillet.skillDir` is present, it is resolved to an absolute path and
+ * returned as `directSkillDir` (with `skillsDirs: []`). It takes precedence
+ * over `skillet.skills`.
+ *
+ * Otherwise normalises the `skills` sub-key:
  *   - string        → `[value]`
  *   - string[]      → as-is
  *   - absent        → `["skills"]`
@@ -32,6 +42,14 @@ export async function readSkilletMarker(packageRoot: string): Promise<SkilletMar
     skillet !== null && typeof skillet === 'object' && !Array.isArray(skillet)
       ? (skillet as SkilletPackageJson)
       : {};
+
+  // skillet.skillDir — direct path to skill directory, takes precedence over skills
+  if (typeof skilletObj.skillDir === 'string') {
+    return {
+      skillsDirs: [],
+      directSkillDir: path.resolve(packageRoot, skilletObj.skillDir),
+    };
+  }
 
   const skills = skilletObj.skills;
   let skillsDirs: string[];

@@ -2,6 +2,8 @@ export type Scope = 'user' | 'project';
 
 export interface SkilletPackageJson {
   skills?: string | string[];
+  /** Direct path to the skill directory (relative to package root). When present, takes precedence over `skills`. */
+  skillDir?: string;
   [key: string]: unknown;
 }
 

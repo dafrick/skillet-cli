@@ -31,7 +31,7 @@ describe('executeScaffold — integration (filesystem)', () => {
     await sandbox.cleanup();
   });
 
-  it('writes bin/cli.js with interpolated skillDir', async () => {
+  it('writes bin/cli.js that calls run({ pkg }) with no skillDir argument', async () => {
     // Create a package.json so npm init is skipped
     await fsp.writeFile(
       path.join(sandbox.dir, 'package.json'),
@@ -42,7 +42,10 @@ describe('executeScaffold — integration (filesystem)', () => {
 
     const binPath = path.join(sandbox.dir, 'bin', 'cli.js');
     const content = await fsp.readFile(binPath, 'utf8');
-    expect(content).toContain("new URL('../skill/', import.meta.url)");
+    expect(content).toContain('run({ pkg })');
+    expect(content).not.toContain('skillDir');
+    expect(content).not.toContain('fileURLToPath');
+    expect(content).not.toContain('new URL');
   }, 90_000);
 
   it.skipIf(process.platform === 'win32')('bin/cli.js has execute bits set', async () => {

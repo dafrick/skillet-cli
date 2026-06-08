@@ -28,7 +28,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 
 import { spawnSync } from 'node:child_process';
 import type { WizardConfig } from '../../src/prompts.js';
-import { executeScaffold } from '../../src/scaffold.js';
+import { buildBinCliJs, executeScaffold } from '../../src/scaffold.js';
 
 const mockSpawnSync = vi.mocked(spawnSync);
 const mockFsExistsSync = vi.mocked(fs.existsSync);
@@ -152,6 +152,31 @@ describe('executeScaffold — npm pkg set fields', () => {
     const allArgs = getPkgSetArgs();
     // bin.[name]=./bin/cli.js
     expect(allArgs.some((a) => a.includes('bin.') && a.includes('./bin/cli.js'))).toBe(true);
+  });
+});
+
+describe('buildBinCliJs — generated bin/cli.js content', () => {
+  it('takes no arguments and returns a string', () => {
+    const result = buildBinCliJs();
+    expect(typeof result).toBe('string');
+  });
+
+  it('generated content calls run({ pkg }) with no skillDir argument', () => {
+    const result = buildBinCliJs();
+    expect(result).toContain('run({ pkg })');
+    expect(result).not.toContain('skillDir');
+  });
+
+  it('generated content does not contain fileURLToPath or new URL', () => {
+    const result = buildBinCliJs();
+    expect(result).not.toContain('fileURLToPath');
+    expect(result).not.toContain('new URL');
+  });
+
+  it('generated content imports run from @skillet-cli/core', () => {
+    const result = buildBinCliJs();
+    expect(result).toContain("from '@skillet-cli/core'");
+    expect(result).toContain('run');
   });
 });
 

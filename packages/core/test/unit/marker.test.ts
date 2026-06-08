@@ -114,6 +114,42 @@ describe('readSkilletMarker', () => {
     expect(result).not.toBeNull();
     expect(result?.skillsDirs).toEqual(['skills']);
   });
+
+  // ── skillet.skillDir (direct path) ──────────────────────────────────────────
+
+  it('skillet.skillDir present → directSkillDir is resolved absolute path', async () => {
+    await writePackageJson(tmpDir, { name: 'test-pkg', skillet: { skillDir: 'skill/' } });
+    const result = await readSkilletMarker(tmpDir);
+    expect(result).not.toBeNull();
+    expect(result?.directSkillDir).toBe(path.resolve(tmpDir, 'skill/'));
+    expect(result?.skillsDirs).toEqual([]);
+  });
+
+  it('skillet.skillDir with "./" → directSkillDir is package root', async () => {
+    await writePackageJson(tmpDir, { name: 'test-pkg', skillet: { skillDir: './' } });
+    const result = await readSkilletMarker(tmpDir);
+    expect(result).not.toBeNull();
+    expect(result?.directSkillDir).toBe(path.resolve(tmpDir, './'));
+  });
+
+  it('skillet.skillDir takes precedence over skillet.skills when both present', async () => {
+    await writePackageJson(tmpDir, {
+      name: 'test-pkg',
+      skillet: { skillDir: 'skill/', skills: 'other-skills' },
+    });
+    const result = await readSkilletMarker(tmpDir);
+    expect(result).not.toBeNull();
+    expect(result?.directSkillDir).toBe(path.resolve(tmpDir, 'skill/'));
+    expect(result?.skillsDirs).toEqual([]);
+  });
+
+  it('skillet.skillDir absent → directSkillDir is undefined', async () => {
+    await writePackageJson(tmpDir, { name: 'test-pkg', skillet: { skills: 'my-skills' } });
+    const result = await readSkilletMarker(tmpDir);
+    expect(result).not.toBeNull();
+    expect(result?.directSkillDir).toBeUndefined();
+    expect(result?.skillsDirs).toEqual(['my-skills']);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
