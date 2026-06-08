@@ -1,6 +1,6 @@
 {
   "name": "@skillet-cli/core",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Ship your skill as an npm package with a complete CLI for any agent environment",
   "license": "MIT",
   "repository": {
