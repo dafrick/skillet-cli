@@ -2,6 +2,7 @@ import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
 import { checkbox, confirm } from '@inquirer/prompts';
 import type { DetectionResult } from './detect.js';
+import { buildBinCliJs, runSync } from './scaffold.js';
 
 const LOCK_FILES = new Set(['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock']);
 const SKILL_DIRS = new Set(['resources', 'assets', 'templates']);
@@ -146,4 +147,9 @@ export async function setupSkillDir(detected: DetectionResult): Promise<void> {
       process.exit(1);
     }
   }
+
+  // Step 7: update bin/cli.js and package.json to reflect new skill location
+  const binPath = path.join(cwd, 'bin', 'cli.js');
+  await fsp.writeFile(binPath, buildBinCliJs('skill/'), 'utf8');
+  runSync('npm', ['pkg', 'set', 'skillet.skillDir=./skill/'], 'npm pkg set skillet.skillDir');
 }
