@@ -4,10 +4,15 @@ import * as path from 'node:path';
 import type { SkilletPackageJson } from './types.js';
 
 export interface SkilletMarker {
+  /**
+   * Parent directories to scan for skill trees (subdirectories containing SKILL.md).
+   * Empty (`[]`) when `directSkillDir` is set — use `directSkillDir` in that case.
+   */
   skillsDirs: string[];
   /**
    * When `skillet.skillDir` is present in package.json, this is the resolved
-   * absolute path to the skill directory. When set, it takes precedence over
+   * absolute path to the skill directory itself (the directory containing SKILL.md
+   * directly, not a parent to scan). When set, it takes precedence over
    * `skillsDirs` and subdirectory discovery is skipped.
    */
   directSkillDir?: string;
