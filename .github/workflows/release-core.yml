@@ -1,31 +1,28 @@
 name: Release Core
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  push:
+    tags:
+      - 'core-v*'
 
 jobs:
   publish:
     name: Publish @skillet-cli/core to npm
     runs-on: ubuntu-latest
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'core-v')
     concurrency:
-      group: release-core-${{ github.event.workflow_run.head_sha }}
+      group: release-core-${{ github.sha }}
       cancel-in-progress: false
     permissions:
       id-token: write  # required for npm provenance via OIDC Trusted Publishers
     steps:
       - name: Validate semver tag
         run: |
-          [[ "$BRANCH" =~ ^core-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$TAG" =~ ^core-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
         env:
-          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          TAG: ${{ github.ref_name }}
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:

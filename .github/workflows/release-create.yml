@@ -1,31 +1,28 @@
 name: Release Create
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  push:
+    tags:
+      - 'create-v*'
 
 jobs:
   publish:
     name: Publish create-skillet to npm
     runs-on: ubuntu-latest
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'create-v')
     concurrency:
-      group: release-create-${{ github.event.workflow_run.head_sha }}
+      group: release-create-${{ github.sha }}
       cancel-in-progress: false
     permissions:
       id-token: write  # required for npm provenance via OIDC Trusted Publishers
     steps:
       - name: Validate semver tag
         run: |
-          [[ "$BRANCH" =~ ^create-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$TAG" =~ ^create-v[0-9]+\.[0-9]+\.[0-9]+$ ]]
         env:
-          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          TAG: ${{ github.ref_name }}
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.sha }}
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v6
         with:
