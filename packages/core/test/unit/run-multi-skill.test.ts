@@ -198,4 +198,39 @@ describe('run() — multi-skill discovery', () => {
       new Set(['brainstorming', 'debugging', 'planning']),
     );
   });
+
+  it('skillet.skillDir in package.json is used directly — no subdirectory discovery', async () => {
+    // The skill is at tmpDir/skill/SKILL.md — the skill dir IS skill/, not a parent
+    const skillDir = path.join(tmpDir, 'skill');
+    await fs.mkdir(skillDir, { recursive: true });
+    await fs.writeFile(
+      path.join(skillDir, 'SKILL.md'),
+      '---\nname: direct-skill\ndescription: A directly-pathed skill\n---\nBody.\n',
+      'utf8',
+    );
+
+    // package.json uses skillet.skillDir (not skillet.skills)
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-pkg', version: '1.0.0', skillet: { skillDir: 'skill/' } }),
+      'utf8',
+    );
+
+    const transformedNames: string[] = [];
+
+    await run({
+      pkg: { name: 'test-pkg', version: '1.0.0' },
+      argv: ['node', 'cli.js', '--help'],
+      hooks: {
+        transform: (skill) => {
+          transformedNames.push(skill.name);
+          return skill;
+        },
+      },
+    }).catch(() => {});
+
+    // Exactly one skill — the direct skill — must be discovered
+    expect(transformedNames).toHaveLength(1);
+    expect(transformedNames[0]).toBe('direct-skill');
+  });
 });

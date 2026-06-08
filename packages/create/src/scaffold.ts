@@ -18,14 +18,13 @@ export function runSync(cmd: string, args: string[], stepName: string): void {
   }
 }
 
-export function buildBinCliJs(skillDir: string): string {
+export function buildBinCliJs(): string {
   return `#!/usr/bin/env node
 import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 import { run } from '@skillet-cli/core';
 
 const pkg = createRequire(import.meta.url)('../package.json');
-await run({ skillDir: fileURLToPath(new URL('../${skillDir}', import.meta.url)), pkg });
+await run({ pkg });
 `;
 }
 
@@ -75,7 +74,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     const binDir = path.join(process.cwd(), 'bin');
     await fsp.mkdir(binDir, { recursive: true });
     const binPath = path.join(binDir, 'cli.js');
-    await fsp.writeFile(binPath, buildBinCliJs(config.skillDir), 'utf8');
+    await fsp.writeFile(binPath, buildBinCliJs(), 'utf8');
 
     // Step 5: chmod 755
     await fsp.chmod(binPath, 0o755);

@@ -105,7 +105,7 @@ describe('setupSkillDir — post-move bin/cli.js update', () => {
     mockFspChmod.mockResolvedValue(undefined);
   });
 
-  it('rewrites bin/cli.js to reference skill/ after files are moved', async () => {
+  it('does NOT rewrite bin/cli.js after files are moved (package.json is source of truth)', async () => {
     mockSkillDirAbsent();
     mockReaddir(['SKILL.md', 'README.md']);
     // User selects SKILL.md, then confirms move
@@ -114,18 +114,14 @@ describe('setupSkillDir — post-move bin/cli.js update', () => {
 
     await setupSkillDir(makeDetected());
 
-    // bin/cli.js must have been written
+    // bin/cli.js must NOT have been written — only package.json update is needed
     const writeCall = mockFspWriteFile.mock.calls.find(
       (c) => typeof c[0] === 'string' && (c[0] as string).endsWith('bin/cli.js'),
     );
-    expect(writeCall).toBeDefined();
-
-    // Content must reference skill/ URL
-    const content = writeCall?.[1] as string;
-    expect(content).toContain("new URL('../skill/', import.meta.url)");
+    expect(writeCall).toBeUndefined();
   });
 
-  it('sets execute permission (chmod 755) on the rewritten bin/cli.js', async () => {
+  it('does NOT chmod bin/cli.js after files are moved', async () => {
     mockSkillDirAbsent();
     mockReaddir(['SKILL.md', 'README.md']);
     mockCheckbox.mockResolvedValue(['SKILL.md']);
@@ -133,12 +129,11 @@ describe('setupSkillDir — post-move bin/cli.js update', () => {
 
     await setupSkillDir(makeDetected());
 
-    // chmod must have been called on bin/cli.js with 0o755
+    // chmod must NOT have been called on bin/cli.js
     const chmodCall = mockFspChmod.mock.calls.find(
       (c) => typeof c[0] === 'string' && (c[0] as string).endsWith('bin/cli.js'),
     );
-    expect(chmodCall).toBeDefined();
-    expect(chmodCall?.[1]).toBe(0o755);
+    expect(chmodCall).toBeUndefined();
   });
 
   it('runs npm pkg set skillet.skillDir=./skill/ after files are moved', async () => {

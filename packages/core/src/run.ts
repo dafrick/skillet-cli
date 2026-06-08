@@ -556,6 +556,7 @@ export async function run(options: RunOptions): Promise<void> {
   const invokedPackageRoot: string = process.cwd();
   let invokedSkillDirs: string[];
   if (skillDir !== undefined) {
+    // Programmatic caller passed skillDir explicitly — always takes precedence
     invokedSkillDirs = [skillDir];
   } else {
     const marker = await readSkilletMarker(process.cwd());
@@ -565,19 +566,24 @@ export async function run(options: RunOptions): Promise<void> {
           'Either pass skillDir to run() or add a "skillet" key to your package.json.',
       );
     }
-    const discovered: string[] = [];
-    for (const dir of marker.skillsDirs) {
-      const abs = path.resolve(dir);
-      const trees = await discoverSkillTrees(abs);
-      discovered.push(...trees);
+    if (marker.directSkillDir !== undefined) {
+      // skillet.skillDir — direct path to skill directory, no subdirectory discovery needed
+      invokedSkillDirs = [marker.directSkillDir];
+    } else {
+      const discovered: string[] = [];
+      for (const dir of marker.skillsDirs) {
+        const abs = path.resolve(dir);
+        const trees = await discoverSkillTrees(abs);
+        discovered.push(...trees);
+      }
+      if (discovered.length === 0) {
+        throw new Error(
+          `No skill trees found. Searched directories: ${marker.skillsDirs.join(', ')}. ` +
+            'Each skill tree must contain a SKILL.md file.',
+        );
+      }
+      invokedSkillDirs = discovered;
     }
-    if (discovered.length === 0) {
-      throw new Error(
-        `No skill trees found. Searched directories: ${marker.skillsDirs.join(', ')}. ` +
-          'Each skill tree must contain a SKILL.md file.',
-      );
-    }
-    invokedSkillDirs = discovered;
   }
 
   // Walk the dependency closure to get all skills (invoked + transitive dependencies),
