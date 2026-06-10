@@ -79,11 +79,20 @@ Create `bin/cli.js` — this is your entire CLI:
 ```js
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 import { run } from '@skillet-cli/core';
 
 const pkg = createRequire(import.meta.url)('../package.json');
-await run({ skillDir: fileURLToPath(new URL('../skill', import.meta.url)), pkg });
+await run({ pkg });
+```
+
+Add the skill location to your `package.json`:
+
+```json
+{
+  "skillet": {
+    "skillDir": "./skill"
+  }
+}
 ```
 
 ### 4. Publish
@@ -112,7 +121,7 @@ If you'd rather publish to the public npm registry, remove `publishConfig` from 
 
 | Option | Type | Description |
 |---|---|---|
-| `skillDir` | `string` | Path to the directory containing your skill files |
+| `skillDir` | `string \| undefined` | Path to a single skill tree directory. When omitted, core reads the location from `skillet.skillDir` in `package.json`. |
 | `pkg` | `{ name: string; version: string }` | Your package's name and version (used by the update notifier) |
 | `hooks.transform` | `(skill: NormalizedSkill) => NormalizedSkill` | Modify the normalized skill before adapter dispatch; may be async |
 | `hooks.beforeInstall` | `(skill: NormalizedSkill, adapter: Adapter, ctx: Context) => void` | Run before each adapter install; may be async |
