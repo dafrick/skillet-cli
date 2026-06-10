@@ -7,3 +7,6 @@ coverage/
 *.tsbuildinfo
 test-manual/tmp/*
 !test-manual/tmp/.gitkeep
+
+.openspec-auto.json
+.openspec-auto/
