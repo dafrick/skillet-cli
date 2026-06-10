@@ -1,8 +1,20 @@
 import * as fs from 'node:fs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('node:child_process', () => ({
   spawnSync: vi.fn(),
+}));
+
+const mockSpinnerStart = vi.fn();
+const mockSpinnerSucceed = vi.fn();
+const mockSpinnerFail = vi.fn();
+
+vi.mock('@skillet-cli/ui', () => ({
+  createSpinner: vi.fn(() => ({
+    start: mockSpinnerStart,
+    succeed: mockSpinnerSucceed,
+    fail: mockSpinnerFail,
+  })),
 }));
 
 vi.mock('node:fs', async (importOriginal) => {
@@ -210,5 +222,68 @@ describe('executeScaffold — repository URL guard', () => {
     const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('repository.url'))).toBe(true);
     expect(allArgs.some((a) => a.includes('repository.type=git'))).toBe(true);
+  });
+});
+
+describe('executeScaffold — npm install progress output', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('writes a message containing @skillet-cli/core to stdout before the install spawnSync call', async () => {
+    const writtenMessages: string[] = [];
+    const spawnSyncCallOrder: Array<{ cmd: string; stdoutIndexAtCall: number }> = [];
+
+    stdoutSpy.mockImplementation((chunk: unknown) => {
+      writtenMessages.push(String(chunk));
+      return true;
+    });
+
+    mockSpawnSync.mockImplementation((cmd: unknown, ..._rest: unknown[]) => {
+      spawnSyncCallOrder.push({
+        cmd: String(cmd),
+        stdoutIndexAtCall: writtenMessages.length,
+      });
+      return makeSuccessResult();
+    });
+
+    await executeScaffold(baseConfig);
+
+    // Find the install spawnSync call
+    const installCall = spawnSyncCallOrder.find((c) => c.cmd.includes('npm install'));
+    expect(installCall).toBeDefined();
+
+    // Messages written before the install spawnSync call
+    const writtenBeforeInstall = writtenMessages.slice(0, installCall!.stdoutIndexAtCall);
+    expect(writtenBeforeInstall.some((msg) => msg.includes('@skillet-cli/core'))).toBe(true);
+  });
+
+  it('does NOT call spinner.start with an install-related label for the npm install step', async () => {
+    await executeScaffold(baseConfig);
+
+    const startCalls = mockSpinnerStart.mock.calls.map((c) => String(c[0]));
+    expect(startCalls.some((label) => label.toLowerCase().includes('install'))).toBe(false);
+    expect(startCalls.some((label) => label.toLowerCase().includes('firing'))).toBe(false);
+  });
+
+  it('writes "Install complete." to stdout after the install spawnSync completes with status 0', async () => {
+    const writtenMessages: string[] = [];
+    stdoutSpy.mockImplementation((chunk: unknown) => {
+      writtenMessages.push(String(chunk));
+      return true;
+    });
+
+    await executeScaffold(baseConfig);
+
+    expect(writtenMessages.some((msg) => msg.includes('Install complete.'))).toBe(true);
   });
 });

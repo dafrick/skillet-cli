@@ -81,7 +81,9 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     spinner.succeed('Plating done');
 
     // Step 6: npm install @skillet-cli/core
-    spinner.start('Firing up @skillet-cli/core install…');
+    process.stdout.write(
+      'Installing @skillet-cli/core (this may take a few minutes on first run)…\n',
+    );
     const installResult = spawnSync('npm install @skillet-cli/core', [], {
       stdio: 'inherit',
       shell: true,
@@ -91,7 +93,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
         `npm install @skillet-cli/core exited with code ${installResult.status ?? 'null'}`,
       );
     }
-    spinner.succeed('Firing up done');
+    process.stdout.write('Install complete.\n');
   } catch (err) {
     spinner.fail('Setup failed');
     const message = err instanceof Error ? err.message : String(err);
