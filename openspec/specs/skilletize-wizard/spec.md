@@ -123,6 +123,23 @@ After writing `bin/cli.js`, the wizard SHALL run `npm install @skillet-cli/core`
 
 ---
 
+### Requirement: Install step emits plain progress output, not a spinner
+The `create-skillet` scaffold step that installs `@skillet-cli/core` SHALL write a plain-text progress line to stdout via `process.stdout.write` immediately before invoking npm install, and a plain-text confirmation line after successful completion. The step SHALL NOT use `spinner.start` or `spinner.succeed` for this install step. The `spawnSync` call SHALL retain `stdio: 'inherit'` so npm's own output reaches the terminal.
+
+#### Scenario: Install step produces a visible progress message
+- **WHEN** the wizard reaches the npm install step
+- **THEN** a plain-text line mentioning `@skillet-cli/core` is written to stdout before the install begins, visible in both TTY and non-TTY contexts
+
+#### Scenario: Install step does not use spinner.start before npm install
+- **WHEN** the wizard reaches the npm install step
+- **THEN** `spinner.start` is NOT called immediately before the `spawnSync` npm install call
+
+#### Scenario: npm install output passes through to terminal in TTY context
+- **WHEN** the wizard runs the npm install step in a TTY environment
+- **THEN** npm's stdout and stderr are inherited (passed through directly) rather than captured
+
+---
+
 ### Requirement: Skill directory setup when SKILL.md is in root
 After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary. After files are moved, the wizard SHALL update `package.json`'s `skillet.skillDir` field to `./skill/`. The wizard SHALL NOT rewrite `bin/cli.js` after the move step — since `bin/cli.js` no longer embeds the skill path, it remains valid regardless of the move outcome.
 
