@@ -36,6 +36,17 @@ node_modules/
   @skillet-cli/core/
 ```
 
+The generated `bin/cli.js` looks like this — skill location comes entirely from `package.json`:
+
+```js
+#!/usr/bin/env node
+import { createRequire } from 'node:module';
+import { run } from '@skillet-cli/core';
+
+const pkg = createRequire(import.meta.url)('../package.json');
+await run({ pkg });
+```
+
 From there, publish to npm or GitHub Package Registry and your users can run:
 
 ```sh

@@ -22,7 +22,7 @@ Initialize a directory with a `package.json`. Publishing via GitHub Package Regi
 
 ### 2. Add your skill files
 
-Place your prompt files in a `skills/my-skill/` directory with a `SKILL.md` file.
+Place your prompt files in a `skill/` directory with a `SKILL.md` file at its root.
 
 ### 3. Wire up the CLI
 
@@ -37,7 +37,6 @@ Create `bin/cli.js` — this is your entire CLI:
 ```js
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 import { run } from '@skillet-cli/core';
 
 const pkg = createRequire(import.meta.url)('../package.json');
@@ -49,12 +48,12 @@ Add a `skillet` key to your `package.json` to tell core where your skills live:
 ```json
 {
   "skillet": {
-    "skills": "skills"
+    "skillDir": "./skill"
   }
 }
 ```
 
-`skills` names the parent directory where skill trees live. Each immediate subdirectory containing a `SKILL.md` file is one skill tree. Accepts a string or an array of strings; defaults to `"skills"` if omitted.
+`skillDir` is the direct path to your skill directory — the directory that contains `SKILL.md` at its root. For packages with multiple skill trees, use `skillet.skills` instead to name a parent directory to scan for skill subdirectories (e.g. `"skills": "skills"` to discover every `skills/*/SKILL.md`).
 
 ### 4. Publish
 
@@ -116,6 +115,11 @@ Packages that call `run({ skillDir, pkg })` explicitly continue to work without 
 All `hooks` fields are optional. `NormalizedSkill`, `Adapter`, and `Context` are TypeScript types exported from `@skillet-cli/core`.
 
 ## Changelog
+
+### v0.3.0
+
+- **`skillet.skillDir` in `package.json`**: declare the direct path to a single skill directory; takes precedence over `skillet.skills` when present
+- **Simplified `bin/cli.js`**: `create-skillet` now generates `await run({ pkg })` with no explicit `skillDir` — skill location is read entirely from `package.json`
 
 ### v0.2.0
 
