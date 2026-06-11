@@ -20,6 +20,6 @@ None.
 
 ## Impact
 
-- `packages/create/src/skill-dir.ts` — one `console.log` added inside `setupSkillDir`.
-- `test/unit/skill-dir-post-move.test.ts` — new assertion added to existing unit test.
+- `packages/create/src/skill-dir.ts` — one `process.stdout.write(...)` call added inside `setupSkillDir`, matching the API used by all other move-phase output lines.
+- `packages/create/test/unit/skill-dir-post-move.test.ts` — new test added with a `vi.spyOn(process.stdout, 'write')` spy and an assertion that the confirmation line was written.
 - `openspec/changes/post-move-skilldir-display/specs/skilletize-wizard/spec.md` — delta spec adding the missing scenario.
