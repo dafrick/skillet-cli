@@ -8,10 +8,13 @@
 
 | Tier | Repo | Complexity Notes | Status |
 |------|------|-----------------|--------|
-| T1 | `netresearch/agent-rules-skill` | Single SKILL.md, no resources | Untested |
-| T2 | `netresearch/skill-repo-skill` | Single skill + flat supporting files | Untested |
-| T3 | `harness/harness-skills` | Single skill + nested resources/scripts | Untested |
-| T4 | `addyosmani/agent-skills` | Multiple SKILL.md files in subdirs | Untested |
+| T1 | `Hao0321/claude-skill-code-cleanup` | Single SKILL.md at code-cleanup-helper/SKILL.md, zero companion files | Untested |
+| T2 | `jzOcb/writing-style-skill` | Root SKILL.md + flat scripts/ with two Python files, no nested subdirs | Untested |
+| T3 | `netresearch/agent-rules-skill` | Single skill + deeply nested assets/, references/, scripts/ (22+ scripts, lib/ subdir) | Untested |
+| T3 | `netresearch/skill-repo-skill` | Single skill + nested references/ (11 docs), scripts/ (4 scripts), templates/ (11 files) | Untested |
+| T4 | `arpitg1304/robotics-agent-skills` | 10 SKILL.md files under skills/<topic>/, no per-skill companions; root has install.sh, evals/ only | Untested |
+| T5 | `harness/harness-skills` | 54 SKILL.md files; per-skill references/; root-level scripts/, templates/, sboms/, examples/ | Untested |
+| T5 | `addyosmani/agent-skills` | 24 SKILL.md files; root-level hooks/, scripts/, agents/, commands/, references/ | Untested |
 | T5 | `obra/superpowers` | Multi-skill with scripts, templates, deep nesting | Untested |
 
 ## Test Run Log
