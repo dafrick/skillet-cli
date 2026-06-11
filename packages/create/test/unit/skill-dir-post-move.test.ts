@@ -151,6 +151,26 @@ describe('setupSkillDir — post-move bin/cli.js update', () => {
     );
     expect(pkgSetCall).toBeDefined();
   });
+
+  it('prints "skillDir updated to: ./skill/" after files are moved', async () => {
+    mockSkillDirAbsent();
+    mockReaddir(['SKILL.md', 'README.md']);
+    mockCheckbox.mockResolvedValue(['SKILL.md']);
+    mockConfirm.mockResolvedValue(true);
+
+    const stdoutSpy = vi.spyOn(process.stdout, 'write');
+
+    await setupSkillDir(makeDetected());
+
+    const writtenStrings = stdoutSpy.mock.calls
+      .map((c) => c[0])
+      .filter((s): s is string => typeof s === 'string');
+    const found = writtenStrings.some((s) => s.includes('skillDir updated to: ./skill/'));
+
+    stdoutSpy.mockRestore();
+
+    expect(found).toBe(true);
+  });
 });
 
 describe('setupSkillDir — no update when no files selected', () => {
