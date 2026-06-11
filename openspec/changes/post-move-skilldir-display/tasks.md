@@ -1,6 +1,6 @@
 ## 1. Test (write failing test first)
 
-- [ ] 1.1 In `packages/create/test/unit/skill-dir-post-move.test.ts`, add a new test that:
+- [x] 1.1 In `packages/create/test/unit/skill-dir-post-move.test.ts`, add a new test that:
   - Calls `vi.spyOn(process.stdout, 'write')` to capture writes (restore via `mockRestore()` after the test)
   - Sets up mocks for a successful move (skill/ absent, one file selected, confirm returns true)
   - Calls `await setupSkillDir(makeDetected())`
@@ -8,9 +8,9 @@
 
 ## 2. Implementation
 
-- [ ] 2.1 In `packages/create/src/skill-dir.ts`, inside `setupSkillDir`, add `process.stdout.write('  skillDir updated to: ./skill/\n')` immediately after the move loop completes and before the `runSync('npm', ['pkg', 'set', 'skillet.skillDir=./skill/'], ...)` call
+- [x] 2.1 In `packages/create/src/skill-dir.ts`, inside `setupSkillDir`, add `process.stdout.write('  skillDir updated to: ./skill/\n')` immediately after the move loop completes and before the `runSync('npm', ['pkg', 'set', 'skillet.skillDir=./skill/'], ...)` call
 
 ## 3. Verification
 
-- [ ] 3.1 Run the unit tests and confirm the new assertion passes: `pnpm --filter @skillet-cli/create test`
-- [ ] 3.2 Confirm no other tests regress
+- [x] 3.1 Run the unit tests and confirm the new assertion passes: `pnpm --filter @skillet-cli/create test`
+- [x] 3.2 Confirm no other tests regress
