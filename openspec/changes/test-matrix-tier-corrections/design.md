@@ -28,7 +28,7 @@ The three vacated slots (T1, T2, T4) are filled by freshly found repos verified 
 
 ### Decision: No spec changes required
 
-The existing `manual-test-harness` spec requires "at least five repos spanning tiers T1–T5." After this change the catalog has 7 verified rows covering all five tiers. The requirement continues to be satisfied — no modification to the spec is needed.
+The existing `manual-test-harness` spec requires "at least five repos spanning tiers T1–T5." After this change the catalog has 8 verified rows covering all five tiers. The requirement continues to be satisfied — no modification to the spec is needed.
 
 ## Risks / Trade-offs
 
