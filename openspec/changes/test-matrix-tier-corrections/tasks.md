@@ -1,6 +1,6 @@
 ## 1. Define Acceptance Criteria
 
-- [ ] 1.1 Confirm that the final TEST-MATRIX.md Candidate Repos table has exactly 7 rows, one for each of: Hao0321/claude-skill-code-cleanup (T1), jzOcb/writing-style-skill (T2), netresearch/agent-rules-skill (T3), netresearch/skill-repo-skill (T3), arpitg1304/robotics-agent-skills (T4), harness/harness-skills (T5), addyosmani/agent-skills (T5), obra/superpowers (T5) — wait, that is 8. Correct count: T1×1, T2×1, T3×2, T4×1, T5×3 = 8 rows total.
+- [ ] 1.1 Confirm that the final TEST-MATRIX.md Candidate Repos table has exactly 8 rows: Hao0321/claude-skill-code-cleanup (T1), jzOcb/writing-style-skill (T2), netresearch/agent-rules-skill (T3), netresearch/skill-repo-skill (T3), arpitg1304/robotics-agent-skills (T4), harness/harness-skills (T5), addyosmani/agent-skills (T5), obra/superpowers (T5) — a distribution of T1×1, T2×1, T3×2, T4×1, T5×3.
 - [ ] 1.2 Verify that no tier T1–T5 is absent from the table (each tier appears at least once)
 - [ ] 1.3 Verify that the Test Run Log table is unchanged (all dashes, no test data to modify)
 

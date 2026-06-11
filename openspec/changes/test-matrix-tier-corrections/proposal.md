@@ -21,7 +21,7 @@ None. No new capabilities are introduced — this is a content correction to an 
 
 ### Modified Capabilities
 
-- `manual-test-harness`: The `TEST-MATRIX.md` catalog requirement states it must be "seeded with at least five repos spanning tiers T1–T5." After corrections the catalog will have 7 verified rows covering all five tiers. No spec-level requirement changes; the existing scenario ("Catalog contains entries for all five tiers") continues to hold. No delta spec is required.
+- `manual-test-harness`: The `TEST-MATRIX.md` catalog requirement states it must be "seeded with at least five repos spanning tiers T1–T5." After corrections the catalog will have 8 verified rows covering all five tiers. A delta spec has been added that formalises the new requirement that every catalog row must have a tier classification confirmed by direct inspection of the repo's file tree — not assigned by assumption. Two scenarios capture this: one asserting every row has a confirmed tier, and one asserting all five tiers T1–T5 are covered by at least one verified candidate.
 
 ## Impact
 
