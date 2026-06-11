@@ -124,7 +124,7 @@ After writing `bin/cli.js`, the wizard SHALL run `npm install @skillet-cli/core`
 ---
 
 ### Requirement: Skill directory setup when SKILL.md is in root
-After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary. After files are moved, the wizard SHALL update `package.json`'s `skillet.skillDir` field to `./skill/`. The wizard SHALL NOT rewrite `bin/cli.js` after the move step — since `bin/cli.js` no longer embeds the skill path, it remains valid regardless of the move outcome.
+After npm execution completes, when `SKILL.md` exists in the current directory root (not inside `skill/`), the wizard SHALL offer to move relevant files into a `skill/` subfolder. This phase has its own preview and confirmation gate — no files are moved until the user explicitly confirms the pre-move summary. After files are moved, the wizard SHALL print a line confirming the updated skill directory path (e.g., `  skillDir updated to: ./skill/`), then update `package.json`'s `skillet.skillDir` field to `./skill/`. The wizard SHALL NOT rewrite `bin/cli.js` after the move step — since `bin/cli.js` no longer embeds the skill path, it remains valid regardless of the move outcome.
 
 #### Scenario: skill/ subfolder already exists
 - **WHEN** a `skill/` subfolder already exists in the current directory
@@ -145,6 +145,10 @@ After npm execution completes, when `SKILL.md` exists in the current directory r
 #### Scenario: User confirms file move
 - **WHEN** the user confirms the skilletize preview
 - **THEN** the selected files and folders are moved into a newly created `skill/` subfolder and the wizard prints which files were moved
+
+#### Scenario: Post-move skillDir confirmation
+- **WHEN** all selected files have been moved into `skill/`
+- **THEN** the wizard prints a line confirming the updated skill directory path (e.g., `  skillDir updated to: ./skill/`) before running `npm pkg set skillet.skillDir=./skill/`
 
 #### Scenario: `bin/cli.js` is not modified after the file-move step
 - **WHEN** the user confirms the file move and files are moved into `skill/`
