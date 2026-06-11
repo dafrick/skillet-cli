@@ -148,7 +148,8 @@ export async function setupSkillDir(detected: DetectionResult): Promise<void> {
     }
   }
 
-  // Step 7: update package.json to reflect new skill location
+  // Step 7: confirm the new skillDir value and update package.json
+  process.stdout.write('  skillDir updated to: ./skill/\n');
   // bin/cli.js does not need to be rewritten — it no longer embeds the skill path
   runSync('npm', ['pkg', 'set', 'skillet.skillDir=./skill/'], 'npm pkg set skillet.skillDir');
 }
