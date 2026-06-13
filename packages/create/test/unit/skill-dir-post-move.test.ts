@@ -2,8 +2,8 @@
  * Tests for post-move update behavior in setupSkillDir.
  *
  * After files are moved into skill/, the wizard must:
- *  1. Rewrite bin/cli.js to reference skill/ as the skillDir URL
- *  2. Run `npm pkg set skillet.skillDir=./skill/` to update package.json
+ *  1. Run `npm pkg set skillet.skillDir=./skill/` to update package.json
+ *     (bin/cli.js is NOT rewritten — package.json is the source of truth)
  *
  * These tests use the same mock strategy as scaffold.test.ts.
  */
