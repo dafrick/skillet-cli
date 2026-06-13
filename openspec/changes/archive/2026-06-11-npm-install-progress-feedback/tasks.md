@@ -16,6 +16,6 @@
 
 ## 3. Verify Tests Pass
 
-- [ ] 3.1 Run `pnpm --filter @skillet-cli/create test` and confirm all tests pass (green phase)
-- [ ] 3.2 Run `pnpm --filter @skillet-cli/create typecheck` and confirm no type errors
-- [ ] 3.3 Run `pnpm --filter @skillet-cli/create lint` and confirm no lint errors
+- [ ] 3.1 Run `pnpm --filter create-skillet test` and confirm all tests pass (green phase)
+- [ ] 3.2 Run `pnpm --filter create-skillet typecheck` and confirm no type errors
+- [ ] 3.3 Run `pnpm --filter create-skillet lint` and confirm no lint errors

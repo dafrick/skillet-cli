@@ -12,5 +12,5 @@
 
 ## 3. Verification
 
-- [x] 3.1 Run the unit tests and confirm the new assertion passes: `pnpm --filter @skillet-cli/create test`
+- [x] 3.1 Run the unit tests and confirm the new assertion passes: `pnpm --filter create-skillet test`
 - [x] 3.2 Confirm no other tests regress
