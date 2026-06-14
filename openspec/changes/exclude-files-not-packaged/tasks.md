@@ -13,17 +13,17 @@
 
 ## 3. Add files allowlist to scaffold (test-first)
 
-- [ ] 3.1 Write a failing unit test for `executeScaffold()` asserting that `npm pkg set --json files='["bin","<skillDir>"]'` is executed in the command sequence (using the JSON form that atomically replaces the entire `files` array)
-- [ ] 3.2 Write a failing test asserting that the resulting `package.json` `files` field contains exactly `["bin", "<skillDir>"]` and no other entries
-- [ ] 3.3 Add `npm pkg set --json files='["bin","${config.skillDir}"]'` to the npm command sequence in `packages/create/src/scaffold.ts` `executeScaffold()`
+- [ ] 3.1 Write a failing unit test for `executeScaffold()` asserting that `npm pkg set "files[0]=bin" "files[1]=<skillDir>"` is executed in the command sequence (indexed-array form, safe with `runSync` double-quote wrapping — no inner quotes in the args)
+- [ ] 3.2 Write a failing test asserting that the resulting `package.json` `files` field contains `"bin"` at index 0 and `<skillDir>` at index 1
+- [ ] 3.3 Add `npm pkg set "files[0]=bin" "files[1]=${config.skillDir}"` to the npm command sequence in `packages/create/src/scaffold.ts` `executeScaffold()`. Note: this assumes no pre-existing `files` entries beyond index 1; `npm init -y` never sets `files`, so this is safe for the standard `create-skillet` fresh-project flow.
 - [ ] 3.4 Confirm all new and existing scaffold tests pass
 
 ## 4. Add publish preview to wizard (test-first)
 
-- [ ] 4.1 Write a failing test for `run.ts` asserting that the publish preview is shown immediately after `setupSkillDir` completes (Step 7) and before the final confirmation prompt, listing skill directory contents
+- [ ] 4.1 Extract the preview logic as a standalone function (e.g. `printPublishPreview(skillDir: string): Promise<void>`) in its own module or at the top of `run.ts`, so it can be unit-tested without invoking inquirer's raw-mode prompts. Write a failing unit test for this function asserting that it prints skill directory contents to stdout after `setupSkillDir` completes.
 - [ ] 4.2 Write a failing test asserting that entries matching the ignore set are noted as excluded in the preview output
 - [ ] 4.3 Write a failing test asserting that the preview handles a missing skill directory gracefully (no error, prints a note) — this is an error path, not the common case
-- [ ] 4.4 Implement the file tree preview in `packages/create/src/run.ts` immediately after the `setupSkillDir` call (Step 7), reading skill directory contents and annotating excluded entries; the preview runs before the confirmation gate
+- [ ] 4.4 Call `printPublishPreview` in `packages/create/src/run.ts` immediately after the `setupSkillDir` call (Step 7). This is a post-completion informational summary — the user has already confirmed at Step 5 (`proceedFinal`), and `setupSkillDir` has already populated the directory. Wizard integration tests that cover the full prompt flow are not feasible (inquirer requires a raw-mode TTY); rely on the extracted unit-testable function instead.
 - [ ] 4.5 Confirm all new and existing wizard tests pass
 
 ## 5. Integration verification
