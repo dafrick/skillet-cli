@@ -50,6 +50,7 @@ import type { WizardConfig } from '../../src/prompts.js';
 import { collectConfig } from '../../src/prompts.js';
 import { executeScaffold } from '../../src/scaffold.js';
 import { setupSkillDir } from '../../src/skill-dir.js';
+import { skillMdStatus } from '../../src/run.js';
 
 const mockConfirm = vi.mocked(confirm);
 const mockDetectEnvironment = vi.mocked(detectEnvironment);
@@ -70,6 +71,24 @@ function makeFakeDetected(overrides: Partial<DetectionResult> = {}): DetectionRe
     discoveredSkillDirs: [],
     repositoryUrl: '',
     gitUser: 'Test User <test@example.com>',
+    ...overrides,
+  };
+}
+
+// Minimal DetectionResult stub — only the fields skillMdStatus reads
+function makeDetected(overrides: Partial<DetectionResult>): DetectionResult {
+  return {
+    cwd: '/project',
+    name: 'my-skill',
+    version: '0.1.0',
+    author: '',
+    description: '',
+    hasPackageJson: false,
+    hasSkillMd: false,
+    skillDir: null,
+    discoveredSkillDirs: [],
+    repositoryUrl: '',
+    gitUser: '',
     ...overrides,
   };
 }
@@ -241,5 +260,38 @@ describe('run.ts — setupSkillDir not called in multi-skill mode', () => {
     await invokeRunAction();
 
     expect(mockSetupSkillDir).not.toHaveBeenCalled();
+
+  });
+});
+
+describe('skillMdStatus', () => {
+  it('returns "found" when hasSkillMd is true (root-level SKILL.md)', () => {
+    const detected = makeDetected({ hasSkillMd: true });
+    expect(skillMdStatus(detected)).toBe('found');
+  });
+
+  it('returns "found in <path>" when exactly one directory discovered', () => {
+    const detected = makeDetected({ discoveredSkillDirs: ['skill/openspec-auto/'] });
+    expect(skillMdStatus(detected)).toBe('found in skill/openspec-auto/');
+  });
+
+  it('returns "found in N locations" when multiple directories discovered', () => {
+    const detected = makeDetected({
+      discoveredSkillDirs: ['skill/openspec-auto/', 'skill/other/', 'tools/'],
+    });
+    expect(skillMdStatus(detected)).toBe('found in 3 locations');
+  });
+
+  it('returns "not found" when no SKILL.md exists anywhere', () => {
+    const detected = makeDetected({});
+    expect(skillMdStatus(detected)).toBe('not found');
+  });
+
+  it('returns "found" (no path suffix) when root hasSkillMd is true even if discoveredSkillDirs is non-empty', () => {
+    const detected = makeDetected({
+      hasSkillMd: true,
+      discoveredSkillDirs: ['skill/openspec-auto/'],
+    });
+    expect(skillMdStatus(detected)).toBe('found');
   });
 });
