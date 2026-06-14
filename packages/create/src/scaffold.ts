@@ -82,6 +82,9 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
 
     spinner.succeed('Seasoning done');
 
+    const finalPkg = fs.readFileSync(pkgJsonPath, 'utf8');
+    process.stdout.write(`\npackage.json written:\n${finalPkg}\n`);
+
     // Step 4: Write bin/cli.js
     spinner.start('Plating bin/cli.js…');
     const binDir = path.join(process.cwd(), 'bin');
