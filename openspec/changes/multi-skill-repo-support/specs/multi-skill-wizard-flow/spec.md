@@ -87,14 +87,27 @@ When `WizardConfig.isMultiSkill` is `true`, `run.ts` SHALL NOT call `setupSkillD
 
 ---
 
-### Requirement: Root-level SKILL.md does not force single-skill treatment when other skills exist
-When `discoveredSkillDirs.length > 1` and one of the entries is at the repo root (normalizes to parent dir `'.'`), the wizard SHALL treat this as a multi-skill repo and include the root-level skill in the packaged set. The entry `'.'` SHALL appear in `skillsParentDirs` and be written to `skillet.skills`.
+### Requirement: Root-level SKILL.md entries are excluded from multi-skill packaging
+Root-level `SKILL.md` entries (where the raw path is `"./"` or normalises to `"."`) SHALL be filtered out of `discoveredSkillDirs` before the multi-skill check and parent-dir derivation run. This is because `@skillet-cli/core` scans the *immediate subdirectories* of each `skillet.skills` entry for `SKILL.md` files; writing `"."` into `skillet.skills` would cause core to scan `"./<child>/"` — not `./SKILL.md` itself — silently dropping the root-level skill at install time.
 
-#### Scenario: Multi-skill repo where one skill is at the root
-- **WHEN** `discoveredSkillDirs` is `["./", "skills/brainstorming/"]`
-- **THEN** `skillsParentDirs` is `[".", "skills"]`
-- **AND** `skillet.skills` is written as a JSON array `[".", "skills"]`
+After filtering:
+- If `> 1` entries remain, the multi-skill flow proceeds with only the subdirectory skills.
+- If `<= 1` entries remain, the wizard falls through to the existing single-skill path.
+
+#### Scenario: Multi-skill repo with a root-level SKILL.md and subdir skills — root entry is excluded
+- **WHEN** `discoveredSkillDirs` is `["./", "skills/brainstorming/", "skills/debugging/"]`
+- **THEN** the root entry `"./"` is filtered out before multi-skill detection
+- **AND** the remaining entries `["skills/brainstorming/", "skills/debugging/"]` are used for multi-skill detection (`length > 1` ✓)
+- **AND** `skillsParentDirs` is `["skills"]` (derived from the subdir entries only)
+- **AND** `skillet.skills` is written as `"skills"` (plain string, one parent)
 - **AND** `skillet.skillDir` is NOT written
+- **AND** the root-level `SKILL.md` is NOT included in the packaged set (no warning is required)
+
+#### Scenario: Repo has only a root-level SKILL.md — falls through to single-skill path
+- **WHEN** `discoveredSkillDirs` is `["./"]`
+- **THEN** after filtering the root entry, zero entries remain
+- **AND** the `<= 1` condition is true, so the existing single-skill path is used
+- **AND** `skillet.skillDir` is written as before
 
 ---
 

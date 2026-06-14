@@ -4,16 +4,17 @@
 
 ## 2. Tests — Write failing tests first (TDD)
 
-- [ ] 2.1 Write unit tests for parent-directory derivation logic: given `discoveredSkillDirs`, expect correct `skillsParentDirs` output (single parent, multiple parents, trailing-slash normalization, root-level entry `"./"` normalizes to `"."`)
+- [ ] 2.1 Write unit tests for parent-directory derivation logic: given `discoveredSkillDirs`, expect correct `skillsParentDirs` output (single parent, multiple parents, trailing-slash normalization, root-level entries `"./"` and `"."` are filtered out before derivation)
 - [ ] 2.2 Write unit tests for `collectConfig` in `prompts.ts`: when `discoveredSkillDirs.length > 1`, expect `isMultiSkill: true`, `skillsParentDirs` populated, and no skill-path input prompt shown
 - [ ] 2.3 Write unit tests for `executeScaffold` in `scaffold.ts`: when `isMultiSkill: true` with one parent, expect `npm pkg set skillet.skills=<dir>` and no `skillet.skillDir`; when multiple parents, expect JSON array form
 - [ ] 2.4 Write unit tests for the `run.ts` preview block: when `isMultiSkill: true`, expect `skillsParent:` in output instead of `skillDir:`
-- [ ] 2.5 Write a failing unit test for `run.ts` that exercises the scenario: `isMultiSkill: true` AND `detected.hasSkillMd: true` — assert that `setupSkillDir` is NOT called and that `package.json` does NOT contain `skillet.skillDir` after the run completes
+- [ ] 2.5 Write a failing unit test for the root-level SKILL.md filtering in `deriveParentDirs` / `collectConfig`: given `discoveredSkillDirs = ["./", "skills/brainstorming/", "skills/debugging/"]`, assert that (a) the root entry `"./"` is filtered out before multi-skill detection, (b) the remaining two subdir entries trigger `isMultiSkill: true`, and (c) `skillsParentDirs` is `["skills"]` (root-level dir NOT included)
+- [ ] 2.6 Write a failing unit test for `run.ts` that exercises the scenario: `isMultiSkill: true` AND `detected.hasSkillMd: true` — assert that `setupSkillDir` is NOT called and that `package.json` does NOT contain `skillet.skillDir` after the run completes
 
 ## 3. prompts.ts — Multi-skill inform-and-confirm flow
 
-- [ ] 3.1 Add a helper `deriveParentDirs(discoveredSkillDirs: string[]): string[]` that normalizes trailing slashes, calls `path.dirname()` on each entry, and deduplicates with a `Set`
-- [ ] 3.2 Replace the `select()` branch in `collectConfig` (when `discoveredSkillDirs.length > 1`) with: print discovered skill list, print "All N skills will be packaged into this single npm package.", ask `confirm()` — decline exits with code 0
+- [ ] 3.1 Add a helper `deriveParentDirs(discoveredSkillDirs: string[]): string[]` that (1) filters out entries whose normalised value is `"./"` or `"."` (root-level SKILL.md entries that core cannot locate via parent-dir scan), (2) normalizes trailing slashes on remaining entries, (3) calls `path.dirname()`, and (4) deduplicates with a `Set`
+- [ ] 3.2 Replace the `select()` branch in `collectConfig` so it: first calls `deriveParentDirs()` to get the filtered skill list, then checks `filteredDirs.length > 1` (not the raw `discoveredSkillDirs.length`) before entering multi-skill mode; prints discovered skill list, prints "All N skills will be packaged into this single npm package.", asks `confirm()` — decline exits with code 0
 - [ ] 3.3 Populate `isMultiSkill: true` and `skillsParentDirs` from `deriveParentDirs()` in the returned `WizardConfig`
 - [ ] 3.4 Ensure the single-skill path returns `isMultiSkill: false` and `skillsParentDirs: []`
 

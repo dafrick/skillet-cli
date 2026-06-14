@@ -6,7 +6,7 @@
 
 - Replace the `select()` skill-picker in `prompts.ts` with an informational step that displays all discovered skills and asks for confirmation to proceed with multi-skill packaging
 - Add `isMultiSkill: boolean` and `skillsParentDirs: string[]` to `WizardConfig`
-- Derive common parent directory(ies) from `discoveredSkillDirs` automatically (using `path.dirname()` + deduplication)
+- Derive common parent directory(ies) from `discoveredSkillDirs` automatically (using `path.dirname()` + deduplication); root-level entries (where the normalised path is `"./"` or `"."`) are excluded before derivation because `@skillet-cli/core` scans *subdirectories* of each `skillet.skills` entry and cannot locate a `SKILL.md` that lives directly in the repo root via this mechanism
 - In `scaffold.ts`, branch on `isMultiSkill`: write `skillet.skills` for multi-skill packages instead of `skillet.skillDir`
 - Update the `run.ts` preview block to display parent directories for multi-skill packages
 - The single-skill wizard path remains unchanged
