@@ -26,5 +26,6 @@
 - `packages/create/src/prompts.ts` — replaces `select()` multi-skill branch with inform + confirm
 - `packages/create/src/types.ts` (or wherever `WizardConfig` is defined) — adds `isMultiSkill` and `skillsParentDirs` fields
 - `packages/create/src/scaffold.ts` — branches on `isMultiSkill` to write `skillet.skills` vs `skillet.skillDir`
-- `packages/create/src/run.ts` — updates preview output for multi-skill
-- No changes to `@skillet-cli/core` runtime, `detect.ts`, or `skill-dir.ts`
+- `packages/create/src/run.ts` — updates preview output for multi-skill; adds a guard so `setupSkillDir` is only called when `!config.isMultiSkill` (calling it unconditionally would re-introduce `skillet.skillDir` on a package that the scaffold just wrote `skillet.skills` to)
+- No changes to `@skillet-cli/core` runtime or `detect.ts`
+- No direct changes to `skill-dir.ts` — the guard lives in `run.ts` instead, which is cleaner

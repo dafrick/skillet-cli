@@ -4,10 +4,11 @@
 
 ## 2. Tests — Write failing tests first (TDD)
 
-- [ ] 2.1 Write unit tests for parent-directory derivation logic: given `discoveredSkillDirs`, expect correct `skillsParentDirs` output (single parent, multiple parents, trailing-slash normalization)
+- [ ] 2.1 Write unit tests for parent-directory derivation logic: given `discoveredSkillDirs`, expect correct `skillsParentDirs` output (single parent, multiple parents, trailing-slash normalization, root-level entry `"./"` normalizes to `"."`)
 - [ ] 2.2 Write unit tests for `collectConfig` in `prompts.ts`: when `discoveredSkillDirs.length > 1`, expect `isMultiSkill: true`, `skillsParentDirs` populated, and no skill-path input prompt shown
 - [ ] 2.3 Write unit tests for `executeScaffold` in `scaffold.ts`: when `isMultiSkill: true` with one parent, expect `npm pkg set skillet.skills=<dir>` and no `skillet.skillDir`; when multiple parents, expect JSON array form
 - [ ] 2.4 Write unit tests for the `run.ts` preview block: when `isMultiSkill: true`, expect `skillsParent:` in output instead of `skillDir:`
+- [ ] 2.5 Write a failing unit test for `run.ts` that exercises the scenario: `isMultiSkill: true` AND `detected.hasSkillMd: true` — assert that `setupSkillDir` is NOT called and that `package.json` does NOT contain `skillet.skillDir` after the run completes
 
 ## 3. prompts.ts — Multi-skill inform-and-confirm flow
 
@@ -21,10 +22,11 @@
 - [ ] 4.1 In `executeScaffold`, branch on `config.isMultiSkill`: when true, build the `npm pkg set skillet.skills=<value>` arg (plain string if `skillsParentDirs.length === 1`, JSON array string otherwise); remove `skillet.skillDir` from the `pkgSetArgs` array for this branch
 - [ ] 4.2 Verify the single-skill `pkgSetArgs` branch is unmodified (still sets `skillet.skillDir`)
 
-## 5. run.ts — Update preview block
+## 5. run.ts — Update preview block and guard setupSkillDir
 
 - [ ] 5.1 In the NPM preview step, branch on `config.isMultiSkill`: when true, print `  skillsParent:  <parent dirs joined by ", ">` instead of `  skillDir:     <path>`
 - [ ] 5.2 Verify the single-skill preview line is unmodified
+- [ ] 5.3 Guard the `setupSkillDir(detected)` call so it only executes when `!config.isMultiSkill`; this prevents `setupSkillDir` from writing `skillet.skillDir` (and moving files into `skill/`) on a package that the scaffold just wrote `skillet.skills` to
 
 ## 6. Verification
 

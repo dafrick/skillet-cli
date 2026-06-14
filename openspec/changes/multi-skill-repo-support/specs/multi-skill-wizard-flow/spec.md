@@ -74,6 +74,30 @@ When `WizardConfig.isMultiSkill` is `true`, `executeScaffold` SHALL write `skill
 
 ---
 
+### Requirement: setupSkillDir is skipped for multi-skill packages
+When `WizardConfig.isMultiSkill` is `true`, `run.ts` SHALL NOT call `setupSkillDir` after `executeScaffold` completes. Calling `setupSkillDir` on a multi-skill package would move files into `skill/` and write `skillet.skillDir`, overwriting the `skillet.skills` value the scaffold just set.
+
+#### Scenario: Multi-skill repo with hasSkillMd=true — setupSkillDir is NOT called
+- **WHEN** `isMultiSkill` is `true` and `detected.hasSkillMd` is `true`
+- **THEN** `setupSkillDir` is NOT invoked and `package.json` does NOT contain a `skillet.skillDir` key after the run completes
+
+#### Scenario: Single-skill repo — setupSkillDir behaves as today
+- **WHEN** `isMultiSkill` is `false`
+- **THEN** `setupSkillDir` is called exactly as before (no change to single-skill behaviour)
+
+---
+
+### Requirement: Root-level SKILL.md does not force single-skill treatment when other skills exist
+When `discoveredSkillDirs.length > 1` and one of the entries is at the repo root (normalizes to parent dir `'.'`), the wizard SHALL treat this as a multi-skill repo and include the root-level skill in the packaged set. The entry `'.'` SHALL appear in `skillsParentDirs` and be written to `skillet.skills`.
+
+#### Scenario: Multi-skill repo where one skill is at the root
+- **WHEN** `discoveredSkillDirs` is `["./", "skills/brainstorming/"]`
+- **THEN** `skillsParentDirs` is `[".", "skills"]`
+- **AND** `skillet.skills` is written as a JSON array `[".", "skills"]`
+- **AND** `skillet.skillDir` is NOT written
+
+---
+
 ### Requirement: NPM preview block shows multi-skill parent directories
 When `isMultiSkill` is `true`, the preview block in `run.ts` SHALL display the list of parent directories under a `skillsParent:` label instead of `skillDir:`.
 
