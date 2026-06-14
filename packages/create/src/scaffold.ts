@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { type StdioOptions, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
@@ -10,9 +10,14 @@ import type { WizardConfig } from './prompts.js';
 // and double-quote every arg so shell metacharacters (>, |, &, spaces) in
 // values like "engines.node=>=24" or "description=A test skill" are not
 // interpreted by the shell.
-export function runSync(cmd: string, args: string[], stepName: string): void {
+export function runSync(
+  cmd: string,
+  args: string[],
+  stepName: string,
+  stdioOverride?: StdioOptions,
+): void {
   const cmdStr = [cmd, ...args.map((a) => `"${a}"`)].join(' ');
-  const result = spawnSync(cmdStr, [], { stdio: 'inherit', shell: true });
+  const result = spawnSync(cmdStr, [], { stdio: stdioOverride ?? 'inherit', shell: true });
   if (result.status !== 0) {
     throw new Error(`${stepName} exited with code ${result.status ?? 'null'}`);
   }
