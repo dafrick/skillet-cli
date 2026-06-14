@@ -43,6 +43,12 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     // Step 2: npm pkg set fields
     spinner.start('Seasoning package fields…');
 
+    const skillField = config.isMultiSkill
+      ? config.skillsParentDirs.length === 1
+        ? `skillet.skills=${config.skillsParentDirs[0]}`
+        : `skillet.skills=${JSON.stringify(config.skillsParentDirs)}`
+      : `skillet.skillDir=${config.skillDir}`;
+
     const pkgSetArgs = [
       `name=${config.name}`,
       `version=${config.version}`,
@@ -51,7 +57,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       `license=${config.license}`,
       'type=module',
       `engines.node=>=24`,
-      `skillet.skillDir=${config.skillDir}`,
+      skillField,
       `bin.${config.name}=./bin/cli.js`,
       `files[0]=bin`,
       `files[1]=${config.skillDir}`,
