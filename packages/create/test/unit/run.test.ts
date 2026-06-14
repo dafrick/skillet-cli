@@ -48,9 +48,9 @@ import type { DetectionResult } from '../../src/detect.js';
 import { detectEnvironment } from '../../src/detect.js';
 import type { WizardConfig } from '../../src/prompts.js';
 import { collectConfig } from '../../src/prompts.js';
+import { skillMdStatus } from '../../src/run.js';
 import { executeScaffold } from '../../src/scaffold.js';
 import { setupSkillDir } from '../../src/skill-dir.js';
-import { skillMdStatus } from '../../src/run.js';
 
 const mockConfirm = vi.mocked(confirm);
 const mockDetectEnvironment = vi.mocked(detectEnvironment);
@@ -260,7 +260,6 @@ describe('run.ts — setupSkillDir not called in multi-skill mode', () => {
     await invokeRunAction();
 
     expect(mockSetupSkillDir).not.toHaveBeenCalled();
-
   });
 });
 
