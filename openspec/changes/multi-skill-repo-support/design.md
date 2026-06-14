@@ -65,8 +65,27 @@ No changes to core are needed. The work is entirely in `packages/create/`.
 
 **Rationale:** Keeps the single-skill scaffold path byte-for-byte identical. The new branch is isolated and testable independently.
 
+## Edge Case: `setupSkillDir` Must Be Skipped for Multi-Skill Packages
+
+After `executeScaffold` completes, `run.ts` calls `setupSkillDir(detected)`. When `hasSkillMd === true` AND `isMultiSkill === true`, `setupSkillDir` would:
+1. Move files into `skill/`
+2. Run `npm pkg set skillet.skillDir=./skill/`
+
+This re-introduces `skillet.skillDir` on a package that the scaffold just wrote `skillet.skills` to — directly violating the requirement that `skillet.skillDir` SHALL NOT be written for multi-skill packages.
+
+**Fix:** In `run.ts`, guard the `setupSkillDir` call so it only executes when `!config.isMultiSkill`. The guard lives in `run.ts` rather than inside `skill-dir.ts` because the responsibility for orchestrating the post-scaffold steps belongs to the run-loop, not to the helper.
+
+## Edge Case: Root-Level SKILL.md Among Discovered Skill Dirs
+
+`path.dirname('./')` returns `'.'`, and `path.dirname('skill.md')` at the root also yields `'.'`. If `discoveredSkillDirs` contains an entry that normalizes to `'.'` after dirname derivation, the package effectively has a root-level SKILL.md. In this situation:
+
+- If `discoveredSkillDirs.length === 1`, the single-skill path is used as today (no change).
+- If `discoveredSkillDirs.length > 1` but one entry normalizes its parent to `'.'`, the multi-skill flow proceeds normally — the root-level skill is included as one of the packaged skills and its parent dir `'.'` is written into `skillet.skills`. This is correct behaviour; the root dir is a valid parent directory for the core runtime to scan.
+
+The `deriveParentDirs` helper must normalize trailing slashes (strip trailing `/`) before calling `path.dirname()` to ensure `./` and `.` are treated identically.
+
 ## Risks / Trade-offs
 
 - **Skills spanning multiple parent directories produce a JSON array value** for `skillet.skills`. The `npm pkg set` command serializes arrays as JSON. This is correct per the core spec, but visually unusual in `package.json`. Mitigation: document in the preview step what will be written.
 - **No rollback if confirm is declined mid-flow** — but this is unchanged from today; the confirm gates exist for exactly this reason.
-- **`path.dirname()` on a path like `./` returns `.`** — edge case if a skill is discovered at the root. Mitigation: normalize discovered paths before deriving parents; a root SKILL.md is already handled by `skill-dir.ts` and the single-skill path.
+- **`path.dirname()` on a path like `./` returns `.`** — handled by the edge-case analysis above; normalize before deriving.
