@@ -42,32 +42,33 @@ The result: installed skills pick up noise directories (`.git`, `node_modules`) 
 
 **`fs.cp` filter semantics (important)**: The `filter` callback is invoked once per entry — both files and directories — as `fs.cp` recurses. When the callback returns `false` for a directory, the entire subtree under that directory is pruned (not descended into). This is exactly the behaviour we want for `node_modules/` and `.git/`: returning `false` stops recursion entirely, so their contents are never visited. The callback is also called with the root source directory itself as its very first invocation; because skill directory names (e.g. `skill/`) are never members of `DEFAULT_IGNORE`, this call always returns `true` and the copy proceeds normally. This per-entry, subtree-pruning behaviour matches how `collectFiles()` in `hash.ts` already skips entries by basename.
 
-### Decision 3: Use `npm pkg set --json files=...` in scaffold — not a `.npmignore`
+### Decision 3: Use indexed-array `npm pkg set` args in scaffold — not `--json` and not `.npmignore`
 
-**Chosen**: Append `npm pkg set --json files='["bin","<skillDir>"]'` to `executeScaffold`'s npm command sequence, atomically replacing the entire `files` field.
+**Chosen**: Append two `npm pkg set` calls — `npm pkg set "files[0]=bin" "files[1]=<skillDir>"` — to `executeScaffold`'s npm command sequence.
 
 **Alternatives considered**:
 - Write a `.npmignore`: blocklist approach; new files are included by default, which keeps the credential-leak risk.
 - Directly write `files` into `package.json` via `JSON.parse`/`JSON.stringify`: violates the existing constraint that the wizard uses only native npm commands.
-- Use `npm pkg set files[]=bin` followed by `npm pkg set files[]=${config.skillDir}` (array-index append form): this does NOT clear a pre-existing `files` array — entries at indices beyond the last appended item survive, leaving the field in an inconsistent state when run against an existing `package.json`. Rejected.
+- Use `npm pkg set --json files='["bin","<skillDir>"]'`: the `--json` form requires the argument `files=["bin","./skill/"]`, which contains inner double quotes. `runSync` in `scaffold.ts` wraps every argument in double quotes (`'"' + a + '"'`) before joining them into a shell command, so the inner double quotes corrupt the value. Rejected.
 
-**Rationale**: `files` is an allowlist — only the listed entries are published. Using `--json` with a literal JSON array always overwrites the field entirely, regardless of its prior contents. Aligns with the existing scaffold pattern of using `npm pkg set` exclusively. Safer by default.
+**Rationale**: Indexed-array args (`files[0]=bin`, `files[1]=<skillDir>`) are plain strings with no inner quotes, safe with the existing `runSync` double-quote wrapping. `files` is an allowlist — only the listed entries are published — so the two-entry form gives the desired restriction.
 
-### Decision 4: Display file tree preview in wizard Step 8 (after `setupSkillDir`)
+**Assumption**: This assumes no pre-existing `files` entries beyond index 1 survive in the target `package.json`. `npm init -y` never sets a `files` field, so in the standard `create-skillet` fresh-project flow this is a non-issue. If a pre-existing `files` array had entries at indices 2+ they would survive; this edge case is acceptable because `create-skillet` always generates from scratch.
 
-**Chosen**: In `run.ts`, immediately after `setupSkillDir` completes (Step 7) and before the confirmation gate, list the skill directory contents, annotating excluded entries and confirming which paths will be in `files`.
+### Decision 4: Display file tree preview as a post-setupSkillDir informational summary
+
+**Chosen**: In `run.ts`, immediately after `setupSkillDir` completes (Step 7), print a publish preview to stdout listing the skill directory contents and noting any entries excluded by the standard ignore set. This is an informational summary — the user has already confirmed and the skill directory is already populated at this point.
 
 **Alternatives considered**:
-- Emit preview at the NPM preview step (Step 5): At Step 5, `setupSkillDir` has not yet run, so `config.skillDir` almost always does not exist on disk yet (files are still in the cwd root). The preview would always fall through to the "directory will be created" fallback, defeating its purpose.
-- Emit preview after confirmation: too late to be useful.
-- New separate step: unnecessary complexity.
+- Emit preview before the confirmation gate (Step 5): The only confirmation gate in `run.ts` (`proceedFinal`) runs at Step 5, before `executeScaffold` and `setupSkillDir`. A preview at Step 5 would show an empty or non-existent skill directory, making it useless. Placing the preview "before confirmation" and "after setupSkillDir" are mutually exclusive — we choose accuracy over pre-confirmation placement.
+- Emit preview at a new wizard step before Step 5: Would require prompting the user to manually move files first; overly complex.
 
-**Rationale**: `setupSkillDir` populates the skill directory. Running the preview immediately after ensures the directory exists and its contents are accurate. The preview still appears before the final confirmation prompt, giving the user full context before they commit.
+**Rationale**: `setupSkillDir` populates the skill directory. Running the preview immediately after ensures the directory exists and its contents are accurate. The preview is still valuable as a post-completion summary: it shows the user exactly what was packaged and confirms no unwanted directories were included. The preview function is extracted as a standalone pure function so it can be unit-tested without spinning up inquirer's raw-mode prompt.
 
 ## Risks / Trade-offs
 
 - **`fs.cp` filter API availability**: The `filter` option for `fs.cp` requires Node.js ≥ 16.7.0. The project already targets `engines.node >= 24`, so this is safe.
-- **Skill dir edge case**: If `config.skillDir` begins with `./`, the `npm pkg set files[]=${config.skillDir}` command may produce a path like `./skill/` in `files`. npm normalises leading `./` in `files` entries, so this is benign.
+- **Skill dir leading `./`**: If `config.skillDir` begins with `./`, the resulting `files[1]=./skill/` value produces a path like `./skill/` in `files`. npm normalises leading `./` in `files` entries, so this is benign.
 - **Install-time filter is basename-only**: The filter skips any entry whose *name* matches `DEFAULT_IGNORE`. This means a file named `.DS_Store` anywhere in a nested subdirectory is also excluded. This is the intended behaviour (mirrors hashing) but worth noting.
 - **No rollback for scaffold**: `npm pkg set files` modifies the user's `package.json` in place. If the user aborts mid-wizard after this step, they may have a partial `files` field. Existing behaviour for all `npm pkg set` commands in the scaffold — not a new risk.
 

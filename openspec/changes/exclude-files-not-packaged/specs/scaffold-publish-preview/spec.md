@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Publish preview lists files that will be published (shown after setupSkillDir)
-After `setupSkillDir` completes in the `create-skillet` wizard, a publish preview SHALL display the contents of the skill content directory that will be included in the published npm package, and SHALL note which entries (if any) are excluded because they match the standard ignore set (`.git`, `node_modules`, `.DS_Store`, `.skill-manifest.json`). The preview is shown before the final confirmation prompt.
+After `setupSkillDir` completes in the `create-skillet` wizard, a publish preview SHALL display the contents of the skill content directory that will be included in the published npm package, and SHALL note which entries (if any) are excluded because they match the standard ignore set (`.git`, `node_modules`, `.DS_Store`, `.skill-manifest.json`). The preview is an informational post-completion summary printed to stdout; the user has already confirmed by the time this output appears.
 
 #### Scenario: Preview shows skill directory file tree
 - **WHEN** the wizard has completed `setupSkillDir` and the skill content directory exists on disk
@@ -11,9 +11,9 @@ After `setupSkillDir` completes in the `create-skillet` wizard, a publish previe
 - **WHEN** the skill content directory contains entries matching the standard ignore set (e.g., `node_modules/`)
 - **THEN** the preview output notes those entries as excluded, so the user knows they will not be published
 
-#### Scenario: Preview shown before confirmation prompt
+#### Scenario: Preview is a post-setupSkillDir informational summary
 - **WHEN** the publish preview is displayed
-- **THEN** the file inclusion list appears before the confirmation prompt, giving the user full context before they commit
+- **THEN** the file inclusion list is printed to stdout immediately after `setupSkillDir` completes (after the user has already confirmed), serving as a confirmation of what was packaged
 
 #### Scenario: Skill directory does not exist after setupSkillDir (error path)
 - **WHEN** `setupSkillDir` completes but the skill content directory is still absent (unexpected error path)
