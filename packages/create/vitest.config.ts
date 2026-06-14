@@ -5,6 +5,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@skillet-cli/ui': path.resolve('../ui/src/index.ts'),
+      '@skillet-cli/core': path.resolve('../core/src/index.ts'),
     },
   },
   test: {

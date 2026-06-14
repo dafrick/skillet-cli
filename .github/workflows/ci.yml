@@ -47,6 +47,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @skillet-cli/ui build
+      - run: pnpm --filter @skillet-cli/core build
       - run: pnpm lint
       - run: pnpm typecheck
 
@@ -64,6 +65,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @skillet-cli/ui build
+      - run: pnpm --filter @skillet-cli/core build
       - run: pnpm test:unit
 
   integration:
