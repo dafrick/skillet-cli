@@ -77,12 +77,21 @@ This re-introduces `skillet.skillDir` on a package that the scaffold just wrote 
 
 ## Edge Case: Root-Level SKILL.md Among Discovered Skill Dirs
 
-`path.dirname('./')` returns `'.'`, and `path.dirname('skill.md')` at the root also yields `'.'`. If `discoveredSkillDirs` contains an entry that normalizes to `'.'` after dirname derivation, the package effectively has a root-level SKILL.md. In this situation:
+`scanForSkillMds` returns `"./"` for a `SKILL.md` at the repo root. `deriveParentDirs` would normalize that to `"."` after stripping the trailing slash. However, writing `"."` into `skillet.skills` does NOT correctly package the root-level skill: the `@skillet-cli/core` runtime scans the *immediate subdirectories* of each entry in `skillet.skills` looking for `SKILL.md` files. A parent dir of `"."` causes core to scan `"./<child>/"` for `SKILL.md` — it does **not** find `./SKILL.md` itself. A root-level skill would therefore be silently dropped at install time even though it was written into the package manifest.
 
-- If `discoveredSkillDirs.length === 1`, the single-skill path is used as today (no change).
-- If `discoveredSkillDirs.length > 1` but one entry normalizes its parent to `'.'`, the multi-skill flow proceeds normally — the root-level skill is included as one of the packaged skills and its parent dir `'.'` is written into `skillet.skills`. This is correct behaviour; the root dir is a valid parent directory for the core runtime to scan.
+**Fix — exclude root-level entries from multi-skill derivation:**
 
-The `deriveParentDirs` helper must normalize trailing slashes (strip trailing `/`) before calling `path.dirname()` to ensure `./` and `.` are treated identically.
+Root-level `SKILL.md` entries (where the normalized path is `"./"` or `"."`) are excluded from `discoveredSkillDirs` before the multi-skill check and parent-dir computation run. Specifically:
+
+1. `deriveParentDirs` (or the call site in `collectConfig`) filters out any entry whose normalised value is `"."` or `"./"` before computing parent dirs.
+2. The `discoveredSkillDirs.length > 1` guard is evaluated **after** filtering. If filtering leaves `<= 1` entries, the wizard falls through to the existing single-skill path.
+3. If filtering leaves `> 1` entries, the multi-skill flow proceeds with only the subdirectory skills — the root-level skill is excluded from the package with no error, because core cannot locate it via the parent-dir scan model.
+
+**Root cause:** The `@skillet-cli/core` parent-dir scan model requires each `skillet.skills` entry to be a directory whose *children* contain `SKILL.md`. The repo root cannot serve this role for a `SKILL.md` that lives directly in the root.
+
+**Note:** If a repo has *only* a root-level `SKILL.md` (i.e. after filtering, zero entries remain), the standard `discoveredSkillDirs.length <= 1` condition is true and the existing single-skill path handles it as before using `skillet.skillDir = "./"`.
+
+The `deriveParentDirs` helper must still normalize trailing slashes (strip trailing `/`) before calling `path.dirname()` to ensure `./` and `.` are treated identically in the filter.
 
 ## Risks / Trade-offs
 
