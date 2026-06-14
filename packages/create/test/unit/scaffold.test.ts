@@ -77,6 +77,9 @@ describe('executeScaffold — npm init conditional', () => {
       (c) => typeof c[0] === 'string' && c[0].includes('npm') && c[0].includes('init'),
     );
     expect(initCall).toBeDefined();
+    const initCmd = initCall![0] as string;
+    expect(initCmd).toContain('--init-license=MIT');
+    expect(initCmd).toContain('--init-type=module');
   });
 
   it('skips npm init when package.json already exists', async () => {
