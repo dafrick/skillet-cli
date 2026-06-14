@@ -333,6 +333,82 @@ describe('executeScaffold — multi-skill mode', () => {
   });
 });
 
+describe('executeScaffold — package.json written display', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let readFileSyncSpy: ReturnType<typeof vi.spyOn>;
+
+  const fixturePackageJson = JSON.stringify(
+    {
+      name: 'my-skill',
+      version: '0.1.0',
+      description: 'A test skill',
+      author: 'Test Author',
+      license: 'MIT',
+      type: 'module',
+    },
+    null,
+    2,
+  );
+
+  const configWithCustomValues: WizardConfig = {
+    ...baseConfig,
+    version: '0.1.0',
+    license: 'MIT',
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    readFileSyncSpy = vi.spyOn(fs, 'readFileSync').mockReturnValue(fixturePackageJson);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+    readFileSyncSpy.mockRestore();
+  });
+
+  it('suppresses npm init stdout by using "pipe" for stdout so npm defaults do not reach the terminal', async () => {
+    mockFsExistsSync.mockReturnValue(false);
+
+    const spawnSyncCalls: Array<{ cmd: string; options: unknown }> = [];
+    mockSpawnSync.mockImplementation((cmd: unknown, _args: unknown, options: unknown) => {
+      spawnSyncCalls.push({ cmd: String(cmd), options });
+      return makeSuccessResult();
+    });
+
+    await executeScaffold(configWithCustomValues);
+
+    const initCall = spawnSyncCalls.find((c) => c.cmd.includes('init'));
+    expect(initCall).toBeDefined();
+
+    // The stdio option must pipe stdout (index 1) so npm init's default package.json
+    // block ("version": "1.0.0", "license": "ISC") never reaches the terminal.
+    const stdio = (initCall!.options as { stdio?: unknown }).stdio;
+    expect(Array.isArray(stdio)).toBe(true);
+    const stdioArray = stdio as unknown[];
+    expect(stdioArray[1]).toBe('pipe');
+  });
+
+  it('outputs a "package.json written:" block with user-configured version, license, author, and type values', async () => {
+    const writtenMessages: string[] = [];
+    stdoutSpy.mockImplementation((chunk: unknown) => {
+      writtenMessages.push(String(chunk));
+      return true;
+    });
+
+    await executeScaffold(configWithCustomValues);
+
+    const allOutput = writtenMessages.join('');
+    expect(allOutput).toContain('package.json written:');
+    expect(allOutput).toContain('"version": "0.1.0"');
+    expect(allOutput).toContain('"license": "MIT"');
+    expect(allOutput).toContain('"author": "Test Author"');
+    expect(allOutput).toContain('"type": "module"');
+  });
+});
+
 describe('executeScaffold — npm install progress output', () => {
   let stdoutSpy: ReturnType<typeof vi.spyOn>;
 
