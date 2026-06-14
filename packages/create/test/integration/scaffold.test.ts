@@ -61,4 +61,13 @@ describe('executeScaffold — integration (filesystem)', () => {
     // Check execute bits (owner, group, other)
     expect((stat.mode & 0o111) !== 0).toBe(true);
   });
+
+  it('fresh init writes license=MIT and type=module to package.json', async () => {
+    // No pre-existing package.json — npm init must run
+    await executeScaffold({ ...baseConfig, license: 'MIT', skillDir: 'skill/' });
+
+    const pkgJson = JSON.parse(await fsp.readFile(path.join(sandbox.dir, 'package.json'), 'utf8'));
+    expect(pkgJson.license).toBe('MIT');
+    expect(pkgJson.type).toBe('module');
+  }, 90_000);
 });

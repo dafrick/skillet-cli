@@ -36,7 +36,11 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     const pkgJsonPath = path.join(process.cwd(), 'package.json');
     if (!fs.existsSync(pkgJsonPath)) {
       spinner.start('Prepping npm package…');
-      runSync('npm', ['init', '-y'], 'npm init');
+      runSync(
+        'npm',
+        ['init', '-y', `--init-license=${config.license}`, '--init-type=module'],
+        'npm init',
+      );
       spinner.succeed('Prepping done');
     }
 
