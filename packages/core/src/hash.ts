@@ -2,7 +2,12 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import * as nodePath from 'node:path';
 
-const DEFAULT_IGNORE = new Set(['.git', 'node_modules', '.DS_Store', '.skill-manifest.json']);
+export const DEFAULT_IGNORE = new Set([
+  '.git',
+  'node_modules',
+  '.DS_Store',
+  '.skill-manifest.json',
+]);
 
 /**
  * Recursively collect all file paths under `dir`, returning paths relative to

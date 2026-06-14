@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^7.5.2",
+    "@skillet-cli/core": "workspace:*",
     "chalk": "^5.4.1",
     "commander": "^14.0.0"
   },

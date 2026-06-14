@@ -1,9 +1,11 @@
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import { confirm } from '@inquirer/prompts';
 import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
 import { detectEnvironment } from './detect.js';
 import { collectConfig } from './prompts.js';
+import { printPublishPreview } from './publish-preview.js';
 import { executeScaffold } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
 
@@ -93,6 +95,9 @@ program
 
     // Step 7: Skill directory setup
     await setupSkillDir(detected);
+
+    // Step 7b: Publish preview
+    await printPublishPreview(path.join(detected.cwd, config.skillDir));
 
     // Step 8: Completion block
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);

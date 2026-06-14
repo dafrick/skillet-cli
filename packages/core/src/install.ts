@@ -5,7 +5,7 @@ import path from 'node:path';
 import { registry } from './adapters/index.js';
 import type { Adapter, Context } from './adapters/types.js';
 import { detectDrift, isStale } from './drift.js';
-import { hashSkill } from './hash.js';
+import { DEFAULT_IGNORE, hashSkill } from './hash.js';
 import type { NormalizedSkill } from './normalize.js';
 import type { Scope, SkillManifest } from './types.js';
 
@@ -74,7 +74,10 @@ export function makeContext(scope: Scope): Context {
  */
 export async function copyTree(src: string, dst: string): Promise<void> {
   await mkdir(dst, { recursive: true });
-  await cp(src, dst, { recursive: true });
+  await cp(src, dst, {
+    recursive: true,
+    filter: (_src) => !DEFAULT_IGNORE.has(path.basename(_src)),
+  });
 }
 
 /**
