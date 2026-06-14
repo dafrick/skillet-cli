@@ -6,15 +6,19 @@ import { printPublishPreview } from '../../src/publish-preview.js';
 
 describe('printPublishPreview', () => {
   let tmpDir: string;
-  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenChunks: string[];
 
   beforeEach(async () => {
     tmpDir = await mkdtemp(path.join(os.tmpdir(), 'publish-preview-test-'));
-    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    writtenChunks = [];
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenChunks.push(String(chunk));
+      return true;
+    });
   });
 
   afterEach(async () => {
-    stdoutSpy.mockRestore();
+    vi.restoreAllMocks();
     await rm(tmpDir, { recursive: true, force: true });
   });
 
@@ -25,7 +29,7 @@ describe('printPublishPreview', () => {
 
     await printPublishPreview(tmpDir);
 
-    const output = stdoutSpy.mock.calls.map((call) => call[0] as string).join('');
+    const output = writtenChunks.join('');
     expect(output).toContain('SKILL.md');
     expect(output).toContain('README.md');
   });
@@ -38,7 +42,7 @@ describe('printPublishPreview', () => {
 
     await printPublishPreview(tmpDir);
 
-    const output = stdoutSpy.mock.calls.map((call) => call[0] as string).join('');
+    const output = writtenChunks.join('');
     expect(output).toContain('[excluded]');
     expect(output).toContain('.git');
     expect(output).toContain('node_modules');
@@ -55,7 +59,7 @@ describe('printPublishPreview', () => {
       printPublishPreview('/nonexistent/path/xyz-publish-preview-test'),
     ).resolves.not.toThrow();
 
-    const output = stdoutSpy.mock.calls.map((call) => call[0] as string).join('');
-    expect(output).toMatch(/not found|not found/i);
+    const output = writtenChunks.join('');
+    expect(output).toMatch(/not found/i);
   });
 });
