@@ -14,6 +14,8 @@ const baseConfig: WizardConfig = {
   repositoryUrl: '',
   license: 'MIT',
   skillDir: 'skill/',
+  isMultiSkill: false,
+  skillsParentDirs: [],
 };
 
 describe('executeScaffold — integration (filesystem)', () => {

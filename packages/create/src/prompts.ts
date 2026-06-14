@@ -1,4 +1,5 @@
-import { input, select } from '@inquirer/prompts';
+import * as path from 'node:path';
+import { confirm, input } from '@inquirer/prompts';
 import type { DetectionResult } from './detect.js';
 
 export interface WizardConfig {
@@ -9,6 +10,20 @@ export interface WizardConfig {
   repositoryUrl: string;
   license: string;
   skillDir: string;
+  isMultiSkill: boolean;
+  skillsParentDirs: string[];
+}
+
+export function deriveParentDirs(discoveredSkillDirs: string[]): string[] {
+  const filtered = discoveredSkillDirs.filter((d) => {
+    const normalized = d.replace(/\/+$/, ''); // strip trailing slashes
+    return normalized !== '.' && normalized !== './';
+  });
+  const parents = filtered.map((d) => {
+    const normalized = d.replace(/\/+$/, '');
+    return path.dirname(normalized);
+  });
+  return [...new Set(parents)];
 }
 
 export async function collectConfig(detected: DetectionResult): Promise<WizardConfig> {
@@ -43,11 +58,38 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
   });
 
   let skillDir: string;
-  if (detected.discoveredSkillDirs.length > 1) {
-    skillDir = await select({
-      message: 'Select skill content path (relative to package root):',
-      choices: detected.discoveredSkillDirs.map((d) => ({ name: d, value: d })),
+  let isMultiSkill = false;
+  let skillsParentDirs: string[] = [];
+
+  const filteredDirs = deriveParentDirs(detected.discoveredSkillDirs);
+  const filteredSkillDirs = detected.discoveredSkillDirs.filter((d) => {
+    const n = d.replace(/\/+$/, '');
+    return n !== '.' && n !== './';
+  });
+
+  if (filteredSkillDirs.length > 1) {
+    // Multi-skill mode: inform and confirm
+    isMultiSkill = true;
+    skillsParentDirs = filteredDirs;
+
+    process.stdout.write(`\nFound ${filteredSkillDirs.length} skills:\n`);
+    for (const dir of filteredSkillDirs) {
+      process.stdout.write(`  ${dir}\n`);
+    }
+    process.stdout.write(
+      `All ${filteredSkillDirs.length} skills will be packaged into this single npm package.\n`,
+    );
+
+    const proceed = await confirm({
+      message: 'Package all skills into one npm package?',
+      default: true,
     });
+    if (!proceed) {
+      process.stdout.write('No changes made.\n');
+      process.exit(0);
+    }
+
+    skillDir = detected.discoveredSkillDirs[0] || 'skill/';
   } else {
     if (detected.discoveredSkillDirs.length === 0 && !detected.skillDir) {
       process.stdout.write(
@@ -62,5 +104,15 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
     });
   }
 
-  return { name, version, description, author, repositoryUrl, license, skillDir };
+  return {
+    name,
+    version,
+    description,
+    author,
+    repositoryUrl,
+    license,
+    skillDir,
+    isMultiSkill,
+    skillsParentDirs,
+  };
 }

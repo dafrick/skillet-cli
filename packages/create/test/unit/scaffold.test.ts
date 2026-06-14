@@ -59,6 +59,8 @@ const baseConfig: WizardConfig = {
   repositoryUrl: 'git+https://github.com/org/repo',
   license: 'MIT',
   skillDir: 'skill/',
+  isMultiSkill: false,
+  skillsParentDirs: [],
 };
 
 describe('executeScaffold — npm init conditional', () => {
@@ -268,6 +270,66 @@ describe('executeScaffold — files allowlist', () => {
     await executeScaffold({ ...baseConfig, skillDir: 'my-skill/' });
     const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('"files[1]=my-skill/"'))).toBe(true);
+  });
+});
+
+describe('executeScaffold — multi-skill mode', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+  });
+
+  function getPkgSetArgs(): string[] {
+    return mockSpawnSync.mock.calls
+      .filter(
+        (c) =>
+          typeof c[0] === 'string' &&
+          c[0].includes('npm') &&
+          c[0].includes('"pkg"') &&
+          c[0].includes('"set"'),
+      )
+      .map((c) => c[0] as string);
+  }
+
+  it('sets skillet.skills=skills (single parent) and does NOT set skillet.skillDir when isMultiSkill: true', async () => {
+    const config: WizardConfig = {
+      ...baseConfig,
+      isMultiSkill: true,
+      skillsParentDirs: ['skills'],
+    };
+
+    await executeScaffold(config);
+
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('skillet.skills=') && a.includes('skills'))).toBe(true);
+    expect(allArgs.some((a) => a.includes('skillet.skillDir='))).toBe(false);
+  });
+
+  it('sets skillet.skills as JSON array when skillsParentDirs has multiple entries and does NOT set skillet.skillDir', async () => {
+    const config: WizardConfig = {
+      ...baseConfig,
+      isMultiSkill: true,
+      skillsParentDirs: ['core', 'exp'],
+    };
+
+    await executeScaffold(config);
+
+    const allArgs = getPkgSetArgs();
+    expect(
+      allArgs.some(
+        (a) => a.includes('skillet.skills=') && a.includes('"core"') && a.includes('"exp"'),
+      ),
+    ).toBe(true);
+    expect(allArgs.some((a) => a.includes('skillet.skillDir='))).toBe(false);
+  });
+
+  it('still sets skillet.skillDir in single-skill mode (regression)', async () => {
+    await executeScaffold(baseConfig); // baseConfig has isMultiSkill: false
+
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('skillet.skillDir='))).toBe(true);
+    expect(allArgs.some((a) => a.includes('skillet.skills='))).toBe(false);
   });
 });
 
