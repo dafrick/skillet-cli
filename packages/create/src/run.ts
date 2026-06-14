@@ -3,11 +3,20 @@ import path from 'node:path';
 import { confirm } from '@inquirer/prompts';
 import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
-import { detectEnvironment } from './detect.js';
+import { type DetectionResult, detectEnvironment } from './detect.js';
 import { collectConfig } from './prompts.js';
 import { printPublishPreview } from './publish-preview.js';
 import { executeScaffold } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
+
+export function skillMdStatus(detected: DetectionResult): string {
+  if (detected.hasSkillMd) return 'found';
+  if (detected.discoveredSkillDirs.length === 1)
+    return `found in ${detected.discoveredSkillDirs[0]}`;
+  if (detected.discoveredSkillDirs.length > 1)
+    return `found in ${detected.discoveredSkillDirs.length} locations`;
+  return 'not found';
+}
 
 const _require = createRequire(import.meta.url);
 const pkg = _require('../package.json') as { name: string; version: string };
@@ -33,7 +42,7 @@ program
 
     // Step 3: Early gate — show detection summary and confirm
     process.stdout.write(`Directory:    ${detected.cwd}\n`);
-    process.stdout.write(`SKILL.md:     ${detected.hasSkillMd ? 'found' : 'not found'}\n`);
+    process.stdout.write(`SKILL.md:     ${skillMdStatus(detected)}\n`);
     process.stdout.write(`package.json: ${detected.hasPackageJson ? 'found' : 'not found'}\n`);
     process.stdout.write(`Git user:     ${detected.gitUser || '(not detected)'}\n`);
     process.stdout.write('\n');
