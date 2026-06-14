@@ -8,8 +8,8 @@
 
 ## 3. Apply the code fix (green)
 
-- [ ] 3.1 In `packages/create/src/scaffold.ts`, update the `npm init -y` call to pass both `--init-license=${config.license}` and `--init-type=module` as additional arguments so the user-selected license and the correct module type are written directly at init time — before any `npm pkg set` runs.
+- [x] 3.1 In `packages/create/src/scaffold.ts`, update the `npm init -y` call to pass both `--init-license=${config.license}` and `--init-type=module` as additional arguments so the user-selected license and the correct module type are written directly at init time — before any `npm pkg set` runs.
 
 ## 4. Verify
 
-- [ ] 4.1 Run `pnpm test --filter create-skillet` and confirm all unit and integration tests pass, including the new regression test.
+- [x] 4.1 Run `pnpm test --filter create-skillet` and confirm all unit and integration tests pass, including the new regression test.
