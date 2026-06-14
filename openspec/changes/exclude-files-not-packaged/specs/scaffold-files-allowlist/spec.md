@@ -7,14 +7,14 @@ The `create-skillet` scaffold execution SHALL set the `files` field in the gener
 - **WHEN** `executeScaffold` completes successfully
 - **THEN** `package.json` contains a `files` array with `"bin"` and the configured skill content path as its two entries
 
-#### Scenario: files field set via npm pkg set
+#### Scenario: files field set via npm pkg set --json
 - **WHEN** the scaffold runs the npm command sequence
-- **THEN** `npm pkg set files[]=bin` and `npm pkg set files[]=${config.skillDir}` are executed (in that order) as part of the command sequence
+- **THEN** `npm pkg set --json files='["bin","<skillDir>"]'` is executed as part of the command sequence, where `<skillDir>` is the configured skill content path
 
 #### Scenario: Noise directories excluded from published package
 - **WHEN** the skill directory contains `.git/`, `node_modules/`, or other untracked directories alongside `bin/` and the skill content directory
 - **THEN** `npm publish` includes only the contents of `bin/` and the skill content directory
 
-#### Scenario: Existing package.json files field overwritten
-- **WHEN** a `package.json` already exists with a different `files` field
-- **THEN** `npm pkg set files[]=bin` resets `files` to the allowlist before adding the skill content path
+#### Scenario: Existing package.json files field atomically replaced
+- **WHEN** a `package.json` already exists with a different or longer `files` array
+- **THEN** `npm pkg set --json files='["bin","<skillDir>"]'` replaces the entire `files` field with exactly `["bin", "<skillDir>"]`, leaving no stale entries from the prior value

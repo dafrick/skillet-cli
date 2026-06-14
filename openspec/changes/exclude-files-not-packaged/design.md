@@ -40,25 +40,29 @@ The result: installed skills pick up noise directories (`.git`, `node_modules`) 
 
 **Rationale**: `fs.cp` `filter` receives the absolute source path; `path.basename` extracts the entry name. This mirrors how `collectFiles()` in `hash.ts` already skips entries by name.
 
-### Decision 3: Use `npm pkg set files[]=...` in scaffold — not a `.npmignore`
+**`fs.cp` filter semantics (important)**: The `filter` callback is invoked once per entry — both files and directories — as `fs.cp` recurses. When the callback returns `false` for a directory, the entire subtree under that directory is pruned (not descended into). This is exactly the behaviour we want for `node_modules/` and `.git/`: returning `false` stops recursion entirely, so their contents are never visited. The callback is also called with the root source directory itself as its very first invocation; because skill directory names (e.g. `skill/`) are never members of `DEFAULT_IGNORE`, this call always returns `true` and the copy proceeds normally. This per-entry, subtree-pruning behaviour matches how `collectFiles()` in `hash.ts` already skips entries by basename.
 
-**Chosen**: Append `npm pkg set files[]=bin` and `npm pkg set files[]=${config.skillDir}` to `executeScaffold`'s npm command sequence.
+### Decision 3: Use `npm pkg set --json files=...` in scaffold — not a `.npmignore`
+
+**Chosen**: Append `npm pkg set --json files='["bin","<skillDir>"]'` to `executeScaffold`'s npm command sequence, atomically replacing the entire `files` field.
 
 **Alternatives considered**:
 - Write a `.npmignore`: blocklist approach; new files are included by default, which keeps the credential-leak risk.
 - Directly write `files` into `package.json` via `JSON.parse`/`JSON.stringify`: violates the existing constraint that the wizard uses only native npm commands.
+- Use `npm pkg set files[]=bin` followed by `npm pkg set files[]=${config.skillDir}` (array-index append form): this does NOT clear a pre-existing `files` array — entries at indices beyond the last appended item survive, leaving the field in an inconsistent state when run against an existing `package.json`. Rejected.
 
-**Rationale**: `files` is an allowlist — only the listed entries are published. Aligns with existing scaffold pattern of using `npm pkg set` exclusively. Safer by default.
+**Rationale**: `files` is an allowlist — only the listed entries are published. Using `--json` with a literal JSON array always overwrites the field entirely, regardless of its prior contents. Aligns with the existing scaffold pattern of using `npm pkg set` exclusively. Safer by default.
 
-### Decision 4: Display file tree preview in wizard Step 5 (NPM preview)
+### Decision 4: Display file tree preview in wizard Step 8 (after `setupSkillDir`)
 
-**Chosen**: In `run.ts`, after config prompts and before the confirmation gate, list the skill directory contents, annotating excluded entries and confirming which paths will be in `files`.
+**Chosen**: In `run.ts`, immediately after `setupSkillDir` completes (Step 7) and before the confirmation gate, list the skill directory contents, annotating excluded entries and confirming which paths will be in `files`.
 
 **Alternatives considered**:
+- Emit preview at the NPM preview step (Step 5): At Step 5, `setupSkillDir` has not yet run, so `config.skillDir` almost always does not exist on disk yet (files are still in the cwd root). The preview would always fall through to the "directory will be created" fallback, defeating its purpose.
 - Emit preview after confirmation: too late to be useful.
-- New separate step: unnecessary complexity; the NPM preview step already exists as a natural place for this.
+- New separate step: unnecessary complexity.
 
-**Rationale**: The user already sees a summary of npm commands at the NPM preview step. Adding the file inclusion list there provides full context before they commit.
+**Rationale**: `setupSkillDir` populates the skill directory. Running the preview immediately after ensures the directory exists and its contents are accurate. The preview still appears before the final confirmation prompt, giving the user full context before they commit.
 
 ## Risks / Trade-offs
 
