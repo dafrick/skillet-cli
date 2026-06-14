@@ -225,6 +225,52 @@ describe('executeScaffold — repository URL guard', () => {
   });
 });
 
+describe('executeScaffold — files allowlist', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+  });
+
+  function getPkgSetArgs(): string[] {
+    return mockSpawnSync.mock.calls
+      .filter(
+        (c) =>
+          typeof c[0] === 'string' &&
+          c[0].includes('npm') &&
+          c[0].includes('"pkg"') &&
+          c[0].includes('"set"'),
+      )
+      .map((c) => c[0] as string);
+  }
+
+  it('sets files[0]=bin in the npm pkg set command', async () => {
+    await executeScaffold(baseConfig);
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('files[0]=bin'))).toBe(true);
+  });
+
+  it('sets files[1]=<skillDir> in the npm pkg set command', async () => {
+    await executeScaffold(baseConfig);
+    const allArgs = getPkgSetArgs();
+    // baseConfig.skillDir = 'skill/'
+    expect(allArgs.some((a) => a.includes('files[1]=skill/'))).toBe(true);
+  });
+
+  it('files[0] value is "bin" (no leading slash)', async () => {
+    await executeScaffold(baseConfig);
+    const allArgs = getPkgSetArgs();
+    // The arg string will have "files[0]=bin" wrapped in double quotes by runSync
+    expect(allArgs.some((a) => a.includes('"files[0]=bin"'))).toBe(true);
+  });
+
+  it('files[1] value matches config.skillDir exactly', async () => {
+    await executeScaffold({ ...baseConfig, skillDir: 'my-skill/' });
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('"files[1]=my-skill/"'))).toBe(true);
+  });
+});
+
 describe('executeScaffold — npm install progress output', () => {
   let stdoutSpy: ReturnType<typeof vi.spyOn>;
 

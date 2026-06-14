@@ -53,6 +53,8 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       `engines.node=>=24`,
       `skillet.skillDir=${config.skillDir}`,
       `bin.${config.name}=./bin/cli.js`,
+      `files[0]=bin`,
+      `files[1]=${config.skillDir}`,
     ];
 
     runSync('npm', ['pkg', 'set', ...pkgSetArgs], 'npm pkg set');
