@@ -13,7 +13,7 @@ Everything else — including common companion directories like `scripts/`, `pro
 **Goals:**
 - All non-infrastructure sibling content is pre-selected by default in the file-picker checkbox
 - Known infrastructure/noise items are excluded from pre-selection via a blocklist
-- `SKILL_DIRS` allowlist constant is removed entirely
+- `SKILL_DIRS` is removed from `getPreselected()` only — the constant itself is retained for the `>12 items` branch at line 90
 - Tests and spec are updated to reflect the new behavior
 
 **Non-Goals:**
@@ -49,18 +49,25 @@ The blocklist covers items that are infrastructure, tooling metadata, or generat
 
 **Not on the blocklist:** `scripts/`, `prompts/`, `examples/`, `assets/`, `templates/`, `resources/`, and any other directories — all pre-selected.
 
-### Decision 3: Remove SKILL_DIRS entirely
+### Decision 3: Remove SKILL_DIRS from `getPreselected()` only — keep the constant
 
-`SKILL_DIRS` served only the allowlist. Once the logic inverts, the constant has no remaining purpose and is deleted. `LOCK_FILES` is retained and joined by a new `EXCLUDED_NAMES` set (or equivalent inline check) covering `package.json`, `node_modules`, and `bin`.
+`SKILL_DIRS` is used in two places in `skill-dir.ts`:
+1. **Line 31 (inside `getPreselected()`)** — the allowlist check being replaced by the blocklist
+2. **Line 90 (inside the `>12 items` collapsed-confirm branch)** — names "other skill-related folders" as a hint to the user
+
+The allowlist check is removed from `getPreselected()`, but the constant itself must remain so line 90 continues to compile and produce its existing hint text. `LOCK_FILES` is retained and joined by a new `EXCLUDED_NAMES` set (or equivalent inline check) covering `package.json`, `node_modules`, and `bin`.
 
 ### Decision 4: Test-driven implementation order
 
-Tests in `packages/create/test/unit/skill-dir.test.ts` must be updated BEFORE the implementation changes:
-1. Flip the existing assertion that `scripts/` is NOT pre-selected → assert it IS pre-selected
-2. Add assertions that `package.json`, `node_modules/`, and `bin/` are NOT pre-selected
-3. Then update `skill-dir.ts` to make the tests pass
+Tests in `packages/create/test/unit/skill-dir.test.ts` must be updated BEFORE the implementation changes. The existing test file does NOT contain any assertion that `scripts/` is not pre-selected — there is no assertion to flip.
 
-This ensures the tests encode the intended behavior contract, not the current (buggy) behavior.
+The correct TDD steps are:
+1. Add a NEW test asserting `scripts/` IS pre-selected (currently fails because the allowlist excludes it)
+2. Add NEW tests asserting `package.json`, `node_modules/`, and `bin/` are NOT pre-selected (blocklist items)
+3. Confirm the existing tests for `assets/` and `templates/` remain valid — those directories are not on the blocklist, so they continue to be pre-selected after the fix
+4. Then update `skill-dir.ts` to make the new tests pass
+
+This ensures the new tests encode the intended behavior before any implementation changes.
 
 ## Risks / Trade-offs
 

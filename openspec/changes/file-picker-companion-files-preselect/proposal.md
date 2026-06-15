@@ -4,7 +4,7 @@ When `create-skillet` encounters a flat repo (SKILL.md at root with sibling file
 
 ## What Changes
 
-- Remove the `SKILL_DIRS` allowlist constant from `packages/create/src/skill-dir.ts`
+- Remove the `SKILL_DIRS` allowlist check from `getPreselected()` in `packages/create/src/skill-dir.ts` (the `SKILL_DIRS` constant itself is kept — it is still used by the `>12 items` branch at line 90)
 - Invert `getPreselected()` from an allowlist to a blocklist: pre-select everything except known infrastructure/noise items
 - Extend the exclusion set to include `package.json`, `node_modules/`, and `bin/` alongside existing lock files and dotfiles
 - Update `openspec/specs/skilletize-wizard/spec.md` to document the new blocklist-based pre-selection behavior
@@ -21,6 +21,6 @@ _(none — this is a bug fix, not a new capability)_
 
 ## Impact
 
-- `packages/create/src/skill-dir.ts` — `SKILL_DIRS` constant removed; `getPreselected()` logic inverted
-- `packages/create/test/unit/skill-dir.test.ts` — existing `scripts/` assertion flips; new tests cover `package.json`, `node_modules/`, `bin/` exclusion
+- `packages/create/src/skill-dir.ts` — `SKILL_DIRS` allowlist check removed from `getPreselected()` only (constant kept for line 90); `getPreselected()` logic inverted to blocklist
+- `packages/create/test/unit/skill-dir.test.ts` — new test added asserting `scripts/` IS pre-selected; new tests cover `package.json`, `node_modules/`, `bin/` exclusion (no existing assertions to flip)
 - `openspec/specs/skilletize-wizard/spec.md` — checkbox scenario updated to describe blocklist behavior
