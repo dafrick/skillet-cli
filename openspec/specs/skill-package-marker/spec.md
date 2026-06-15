@@ -49,23 +49,6 @@ If the `skillet` key is present in `package.json` but the `skills` sub-key is ab
 - **WHEN** a `package.json` contains `"skillet": {}` with no `skills` property
 - **THEN** core looks for skill trees in the `skills/` directory relative to the package root
 
-### Requirement: Explicit `skillDir` passed to `run()` is honored for the invoked package
-When the invoked package calls `run({ skillDir })` with a non-null `skillDir` argument, core SHALL treat that value as the skill tree directory for the invoked package, equivalent to a `skillet` marker pointing at that directory. If no `skillDir` is passed, core SHALL fall back to the package's `skillet` marker.
-
-#### Scenario: `run()` called with explicit `skillDir`
-- **WHEN** the invoked package calls `run({ skillDir: './my-skills' })`
-- **THEN** core uses `./my-skills` as the skill tree directory for that package, regardless of whether a `skillet` marker is present
-
-#### Scenario: `run()` called without `skillDir`, marker present
-- **WHEN** the invoked package calls `run({})` or `run()` with no `skillDir`
-- **AND** the package's `package.json` has a `skillet` marker
-- **THEN** core uses the directory named in `skillet.skills` (or the default `"skills"`) as the skill tree directory
-
-#### Scenario: `run()` called without `skillDir`, no marker
-- **WHEN** the invoked package calls `run({})` with no `skillDir`
-- **AND** the package's `package.json` has no `skillet` marker
-- **THEN** core behaves as in v0.1.0 (no skills discovered from this package)
-
 ### Requirement: Dependency packages are discovered via marker only; their CLI is never executed
 For packages reached through the dependency walk, the `skillet` marker is the sole discovery mechanism. Core SHALL read the dependency's `package.json` and its skill tree directly. Core SHALL NOT execute the dependency's `bin` entry or any script defined in its `package.json`.
 
@@ -73,19 +56,19 @@ For packages reached through the dependency walk, the `skillet` marker is the so
 - **WHEN** the dependency walk reaches a package whose `package.json` contains a `skillet` key
 - **THEN** core reads that package's skill trees from the marker path, without running the package's CLI
 
-#### Scenario: Dependency package uses `run({ skillDir })` without a marker
+#### Scenario: Dependency package has no `skillet` marker
 - **WHEN** the dependency walk reaches a package that has no `skillet` key in `package.json`
 - **THEN** core skips that package — it cannot be discovered as a skill dependency, even if its CLI would produce skills when run directly
 
 ### Requirement: Authors who intend their package to be depended upon MUST carry the marker
-This is a normative authoring constraint, not a runtime enforcement. Core SHALL NOT error at runtime when a dependency lacks the marker; it SHALL silently skip it. However, a `skillDir`-only package (no `skillet` marker) MUST NOT be expected to be discoverable as a skill dependency.
+This is a normative authoring constraint, not a runtime enforcement. Core SHALL NOT error at runtime when a dependency lacks the marker; it SHALL silently skip it. A package without a `skillet` marker MUST NOT be expected to be discoverable as a skill dependency.
 
 #### Scenario: Dependency without marker is skipped, no error
 - **WHEN** the dependency walk reaches a package whose `package.json` has no `skillet` key
 - **THEN** core records no error and continues the walk, treating the package as an ordinary library
 
 ### Requirement: `skillet.skillDir` is a recognized field in the `skillet` marker object
-The `SkilletPackageJson` type SHALL include an optional `skillDir` field of type `string`. When present, its value is a path relative to the package root pointing directly to a skill directory (containing `SKILL.md`). The `readSkilletMarker` function SHALL return a `directSkillDir` field (resolved to an absolute path) when `skillDir` is present.
+The `SkilletPackageJson` type SHALL include an optional `skillDir` field of type `string`. When present, its value is a path relative to the package root pointing directly to a skill directory (containing `SKILL.md`). The `readSkilletMarker` function SHALL return a `directSkillDir` field (resolved to an absolute path) when `skillDir` is present. This field is read exclusively from `package.json`; there is no runtime argument equivalent. When no `skillet` key is present in `package.json`, `run()` SHALL throw an error at startup naming `skillet.skillDir` and `skillet.skills` as the expected configuration fields.
 
 #### Scenario: `readSkilletMarker` returns `directSkillDir` when `skillDir` is set
 - **WHEN** `package.json` contains `{ "skillet": { "skillDir": "skill/" } }`

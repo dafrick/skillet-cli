@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Dependency walk is seeded with the invoked package
-When installing or updating, core SHALL begin the closure-resolution walk at the invoked package root `R`. Core SHALL collect `R`'s own skill trees (via the `skillet` marker or the `skillDir` argument to `run()`).
+When installing or updating, core SHALL begin the closure-resolution walk at the invoked package root `R`. Core SHALL collect `R`'s own skill trees via the `skillet` marker in `package.json` (`skillet.skillDir` for a single skill, or `skillet.skills` for multi-skill packages).
 
 #### Scenario: Invoked package with no skill dependencies
 - **WHEN** the invoked package declares no marked skill-package dependencies

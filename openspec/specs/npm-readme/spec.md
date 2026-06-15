@@ -37,7 +37,7 @@ The README SHALL include a complete, minimal code example showing how to create 
 ---
 
 ### Requirement: README documents the RunOptions API
-The README SHALL include a `RunOptions` reference table listing all options (`skillDir`, `pkg`, `hooks.transform`, `hooks.beforeInstall`, `hooks.afterInstall`, `hooks.extendProgram`) with their types and descriptions.
+The README SHALL include a `RunOptions` reference table listing all options (`pkg`, `verbMode`, `displayName`, `wordmarkName`, `hooks.transform`, `hooks.beforeInstall`, `hooks.afterInstall`, `hooks.extendProgram`) with their types and descriptions. `skillDir` SHALL NOT appear in the table; skill location is configured via `skillet.skillDir` or `skillet.skills` in `package.json`.
 
 #### Scenario: All RunOptions are documented
 - **WHEN** a developer searches the README for `hooks.afterInstall`

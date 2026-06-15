@@ -21,9 +21,3 @@ When `package.json` contains a `skillet` key with a `skillDir` sub-key, `@skille
 - **WHEN** `package.json` contains `{ "skillet": {} }` with no sub-keys
 - **THEN** `run()` falls back to the existing default discovery behavior (scans `skills/`)
 
-### Requirement: Programmatic `skillDir` argument to `run()` continues to override all package.json config
-When a caller passes `skillDir` explicitly to `run({ skillDir, pkg })`, that value SHALL be used as the skill location regardless of any `skillet.skillDir` or `skillet.skills` entry in `package.json`. The explicit argument always wins.
-
-#### Scenario: Explicit `skillDir` argument bypasses package.json
-- **WHEN** `run()` is called with `skillDir: "/abs/path/to/skill"` and `package.json` has a different `skillet.skillDir`
-- **THEN** `run()` uses the explicitly passed path, not the one from `package.json`
