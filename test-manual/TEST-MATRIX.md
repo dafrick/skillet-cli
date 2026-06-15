@@ -12,7 +12,7 @@
 | T2 | `jzOcb/writing-style-skill` | Root SKILL.md + flat scripts/ with two Python files, no nested subdirs | 2026-06-15 pass |
 | T3 | `netresearch/agent-rules-skill` | Single skill + deeply nested assets/, references/, scripts/ (22+ scripts, lib/ subdir) | 2026-06-15 pass |
 | T3 | `netresearch/skill-repo-skill` | Single skill + nested references/ (11 docs), scripts/ (4 scripts), templates/ (11 files) | Untested |
-| T4 | `arpitg1304/robotics-agent-skills` | 10 SKILL.md files under skills/<topic>/, no per-skill companions; root has install.sh, evals/ only | Untested |
+| T4 | `arpitg1304/robotics-agent-skills` | 10 SKILL.md files under skills/<topic>/, no per-skill companions; root has install.sh, evals/ only | 2026-06-15 soft fail — ISS-001 files missing 9/10 skills from npm manifest; ISS-002 10x install prompts; local install pass |
 | T5 | `harness/harness-skills` | 54 SKILL.md files; per-skill references/; root-level scripts/, templates/, sboms/, examples/ | Untested |
 | T5 | `addyosmani/agent-skills` | 24 SKILL.md files; root-level hooks/, scripts/, agents/, commands/, references/ | Untested |
 | T5 | `obra/superpowers` | Multi-skill with scripts, templates, deep nesting | Untested |
@@ -24,3 +24,4 @@
 | 2026-06-15 | Hao0321/claude-skill-code-cleanup | T1 | Claude Code | 🔶 Step 3 (ISS-001 empty author/desc crash), ✅ Steps 4–6 | runs/2026-06-15-hao0321-claude-skill-code-cleanup/ |
 | 2026-06-15 | jzOcb/writing-style-skill | T2 | Claude Code | ✅ Steps 1–6 | runs/2026-06-15-jzOcb-writing-style-skill/ |
 | 2026-06-15 | netresearch/agent-rules-skill | T3 | Claude Code | ✅ Steps 1–6 | runs/2026-06-15-netresearch-agent-rules-skill/ |
+| 2026-06-15 | arpitg1304/robotics-agent-skills | T4 | Claude Code | 🔶 Step 4 ISS-001 (files missing 9/10 skills), 🟠 Step 5 ISS-002 (10x install wizards), ✅ Steps 1–3,6 | runs/2026-06-15-arpitg1304-robotics-agent-skills/ |
