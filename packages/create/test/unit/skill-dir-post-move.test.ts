@@ -59,6 +59,7 @@ function makeDetected(overrides: Partial<DetectionResult> = {}): DetectionResult
     author: 'Test',
     description: '',
     hasPackageJson: true,
+    isPrivate: false,
     hasSkillMd: true,
     skillDir: './',
     discoveredSkillDirs: ['./'],

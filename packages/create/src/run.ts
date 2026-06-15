@@ -44,6 +44,9 @@ program
     process.stdout.write(`Directory:    ${detected.cwd}\n`);
     process.stdout.write(`SKILL.md:     ${skillMdStatus(detected)}\n`);
     process.stdout.write(`package.json: ${detected.hasPackageJson ? 'found' : 'not found'}\n`);
+    if (detected.isPrivate) {
+      process.stdout.write(`private:       true ⚠  (cannot publish until removed)\n`);
+    }
     process.stdout.write(`Git user:     ${detected.gitUser || '(not detected)'}\n`);
     process.stdout.write('\n');
 
@@ -119,7 +122,12 @@ program
     process.stdout.write(`\nDone in ${elapsed}s — Your skill package is ready.\n\n`);
     process.stdout.write(`  Next steps:\n`);
     process.stdout.write(`    npx . install    — test locally\n`);
-    process.stdout.write(`    npm publish      — publish to npm\n\n`);
+    if (detected.isPrivate && !config.removePrivate) {
+      process.stdout.write(`    Remove "private": true first: npm pkg delete private\n`);
+    } else {
+      process.stdout.write(`    npm publish      — publish to npm\n`);
+    }
+    process.stdout.write('\n');
   });
 
 export async function run(): Promise<void> {

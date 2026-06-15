@@ -71,6 +71,7 @@ function makeFakeDetected(overrides: Partial<DetectionResult> = {}): DetectionRe
     discoveredSkillDirs: [],
     repositoryUrl: '',
     gitUser: 'Test User <test@example.com>',
+    isPrivate: false,
     ...overrides,
   };
 }
@@ -89,6 +90,7 @@ function makeDetected(overrides: Partial<DetectionResult>): DetectionResult {
     discoveredSkillDirs: [],
     repositoryUrl: '',
     gitUser: '',
+    isPrivate: false,
     ...overrides,
   };
 }
@@ -104,6 +106,7 @@ function makeFakeConfig(overrides: Partial<WizardConfig> = {}): WizardConfig {
     skillDir: 'skill/',
     isMultiSkill: false,
     skillsParentDirs: [],
+    removePrivate: false,
     ...overrides,
   };
 }
@@ -260,6 +263,118 @@ describe('run.ts — setupSkillDir not called in multi-skill mode', () => {
     await invokeRunAction();
 
     expect(mockSetupSkillDir).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tasks 1.9–1.10: early-gate summary private: warning line
+// ---------------------------------------------------------------------------
+
+describe('run.ts — early-gate summary: private field warning', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+
+    mockConfirm.mockResolvedValue(true);
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  // Task 1.9: early-gate summary includes private: warning when isPrivate: true
+  it('early-gate summary includes "private:" warning line when isPrivate is true', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isPrivate: true }));
+    mockCollectConfig.mockResolvedValue(makeFakeConfig({ removePrivate: false }));
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('private:');
+    expect(allOutput).toContain('⚠');
+  });
+
+  // Task 1.10: early-gate summary does NOT include private: line when isPrivate: false
+  it('early-gate summary does NOT include "private:" line when isPrivate is false', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isPrivate: false }));
+    mockCollectConfig.mockResolvedValue(makeFakeConfig({ removePrivate: false }));
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    // The warning line should not appear
+    expect(allOutput).not.toMatch(/private:.*⚠/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tasks 1.11–1.13: completion block
+// ---------------------------------------------------------------------------
+
+describe('run.ts — completion block: npm publish conditional', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+
+    mockConfirm.mockResolvedValue(true);
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  // Task 1.11: isPrivate && !removePrivate → omit npm publish, show npm pkg delete private note
+  it('omits "npm publish" and includes "npm pkg delete private" note when isPrivate: true and removePrivate: false', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isPrivate: true }));
+    mockCollectConfig.mockResolvedValue(makeFakeConfig({ removePrivate: false }));
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).not.toContain('npm publish');
+    expect(allOutput).toContain('npm pkg delete private');
+  });
+
+  // Task 1.12: isPrivate: true and removePrivate: true → includes npm publish
+  it('includes "npm publish" when isPrivate: true and removePrivate: true', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isPrivate: true }));
+    mockCollectConfig.mockResolvedValue(makeFakeConfig({ removePrivate: true }));
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('npm publish');
+  });
+
+  // Task 1.13: isPrivate: false → includes npm publish
+  it('includes "npm publish" when isPrivate is false', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isPrivate: false }));
+    mockCollectConfig.mockResolvedValue(makeFakeConfig({ removePrivate: false }));
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('npm publish');
   });
 });
 

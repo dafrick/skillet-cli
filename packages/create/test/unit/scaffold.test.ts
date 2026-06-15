@@ -61,6 +61,7 @@ const baseConfig: WizardConfig = {
   skillDir: 'skill/',
   isMultiSkill: false,
   skillsParentDirs: [],
+  removePrivate: false,
 };
 
 describe('executeScaffold — npm init conditional', () => {
@@ -512,6 +513,41 @@ describe('executeScaffold — package.json written display', () => {
     expect(allOutput).toContain('"license": "MIT"');
     expect(allOutput).toContain('"author": "Test Author"');
     expect(allOutput).toContain('"type": "module"');
+  });
+});
+
+describe('executeScaffold — npm pkg delete private (tasks 1.7–1.8)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+  });
+
+  function getDeletePrivateCalls(): string[] {
+    return mockSpawnSync.mock.calls
+      .filter(
+        (c) =>
+          typeof c[0] === 'string' &&
+          c[0].includes('npm') &&
+          c[0].includes('"pkg"') &&
+          c[0].includes('"delete"') &&
+          c[0].includes('private'),
+      )
+      .map((c) => c[0] as string);
+  }
+
+  // Task 1.7: npm pkg delete private IS called when removePrivate: true
+  it('calls "npm pkg delete private" when config.removePrivate is true', async () => {
+    await executeScaffold({ ...baseConfig, removePrivate: true });
+    const deleteCalls = getDeletePrivateCalls();
+    expect(deleteCalls.length).toBeGreaterThan(0);
+  });
+
+  // Task 1.8: npm pkg delete private is NOT called when removePrivate: false
+  it('does NOT call "npm pkg delete private" when config.removePrivate is false', async () => {
+    await executeScaffold({ ...baseConfig, removePrivate: false });
+    const deleteCalls = getDeletePrivateCalls();
+    expect(deleteCalls.length).toBe(0);
   });
 });
 
