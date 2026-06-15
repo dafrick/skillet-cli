@@ -46,7 +46,7 @@
 
 ## 7. Final verification
 
-- [ ] 7.1 Run the full `packages/create` test suite and confirm all tests pass
-- [ ] 7.2 Run `pnpm typecheck` (or equivalent) across the monorepo to confirm no TypeScript errors
+- [x] 7.1 Run the full `packages/create` test suite and confirm all tests pass
+- [x] 7.2 Run `pnpm typecheck` (or equivalent) across the monorepo to confirm no TypeScript errors (only pre-existing publish-preview.ts issue remains, unrelated to this change)
 - [ ] 7.3 Smoke-test manually: run `create-skillet` in a directory whose `package.json` has `"private": true`, confirm warning line appears, confirm prompt appears, confirm `npm pkg delete private` runs when accepted, confirm `npm publish` appears in completion
 - [ ] 7.4 Smoke-test: run `create-skillet` in a directory whose `package.json` has no `private` field, confirm no warning line and normal `npm publish` in completion
