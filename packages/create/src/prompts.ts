@@ -12,6 +12,7 @@ export interface WizardConfig {
   skillDir: string;
   isMultiSkill: boolean;
   skillsParentDirs: string[];
+  removePrivate: boolean;
 }
 
 export function deriveParentDirs(discoveredSkillDirs: string[]): string[] {
@@ -56,6 +57,14 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
     message: 'License:',
     default: 'MIT',
   });
+
+  let removePrivate = false;
+  if (detected.isPrivate) {
+    removePrivate = await confirm({
+      message: 'package.json has "private": true — remove it so you can publish?',
+      default: true,
+    });
+  }
 
   let skillDir: string;
   let isMultiSkill = false;
@@ -114,5 +123,6 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
     skillDir,
     isMultiSkill,
     skillsParentDirs,
+    removePrivate,
   };
 }

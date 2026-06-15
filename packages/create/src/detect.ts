@@ -9,6 +9,7 @@ export interface DetectionResult {
   author: string;
   description: string;
   hasPackageJson: boolean;
+  isPrivate: boolean;
   hasSkillMd: boolean;
   skillDir: string | null;
   /** All skill dirs discovered by scanning for SKILL.md files, as relative paths with trailing slash. */
@@ -112,6 +113,7 @@ interface PackageJson {
   version?: string;
   author?: string;
   description?: string;
+  private?: boolean;
   skillet?: {
     skillDir?: string;
   };
@@ -123,6 +125,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
   // --- package.json ---
   const pkgJsonPath = path.join(cwd, 'package.json');
   let hasPackageJson = false;
+  let isPrivate = false;
   let pkgName = '';
   let version = '';
   let author = '';
@@ -140,6 +143,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
       version = /^0\.0\.0(-|$)/.test(rawVersion) ? '' : rawVersion;
       author = pkg.author ?? '';
       description = pkg.description ?? '';
+      isPrivate = pkg.private === true;
       if (pkg.skillet?.skillDir) {
         pkgSkillDir = pkg.skillet.skillDir;
       }
@@ -194,6 +198,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
     author,
     description,
     hasPackageJson,
+    isPrivate,
     hasSkillMd,
     skillDir,
     discoveredSkillDirs,

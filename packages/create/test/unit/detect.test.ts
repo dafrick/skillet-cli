@@ -326,6 +326,54 @@ describe('scanForSkillMds', () => {
 // detectEnvironment — discoveredSkillDirs
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// detectEnvironment — isPrivate detection (tasks 1.1–1.3)
+// ---------------------------------------------------------------------------
+
+describe('detectEnvironment — isPrivate detection', () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tmpDir = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'detect-test-')));
+    originalCwd = process.cwd();
+    process.chdir(tmpDir);
+    vi.clearAllMocks();
+    mockGitFailure();
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  // Task 1.1: isPrivate is true when package.json contains "private": true
+  it('isPrivate is true when package.json contains "private": true', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', private: true }),
+    );
+    const result = detectEnvironment();
+    expect(result.isPrivate).toBe(true);
+  });
+
+  // Task 1.2: isPrivate is false when package.json has no private field
+  it('isPrivate is false when package.json has no private field', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0' }),
+    );
+    const result = detectEnvironment();
+    expect(result.isPrivate).toBe(false);
+  });
+
+  // Task 1.3: isPrivate is false when no package.json exists
+  it('isPrivate is false when no package.json exists', () => {
+    const result = detectEnvironment();
+    expect(result.isPrivate).toBe(false);
+  });
+});
+
 describe('detectEnvironment — discoveredSkillDirs', () => {
   let tmpDir: string;
   let originalCwd: string;

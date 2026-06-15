@@ -78,13 +78,97 @@ function makeDetectionResult(overrides: Partial<DetectionResult> = {}): Detectio
     discoveredSkillDirs: [],
     repositoryUrl: '',
     gitUser: '',
+    isPrivate: false,
     ...overrides,
   };
 }
 
+// ---------------------------------------------------------------------------
+// collectConfig — private field prompt (tasks 1.4–1.6)
+// ---------------------------------------------------------------------------
+
+describe('collectConfig — removePrivate behavior', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  // Task 1.4: removePrivate: true when user confirms removal
+  it('collectConfig includes removePrivate: true when isPrivate and user confirms removal', async () => {
+    const detected = makeDetectionResult({ isPrivate: true });
+
+    // input calls (6 metadata prompts + 1 skill path) + confirm for private removal
+    mockInput
+      .mockReset()
+      .mockResolvedValueOnce('my-skill')
+      .mockResolvedValueOnce('1.0.0')
+      .mockResolvedValueOnce('A test skill')
+      .mockResolvedValueOnce('Test Author')
+      .mockResolvedValueOnce('')
+      .mockResolvedValueOnce('MIT')
+      .mockResolvedValueOnce('skill/'); // skill content path
+
+    // First confirm call is for private removal (true = remove), any subsequent confirm won't be hit
+    mockConfirm.mockResolvedValueOnce(true);
+
+    const config = await collectConfig(detected);
+
+    expect(config.removePrivate).toBe(true);
+  });
+
+  // Task 1.5: removePrivate: false when user declines removal
+  it('collectConfig includes removePrivate: false when isPrivate and user declines removal', async () => {
+    const detected = makeDetectionResult({ isPrivate: true });
+
+    mockInput
+      .mockReset()
+      .mockResolvedValueOnce('my-skill')
+      .mockResolvedValueOnce('1.0.0')
+      .mockResolvedValueOnce('A test skill')
+      .mockResolvedValueOnce('Test Author')
+      .mockResolvedValueOnce('')
+      .mockResolvedValueOnce('MIT')
+      .mockResolvedValueOnce('skill/');
+
+    // Decline private removal
+    mockConfirm.mockResolvedValueOnce(false);
+
+    const config = await collectConfig(detected);
+
+    expect(config.removePrivate).toBe(false);
+  });
+
+  // Task 1.6: no prompt shown and removePrivate: false when isPrivate is false
+  it('no private prompt shown and removePrivate is false when isPrivate is false', async () => {
+    const detected = makeDetectionResult({ isPrivate: false });
+
+    mockInput
+      .mockReset()
+      .mockResolvedValueOnce('my-skill')
+      .mockResolvedValueOnce('1.0.0')
+      .mockResolvedValueOnce('A test skill')
+      .mockResolvedValueOnce('Test Author')
+      .mockResolvedValueOnce('')
+      .mockResolvedValueOnce('MIT')
+      .mockResolvedValueOnce('skill/');
+
+    // confirm should NOT be called when isPrivate is false
+    mockConfirm.mockResolvedValue(true);
+
+    const config = await collectConfig(detected);
+
+    expect(config.removePrivate).toBe(false);
+    // confirm should not have been called at all
+    expect(mockConfirm).not.toHaveBeenCalled();
+  });
+});
+
 describe('collectConfig — multi-skill mode', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     // Default: input prompts return sensible defaults
     mockInput.mockResolvedValue('my-skill');
     mockConfirm.mockResolvedValue(true);
@@ -92,7 +176,7 @@ describe('collectConfig — multi-skill mode', () => {
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it('sets isMultiSkill: true and populates skillsParentDirs when discoveredSkillDirs has 2+ non-root entries', async () => {

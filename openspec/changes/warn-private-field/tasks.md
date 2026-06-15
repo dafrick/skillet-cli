@@ -1,48 +1,48 @@
 ## 1. Tests (write before implementation)
 
-- [ ] 1.1 Add unit test in `detect.test.ts`: `isPrivate` is `true` when `package.json` contains `"private": true`
-- [ ] 1.2 Add unit test in `detect.test.ts`: `isPrivate` is `false` when `package.json` has no `private` field
-- [ ] 1.3 Add unit test in `detect.test.ts`: `isPrivate` is `false` when no `package.json` exists
-- [ ] 1.4 Add unit test in `prompts.test.ts` (or equivalent): `collectConfig` includes `removePrivate: true` when user confirms removal
-- [ ] 1.5 Add unit test in `prompts.test.ts`: `collectConfig` includes `removePrivate: false` when user declines removal
-- [ ] 1.6 Add unit test in `prompts.test.ts`: no private prompt shown and `removePrivate` is `false` when `isPrivate` is `false`
-- [ ] 1.7 Add unit test in `scaffold.test.ts` (or equivalent): `npm pkg delete private` is called when `removePrivate` is `true`
-- [ ] 1.8 Add unit test in `scaffold.test.ts`: `npm pkg delete private` is NOT called when `removePrivate` is `false`
-- [ ] 1.9 Add integration/run test: early-gate summary includes `private:` warning line when `isPrivate` is `true`
-- [ ] 1.10 Add integration/run test: early-gate summary does NOT include `private:` line when `isPrivate` is `false`
-- [ ] 1.11 Add integration/run test: completion block omits `npm publish` and includes `npm pkg delete private` note when `isPrivate` was `true` and `removePrivate` is `false`
-- [ ] 1.12 Add integration/run test: completion block includes `npm publish` when `isPrivate` was `true` and `removePrivate` is `true`
-- [ ] 1.13 Add integration/run test: completion block includes `npm publish` when `isPrivate` was `false`
+- [x] 1.1 Add unit test in `detect.test.ts`: `isPrivate` is `true` when `package.json` contains `"private": true`
+- [x] 1.2 Add unit test in `detect.test.ts`: `isPrivate` is `false` when `package.json` has no `private` field
+- [x] 1.3 Add unit test in `detect.test.ts`: `isPrivate` is `false` when no `package.json` exists
+- [x] 1.4 Add unit test in `prompts.test.ts` (or equivalent): `collectConfig` includes `removePrivate: true` when user confirms removal
+- [x] 1.5 Add unit test in `prompts.test.ts`: `collectConfig` includes `removePrivate: false` when user declines removal
+- [x] 1.6 Add unit test in `prompts.test.ts`: no private prompt shown and `removePrivate` is `false` when `isPrivate` is `false`
+- [x] 1.7 Add unit test in `scaffold.test.ts` (or equivalent): `npm pkg delete private` is called when `removePrivate` is `true`
+- [x] 1.8 Add unit test in `scaffold.test.ts`: `npm pkg delete private` is NOT called when `removePrivate` is `false`
+- [x] 1.9 Add integration/run test: early-gate summary includes `private:` warning line when `isPrivate` is `true`
+- [x] 1.10 Add integration/run test: early-gate summary does NOT include `private:` line when `isPrivate` is `false`
+- [x] 1.11 Add integration/run test: completion block omits `npm publish` and includes `npm pkg delete private` note when `isPrivate` was `true` and `removePrivate` is `false`
+- [x] 1.12 Add integration/run test: completion block includes `npm publish` when `isPrivate` was `true` and `removePrivate` is `true`
+- [x] 1.13 Add integration/run test: completion block includes `npm publish` when `isPrivate` was `false`
 
 ## 2. Detection
 
-- [ ] 2.1 Add `private?: boolean` to the `PackageJson` interface in `packages/create/src/detect.ts`
-- [ ] 2.2 Add `isPrivate: boolean` to the `DetectionResult` interface in `packages/create/src/detect.ts`
-- [ ] 2.3 Read `pkg.private` from parsed `package.json` and assign `isPrivate: pkg.private === true` in `detectEnvironment()` (default `false` when no `package.json`)
-- [ ] 2.4 Verify tests 1.1–1.3 pass
+- [x] 2.1 Add `private?: boolean` to the `PackageJson` interface in `packages/create/src/detect.ts`
+- [x] 2.2 Add `isPrivate: boolean` to the `DetectionResult` interface in `packages/create/src/detect.ts`
+- [x] 2.3 Read `pkg.private` from parsed `package.json` and assign `isPrivate: pkg.private === true` in `detectEnvironment()` (default `false` when no `package.json`)
+- [x] 2.4 Verify tests 1.1–1.3 pass
 
 ## 3. Prompts
 
-- [ ] 3.1 Add `removePrivate: boolean` to the `WizardConfig` interface in `packages/create/src/prompts.ts`
-- [ ] 3.2 After the `license` prompt in `collectConfig`, add a conditional `confirm` prompt: when `detected.isPrivate` is `true`, ask `package.json has "private": true — remove it so you can publish?` with `default: true`
-- [ ] 3.3 Set `removePrivate` in the returned `WizardConfig` (`true` if prompted and accepted, `false` otherwise)
-- [ ] 3.4 Verify tests 1.4–1.6 pass
+- [x] 3.1 Add `removePrivate: boolean` to the `WizardConfig` interface in `packages/create/src/prompts.ts`
+- [x] 3.2 After the `license` prompt in `collectConfig`, add a conditional `confirm` prompt: when `detected.isPrivate` is `true`, ask `package.json has "private": true — remove it so you can publish?` with `default: true`
+- [x] 3.3 Set `removePrivate` in the returned `WizardConfig` (`true` if prompted and accepted, `false` otherwise)
+- [x] 3.4 Verify tests 1.4–1.6 pass
 
 ## 4. Early-gate summary
 
-- [ ] 4.1 In `packages/create/src/run.ts`, after the `package.json:` summary line, conditionally print `private:       true ⚠  (cannot publish until removed)\n` when `detected.isPrivate` is `true`
-- [ ] 4.2 Verify tests 1.9–1.10 pass
+- [x] 4.1 In `packages/create/src/run.ts`, after the `package.json:` summary line, conditionally print `private:       true ⚠  (cannot publish until removed)\n` when `detected.isPrivate` is `true`
+- [x] 4.2 Verify tests 1.9–1.10 pass
 
 ## 5. Scaffold
 
-- [ ] 5.1 In `packages/create/src/scaffold.ts`, after the `npm pkg set` step and before writing `bin/cli.js`, add a conditional call: when `config.removePrivate` is `true`, call `runSync('npm', ['pkg', 'delete', 'private'], 'npm pkg delete private')`
-- [ ] 5.2 Verify tests 1.7–1.8 pass
+- [x] 5.1 In `packages/create/src/scaffold.ts`, after the `npm pkg set` step and before writing `bin/cli.js`, add a conditional call: when `config.removePrivate` is `true`, call `runSync('npm', ['pkg', 'delete', 'private'], 'npm pkg delete private')`
+- [x] 5.2 Verify tests 1.7–1.8 pass
 
 ## 6. Completion block
 
-- [ ] 6.1 In `packages/create/src/run.ts`, thread `detected` and `config` into the completion block logic; when `detected.isPrivate && !config.removePrivate`, omit `npm publish` and instead print `    Remove "private": true first: npm pkg delete private\n`
-- [ ] 6.2 When `!detected.isPrivate || config.removePrivate`, print `    npm publish      — publish to npm\n` as before
-- [ ] 6.3 Verify tests 1.11–1.13 pass
+- [x] 6.1 In `packages/create/src/run.ts`, thread `detected` and `config` into the completion block logic; when `detected.isPrivate && !config.removePrivate`, omit `npm publish` and instead print `    Remove "private": true first: npm pkg delete private\n`
+- [x] 6.2 When `!detected.isPrivate || config.removePrivate`, print `    npm publish      — publish to npm\n` as before
+- [x] 6.3 Verify tests 1.11–1.13 pass
 
 ## 7. Final verification
 

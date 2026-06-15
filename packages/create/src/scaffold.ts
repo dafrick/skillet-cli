@@ -87,6 +87,11 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       );
     }
 
+    // Step 3b: Remove private field if requested
+    if (config.removePrivate) {
+      runSync('npm', ['pkg', 'delete', 'private'], 'npm pkg delete private');
+    }
+
     spinner.succeed('Seasoning done');
 
     const finalPkg = fs.readFileSync(pkgJsonPath, 'utf8');

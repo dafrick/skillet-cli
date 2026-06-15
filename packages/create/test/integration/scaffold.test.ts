@@ -16,6 +16,7 @@ const baseConfig: WizardConfig = {
   skillDir: 'skill/',
   isMultiSkill: false,
   skillsParentDirs: [],
+  removePrivate: false,
 };
 
 describe('executeScaffold — integration (filesystem)', () => {
