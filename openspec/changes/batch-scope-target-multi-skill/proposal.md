@@ -23,5 +23,5 @@ In multi-skill packages, `npx . install` prompts for scope and target once per s
 ## Impact
 
 - **`packages/core/src/run.ts`**: Only file changed. `runInstall()` (lines 122–213) refactored; `registerInstallCommand()` action handler (lines 432–465) updated to hoist prompt resolution.
-- **Tests**: New unit test (mock TTY, assert prompts fire once for 2-skill package) and integration test (multi-skill fixture with flags, assert single summary line) added under `packages/core/src/`.
+- **Tests**: New test cases added to the existing unit test file `packages/core/test/unit/run-multi-skill.test.ts` (mock TTY, assert `select`/`checkbox` prompts fire once for a 2-skill package) and to the existing integration test file `packages/core/test/integration/install.test.ts` (multi-skill fixture with flags, assert single consolidated summary line).
 - **No breaking changes**: `--scope`, `--target`, and `--yes` flag behaviour is unchanged; non-interactive path is unchanged.
