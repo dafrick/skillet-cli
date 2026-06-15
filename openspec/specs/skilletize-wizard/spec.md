@@ -175,9 +175,9 @@ After npm execution completes, when `SKILL.md` exists in the current directory r
 - **WHEN** a `skill/` subfolder already exists in the current directory
 - **THEN** the wizard skips the skill directory setup step entirely and prints a single line noting that `skill/` was found
 
-#### Scenario: Directory has 12 or fewer items — checkbox selection
+#### Scenario: Directory has 12 or fewer items — checkbox selection with blocklist pre-selection
 - **WHEN** `SKILL.md` is in the root and the directory contains 12 or fewer items
-- **THEN** the wizard shows a checkbox list of all directory items; `SKILL.md` and any folders named `resources`, `assets`, or `templates` are pre-selected; README.md, dotfiles, lock files, and dot-folders are not pre-selected
+- **THEN** the wizard shows a checkbox list of all directory items; items are pre-selected unless they appear on the exclusion blocklist; the blocklist consists of: `README.md`, dotfiles and dot-folders (names starting with `.`), lock files (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`), `package.json`, `node_modules/`, and `bin/`; all other items including `SKILL.md` and any companion directories such as `scripts/`, `prompts/`, `examples/`, `assets/`, `templates/`, and `resources/` are pre-selected by default
 
 #### Scenario: Directory has more than 12 items — collapsed confirm
 - **WHEN** `SKILL.md` is in the root and the directory contains more than 12 items
