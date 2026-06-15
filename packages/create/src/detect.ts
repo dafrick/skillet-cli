@@ -8,6 +8,7 @@ export interface DetectionResult {
   version: string;
   author: string;
   description: string;
+  license: string;
   hasPackageJson: boolean;
   isPrivate: boolean;
   hasSkillMd: boolean;
@@ -114,6 +115,7 @@ interface PackageJson {
   author?: string;
   description?: string;
   private?: boolean;
+  license?: string;
   skillet?: {
     skillDir?: string;
   };
@@ -130,6 +132,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
   let version = '';
   let author = '';
   let description = '';
+  let license = '';
   let pkgSkillDir: string | null = null;
 
   if (fs.existsSync(pkgJsonPath)) {
@@ -144,6 +147,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
       author = pkg.author ?? '';
       description = pkg.description ?? '';
       isPrivate = pkg.private === true;
+      license = pkg.license ?? '';
       if (pkg.skillet?.skillDir) {
         pkgSkillDir = pkg.skillet.skillDir;
       }
@@ -197,6 +201,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
     version,
     author,
     description,
+    license,
     hasPackageJson,
     isPrivate,
     hasSkillMd,

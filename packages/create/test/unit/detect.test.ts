@@ -460,3 +460,60 @@ describe('detectEnvironment — discoveredSkillDirs', () => {
     expect(result.discoveredSkillDirs).toHaveLength(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// detectEnvironment — license detection
+// ---------------------------------------------------------------------------
+
+describe('detectEnvironment — license detection', () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tmpDir = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'detect-test-')));
+    originalCwd = process.cwd();
+    process.chdir(tmpDir);
+    vi.clearAllMocks();
+    mockGitFailure();
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('1.1 sets license to "Apache-2.0" when package.json contains "license": "Apache-2.0"', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', license: 'Apache-2.0' }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.license).toBe('Apache-2.0');
+  });
+
+  it('1.2 sets license to "(MIT AND CC-BY-SA-4.0)" verbatim when package.json contains a compound SPDX expression', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', license: '(MIT AND CC-BY-SA-4.0)' }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.license).toBe('(MIT AND CC-BY-SA-4.0)');
+  });
+
+  it('1.3 sets license to "" when package.json has no license field', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0' }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.license).toBe('');
+  });
+
+  it('sets license to "" when no package.json present', () => {
+    const result = detectEnvironment();
+    expect(result.license).toBe('');
+  });
+});

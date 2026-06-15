@@ -79,6 +79,7 @@ function makeDetectionResult(overrides: Partial<DetectionResult> = {}): Detectio
     repositoryUrl: '',
     gitUser: '',
     isPrivate: false,
+    license: '',
     ...overrides,
   };
 }
@@ -263,5 +264,69 @@ describe('collectConfig — multi-skill mode', () => {
     expect(config.isMultiSkill).toBe(true);
     // Root NOT included in skillsParentDirs
     expect(config.skillsParentDirs).toEqual(['skills']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// collectConfig — license prompt default
+// ---------------------------------------------------------------------------
+
+describe('collectConfig — license prompt default', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockInput.mockResolvedValue('');
+    mockConfirm.mockResolvedValue(true);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('1.4 License input() receives default: "Apache-2.0" when detected.license is "Apache-2.0"', async () => {
+    const detected = makeDetectionResult({
+      license: 'Apache-2.0',
+      skillDir: 'skill/',
+    });
+
+    mockInput
+      .mockResolvedValueOnce('my-skill') // name
+      .mockResolvedValueOnce('1.0.0') // version
+      .mockResolvedValueOnce('A test skill') // description
+      .mockResolvedValueOnce('Test Author') // author
+      .mockResolvedValueOnce('') // repositoryUrl
+      .mockResolvedValueOnce('Apache-2.0') // license
+      .mockResolvedValueOnce('skill/'); // skillDir
+
+    await collectConfig(detected);
+
+    const licenseCalls = mockInput.mock.calls.filter(
+      (c) => (c[0] as { message: string }).message === 'License:',
+    );
+    expect(licenseCalls).toHaveLength(1);
+    expect((licenseCalls[0][0] as { default: string }).default).toBe('Apache-2.0');
+  });
+
+  it('1.5 License input() receives default: "MIT" when detected.license is ""', async () => {
+    const detected = makeDetectionResult({
+      license: '',
+      skillDir: 'skill/',
+    });
+
+    mockInput
+      .mockResolvedValueOnce('my-skill') // name
+      .mockResolvedValueOnce('1.0.0') // version
+      .mockResolvedValueOnce('A test skill') // description
+      .mockResolvedValueOnce('Test Author') // author
+      .mockResolvedValueOnce('') // repositoryUrl
+      .mockResolvedValueOnce('MIT') // license
+      .mockResolvedValueOnce('skill/'); // skillDir
+
+    await collectConfig(detected);
+
+    const licenseCalls = mockInput.mock.calls.filter(
+      (c) => (c[0] as { message: string }).message === 'License:',
+    );
+    expect(licenseCalls).toHaveLength(1);
+    expect((licenseCalls[0][0] as { default: string }).default).toBe('MIT');
   });
 });
