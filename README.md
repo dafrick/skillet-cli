@@ -64,7 +64,7 @@ Initialize a directory with a `package.json`. Publishing via GitHub Package Regi
 
 ### 2. Add your skill files
 
-Place your prompt files in a `skill/` directory.
+Place your prompt files in a `skill/` directory with a `SKILL.md` file at its root.
 
 ### 3. Wire up the CLI
 
@@ -117,11 +117,29 @@ Skillet detects their agent environment and puts the skill in the right place.
 
 If you'd rather publish to the public npm registry, remove `publishConfig` from your `package.json` and run `npm publish`. Your users can then run `npx @your-github-username/my-skill install` with no registry setup.
 
+### Composing skill-packages
+
+To build on another skill-package's skills, list it in `dependencies` and use `skillet.skills` (a parent directory to scan) instead of `skillet.skillDir` in both packages. When a user installs your package, core automatically installs skills from all marked packages in your dependency closure — no extra commands needed.
+
+```json
+{
+  "name": "travel-planner",
+  "dependencies": {
+    "superpowers-base": "^1.0.0"
+  },
+  "skillet": {
+    "skills": "skills"
+  }
+}
+```
+
+Skills from `superpowers-base` are installed alongside your own. All skills are attributed to `travel-planner` in their `requestedBy` field so uninstalling it correctly garbage-collects any skills it exclusively owns.
+
 ### RunOptions
 
 | Option | Type | Description |
 |---|---|---|
-| `skillDir` | `string \| undefined` | Path to a single skill tree directory. When omitted, core reads the location from `skillet.skillDir` in `package.json`. |
+| `skillDir` | `string \| undefined` | Path to a single skill tree directory. When omitted, core reads `skillet.skillDir` from `package.json` (single skill), or discovers skill trees via `skillet.skills` (multi-skill packages). |
 | `pkg` | `{ name: string; version: string }` | Your package's name and version (used by the update notifier) |
 | `hooks.transform` | `(skill: NormalizedSkill) => NormalizedSkill` | Modify the normalized skill before adapter dispatch; may be async |
 | `hooks.beforeInstall` | `(skill: NormalizedSkill, adapter: Adapter, ctx: Context) => void` | Run before each adapter install; may be async |
