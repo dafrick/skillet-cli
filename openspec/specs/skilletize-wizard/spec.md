@@ -47,7 +47,7 @@ During detection (before any prompts), the wizard SHALL silently check: (1) whet
 ---
 
 ### Requirement: Configuration prompts collect package metadata
-The wizard SHALL collect the following fields via interactive prompts in this order: package name, version, description, author, repository URL, license, skill content path. Each field SHALL have a sensible default derived from detection results.
+The wizard SHALL collect the following fields via interactive prompts in this order: package name, version, description, author, repository URL, license, skill content path. Each field SHALL have a sensible default derived from detection results. The `Description` prompt message SHALL read `Description (optional):` and the `Author` prompt message SHALL read `Author (optional):` to signal that blank input is accepted.
 
 #### Scenario: Package name default from directory
 - **WHEN** no `package.json` exists
@@ -72,6 +72,14 @@ The wizard SHALL collect the following fields via interactive prompts in this or
 #### Scenario: Package name supplied as CLI argument
 - **WHEN** the user runs `npm create skillet my-cooking-skill`
 - **THEN** the package name prompt defaults to `my-cooking-skill`, taking precedence over the kebab-case directory name default
+
+#### Scenario: Description prompt message includes optional label
+- **WHEN** the wizard displays the Description prompt
+- **THEN** the prompt message reads `Description (optional):`
+
+#### Scenario: Author prompt message includes optional label
+- **WHEN** the wizard displays the Author prompt
+- **THEN** the prompt message reads `Author (optional):`
 
 ---
 
