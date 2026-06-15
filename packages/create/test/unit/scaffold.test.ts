@@ -271,6 +271,16 @@ describe('executeScaffold — files allowlist', () => {
     const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('"files[1]=my-skill/"'))).toBe(true);
   });
+
+  // Task 1.4: regression guard — single-skill files[1] is unchanged
+  it('single-skill mode: files[1] is still set to config.skillDir (regression guard)', async () => {
+    // baseConfig has isMultiSkill: false, skillDir: 'skill/'
+    await executeScaffold(baseConfig);
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('"files[1]=skill/"'))).toBe(true);
+    // Must NOT produce multi-skill style parent dir entries
+    expect(allArgs.some((a) => a.includes('files[2]='))).toBe(false);
+  });
 });
 
 describe('executeScaffold — multi-skill mode', () => {
@@ -330,6 +340,53 @@ describe('executeScaffold — multi-skill mode', () => {
     const allArgs = getPkgSetArgs();
     expect(allArgs.some((a) => a.includes('skillet.skillDir='))).toBe(true);
     expect(allArgs.some((a) => a.includes('skillet.skills='))).toBe(false);
+  });
+
+  // Task 1.1: multi-skill single parent sets files[1]=skills/
+  it('sets files[1]=skills/ when isMultiSkill: true and skillsParentDirs is ["skills"]', async () => {
+    const config: WizardConfig = {
+      ...baseConfig,
+      isMultiSkill: true,
+      skillsParentDirs: ['skills'],
+    };
+
+    await executeScaffold(config);
+
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('"files[1]=skills/"'))).toBe(true);
+  });
+
+  // Task 1.2: multi-skill multiple parents sets files[1]=core/ and files[2]=exp/
+  it('sets files[1]=core/ and files[2]=exp/ when isMultiSkill: true and skillsParentDirs is ["core", "exp"]', async () => {
+    const config: WizardConfig = {
+      ...baseConfig,
+      isMultiSkill: true,
+      skillsParentDirs: ['core', 'exp'],
+    };
+
+    await executeScaffold(config);
+
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('"files[1]=core/"'))).toBe(true);
+    expect(allArgs.some((a) => a.includes('"files[2]=exp/"'))).toBe(true);
+  });
+
+  // Task 1.3: normalization — skillsParentDirs entry without trailing slash gets one added
+  it('normalizes skillsParentDirs entry without trailing slash to have one (files[1]=skills/)', async () => {
+    const config: WizardConfig = {
+      ...baseConfig,
+      isMultiSkill: true,
+      skillsParentDirs: ['skills'], // no trailing slash
+    };
+
+    await executeScaffold(config);
+
+    const allArgs = getPkgSetArgs();
+    // Must produce files[1]=skills/ (with trailing slash), not files[1]=skills (without)
+    expect(allArgs.some((a) => a.includes('"files[1]=skills/"'))).toBe(true);
+    expect(
+      allArgs.some((a) => a.includes('"files[1]=skills"') && !a.includes('"files[1]=skills/"')),
+    ).toBe(false);
   });
 });
 

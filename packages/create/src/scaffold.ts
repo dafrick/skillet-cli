@@ -54,6 +54,13 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
         : `skillet.skills=${JSON.stringify(config.skillsParentDirs)}`
       : `skillet.skillDir=${config.skillDir}`;
 
+    const filesArgs = config.isMultiSkill
+      ? config.skillsParentDirs.map((dir, i) => {
+          const normalized = dir.endsWith('/') ? dir : `${dir}/`;
+          return `files[${i + 1}]=${normalized}`;
+        })
+      : [`files[1]=${config.skillDir}`];
+
     const pkgSetArgs = [
       `name=${config.name}`,
       `version=${config.version}`,
@@ -65,7 +72,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       skillField,
       `bin.${config.name}=./bin/cli.js`,
       `files[0]=bin`,
-      `files[1]=${config.skillDir}`,
+      ...filesArgs,
     ];
 
     runSync('npm', ['pkg', 'set', ...pkgSetArgs], 'npm pkg set');
