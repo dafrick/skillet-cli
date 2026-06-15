@@ -58,6 +58,7 @@ function makeDetected(overrides: Partial<DetectionResult> = {}): DetectionResult
     version: '1.0.0',
     author: 'Test',
     description: '',
+    license: '',
     hasPackageJson: true,
     isPrivate: false,
     hasSkillMd: true,

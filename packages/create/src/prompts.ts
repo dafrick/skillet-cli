@@ -55,7 +55,7 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
 
   const license = await input({
     message: 'License:',
-    default: 'MIT',
+    default: detected.license || 'MIT',
   });
 
   let removePrivate = false;
