@@ -70,4 +70,28 @@ describe('getPreselected — pre-selection logic', () => {
     const selected = getPreselected(items);
     expect(selected.every((s) => items.includes(s))).toBe(true);
   });
+
+  it('pre-selects scripts/ folder (companion directory, not on blocklist)', () => {
+    const items = ['SKILL.md', 'scripts/', 'package.json', 'README.md'];
+    const selected = getPreselected(items);
+    expect(selected).toContain('scripts/');
+  });
+
+  it('does NOT pre-select package.json (blocklist item)', () => {
+    const items = ['SKILL.md', 'scripts/', 'package.json'];
+    const selected = getPreselected(items);
+    expect(selected).not.toContain('package.json');
+  });
+
+  it('does NOT pre-select node_modules/ (blocklist item)', () => {
+    const items = ['SKILL.md', 'scripts/', 'node_modules/'];
+    const selected = getPreselected(items);
+    expect(selected).not.toContain('node_modules/');
+  });
+
+  it('does NOT pre-select bin/ (blocklist item)', () => {
+    const items = ['SKILL.md', 'scripts/', 'bin/'];
+    const selected = getPreselected(items);
+    expect(selected).not.toContain('bin/');
+  });
 });

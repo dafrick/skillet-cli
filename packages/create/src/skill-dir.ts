@@ -6,16 +6,17 @@ import { runSync } from './scaffold.js';
 
 const LOCK_FILES = new Set(['package-lock.json', 'pnpm-lock.yaml', 'yarn.lock']);
 const SKILL_DIRS = new Set(['resources', 'assets', 'templates']);
+const EXCLUDED_NAMES = new Set(['package.json', 'node_modules', 'bin']);
 
 /**
  * Pure function that determines which items should be pre-selected for the
  * skill directory move. Exported for testability.
+ *
+ * Uses a blocklist approach: pre-selects everything except known
+ * infrastructure/noise items (README.md, dotfiles, lock files, EXCLUDED_NAMES).
  */
 export function getPreselected(items: string[]): string[] {
   return items.filter((item) => {
-    // Always select SKILL.md
-    if (item === 'SKILL.md') return true;
-
     // Never select README.md
     if (item === 'README.md') return false;
 
@@ -26,11 +27,11 @@ export function getPreselected(items: string[]): string[] {
     // Never select lock files
     if (LOCK_FILES.has(item)) return false;
 
-    // Pre-select skill-related folders
-    const dirName = item.endsWith('/') ? item.slice(0, -1) : item;
-    if (SKILL_DIRS.has(dirName)) return true;
+    // Never select blocklist items (package.json, node_modules/, bin/)
+    if (EXCLUDED_NAMES.has(baseName)) return false;
 
-    return false;
+    // Pre-select everything else (SKILL.md, scripts/, prompts/, examples/, etc.)
+    return true;
   });
 }
 
