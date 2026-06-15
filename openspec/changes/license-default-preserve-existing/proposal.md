@@ -6,8 +6,8 @@
 
 - `detect.ts`: Add `license` to the `PackageJson` interface and to `DetectionResult`; populate it from `pkg.license ?? ''`.
 - `prompts.ts`: Change the License prompt default from the hard-coded `'MIT'` to `detected.license || 'MIT'` (falls back to `'MIT'` when the field is absent or empty).
-- `detect.test.ts`: Add assertions that `license` is extracted correctly for both simple SPDX identifiers and compound SPDX expressions.
-- `prompts.test.ts`: Add an assertion that `collectConfig()` passes the detected license as the prompt's initial/default value.
+- `test/unit/detect.test.ts`: Add assertions that `license` is extracted correctly for both simple SPDX identifiers and compound SPDX expressions.
+- `test/unit/prompts.test.ts`: Add an assertion that `collectConfig()` passes the detected license as the prompt's initial/default value.
 
 No normalization or SPDX validation is added — npm accepts any SPDX expression verbatim, so the value is passed through unchanged.
 
@@ -23,7 +23,7 @@ No normalization or SPDX validation is added — npm accepts any SPDX expression
 
 ## Impact
 
-- **Files changed**: `packages/create/src/detect.ts`, `packages/create/src/prompts.ts`, `packages/create/src/detect.test.ts`, `packages/create/src/prompts.test.ts`
+- **Files changed**: `packages/create/src/detect.ts`, `packages/create/src/prompts.ts`, `packages/create/test/unit/detect.test.ts`, `packages/create/test/unit/prompts.test.ts`
 - **No API or CLI surface changes**: the wizard UX is unchanged; the only difference is the pre-filled default in the License prompt.
 - **No downstream impact**: `scaffold.ts` already uses `config.license` verbatim; no change needed there.
 - **No breaking changes.**

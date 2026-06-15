@@ -1,10 +1,10 @@
 ## 1. Failing Tests
 
-- [ ] 1.1 In `packages/create/src/detect.test.ts`, add a test asserting that `detectEnvironment()` sets `license` to `"Apache-2.0"` when `package.json` contains `"license": "Apache-2.0"`
-- [ ] 1.2 In `packages/create/src/detect.test.ts`, add a test asserting that `detectEnvironment()` sets `license` to `"(MIT AND CC-BY-SA-4.0)"` verbatim when `package.json` contains a compound SPDX expression
-- [ ] 1.3 In `packages/create/src/detect.test.ts`, add a test asserting that `detectEnvironment()` sets `license` to `""` when `package.json` has no `license` field
-- [ ] 1.4 In `packages/create/src/prompts.test.ts`, add a test asserting that the License `input()` call receives `default: "Apache-2.0"` when `detected.license` is `"Apache-2.0"`
-- [ ] 1.5 In `packages/create/src/prompts.test.ts`, add a test asserting that the License `input()` call receives `default: "MIT"` when `detected.license` is `""`
+- [ ] 1.1 In `packages/create/test/unit/detect.test.ts`, add a test asserting that `detectEnvironment()` sets `license` to `"Apache-2.0"` when `package.json` contains `"license": "Apache-2.0"`
+- [ ] 1.2 In `packages/create/test/unit/detect.test.ts`, add a test asserting that `detectEnvironment()` sets `license` to `"(MIT AND CC-BY-SA-4.0)"` verbatim when `package.json` contains a compound SPDX expression
+- [ ] 1.3 In `packages/create/test/unit/detect.test.ts`, add a test asserting that `detectEnvironment()` sets `license` to `""` when `package.json` has no `license` field
+- [ ] 1.4 In `packages/create/test/unit/prompts.test.ts`, add a test asserting that the License `input()` call receives `default: "Apache-2.0"` when `detected.license` is `"Apache-2.0"`
+- [ ] 1.5 In `packages/create/test/unit/prompts.test.ts`, add a test asserting that the License `input()` call receives `default: "MIT"` when `detected.license` is `""`
 - [ ] 1.6 Confirm all new tests fail (TypeScript errors or assertion failures) before touching implementation
 
 ## 2. detect.ts Implementation
@@ -24,4 +24,4 @@
 ## 4. Full Test Suite
 
 - [ ] 4.1 Run the full `packages/create` test suite (`pnpm --filter @skillet-cli/create test`) and confirm all tests pass
-- [ ] 4.2 Run TypeScript type-check (`pnpm --filter @skillet-cli/create tsc --noEmit`) and confirm no errors
+- [ ] 4.2 Run TypeScript type-check (`pnpm --filter @skillet-cli/create typecheck`) and confirm no errors
