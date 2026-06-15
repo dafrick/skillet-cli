@@ -8,7 +8,7 @@
 
 | Tier | Repo | Complexity Notes | Status |
 |------|------|-----------------|--------|
-| T1 | `Hao0321/claude-skill-code-cleanup` | Single SKILL.md at code-cleanup-helper/SKILL.md, zero companion files | Untested |
+| T1 | `Hao0321/claude-skill-code-cleanup` | Single SKILL.md at code-cleanup-helper/SKILL.md, zero companion files | 2026-06-15 mid fail — ISS-001 empty author/desc crashes wizard; install pass |
 | T2 | `jzOcb/writing-style-skill` | Root SKILL.md + flat scripts/ with two Python files, no nested subdirs | Untested |
 | T3 | `netresearch/agent-rules-skill` | Single skill + deeply nested assets/, references/, scripts/ (22+ scripts, lib/ subdir) | Untested |
 | T3 | `netresearch/skill-repo-skill` | Single skill + nested references/ (11 docs), scripts/ (4 scripts), templates/ (11 files) | Untested |
@@ -21,4 +21,4 @@
 
 | Date | Repo | Tier | Env | Outcome | Run Folder |
 |------|------|------|-----|---------|------------|
-| — | — | — | — | — | — |
+| 2026-06-15 | Hao0321/claude-skill-code-cleanup | T1 | Claude Code | 🔶 Step 3 (ISS-001 empty author/desc crash), ✅ Steps 4–6 | runs/2026-06-15-hao0321-claude-skill-code-cleanup/ |
