@@ -7,6 +7,7 @@ import { detectDrift, isStale } from '../../src/drift.js';
 import { hashSkill } from '../../src/hash.js';
 import { findExistingInstalls, LIB_VERSION, performInstall } from '../../src/install.js';
 import { normalizeSkill } from '../../src/normalize.js';
+import { run } from '../../src/run.js';
 import type { Scope } from '../../src/types.js';
 import { applyUpdate, removeInstall } from '../../src/update.js';
 import { createSandbox } from './helpers/sandbox.js';
@@ -671,6 +672,71 @@ describe('requestedBy — two packages sharing a base dependency (Task 3.8)', ()
       // Still exactly two entries — no duplicates
       const sorted = [...manifest.requestedBy].sort();
       expect(sorted).toEqual(['recipe-planner', 'travel-planner']);
+    } finally {
+      await sandbox[Symbol.asyncDispose]();
+    }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Batch install — consolidated summary (non-TTY)
+// After the refactor, a 2-skill package must print exactly ONE summary line
+// of the form "N skills × M targets installed", not one line per skill.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('batch install — multi-skill package (non-TTY)', () => {
+  it('2-skill package with --target claude --scope user --yes prints exactly one consolidated summary', async () => {
+    const sandbox = await createSandbox();
+    try {
+      // Create 2 skill directories under skills/
+      const skillsDir = path.join(sandbox.cwd, 'skills');
+      for (const skillName of ['skill-alpha', 'skill-beta']) {
+        const skillDir = path.join(skillsDir, skillName);
+        await fs.mkdir(skillDir, { recursive: true });
+        await fs.writeFile(
+          path.join(skillDir, 'SKILL.md'),
+          `---\nname: ${skillName}\ndescription: Test skill ${skillName}\n---\n\nBody.\n`,
+          'utf8',
+        );
+      }
+
+      // Write package.json
+      const pkg = { name: 'test-multi-pkg', version: '1.0.0' };
+      await fs.writeFile(
+        path.join(sandbox.cwd, 'package.json'),
+        JSON.stringify({ ...pkg, skillet: { skills: 'skills' } }),
+        'utf8',
+      );
+
+      // Capture console.log output
+      const logLines: string[] = [];
+      vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+        logLines.push(args.map(String).join(' '));
+      });
+      vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+      try {
+        await run({
+          pkg,
+          argv: ['node', 'cli.js', 'install', '--target', 'claude', '--scope', 'user', '--yes'],
+        });
+      } finally {
+        vi.restoreAllMocks();
+      }
+
+      // The consolidated summary pattern: "N skills × M targets installed"
+      const consolidatedSummaryPattern = /\d+ skills? [×x] \d+ targets? installed/;
+
+      const summaryLines = logLines.filter((line) => consolidatedSummaryPattern.test(line));
+
+      // After refactor: exactly one consolidated summary line
+      expect(summaryLines).toHaveLength(1);
+
+      // Before refactor: the old per-skill summary "N targets installed" fires once per skill.
+      // Ensure we don't have multiple separate summary lines matching the legacy pattern.
+      const legacySummaryPattern = /\d+ targets? installed/;
+      const legacySummaryLines = logLines.filter((line) => legacySummaryPattern.test(line));
+      expect(legacySummaryLines).toHaveLength(1);
     } finally {
       await sandbox[Symbol.asyncDispose]();
     }
