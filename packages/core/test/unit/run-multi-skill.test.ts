@@ -7,8 +7,15 @@
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { checkbox, select } from '@inquirer/prompts';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { run } from '../../src/run.js';
+
+vi.mock('@inquirer/prompts', () => ({
+  select: vi.fn(),
+  checkbox: vi.fn(),
+  confirm: vi.fn(),
+}));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -236,5 +243,108 @@ describe('run() — multi-skill discovery', () => {
     // Exactly one skill — the direct skill — must be discovered
     expect(transformedNames).toHaveLength(1);
     expect(transformedNames[0]).toBe('direct-skill');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Batch prompt behaviour (TTY) — prompts must fire exactly once per install
+// command, regardless of how many skills are in the package.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('run() — batch prompt behaviour (TTY)', () => {
+  let tmpDir: string;
+  let originalCwd: string;
+  let originalHome: string | undefined;
+  let isTTYDesc: PropertyDescriptor | undefined;
+
+  beforeEach(async () => {
+    tmpDir = await makeTmpDir();
+    originalCwd = process.cwd();
+    originalHome = process.env.HOME;
+    process.env.HOME = tmpDir;
+    process.chdir(tmpDir);
+
+    // Force TTY so install prompts are shown
+    isTTYDesc = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: true,
+      writable: true,
+      configurable: true,
+    });
+
+    // Reset mock call counts from previous tests in this suite
+    vi.clearAllMocks();
+
+    // Suppress output
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(async () => {
+    // Restore isTTY
+    Object.defineProperty(
+      process.stdout,
+      'isTTY',
+      isTTYDesc ?? { value: undefined, writable: true, configurable: true },
+    );
+
+    process.chdir(originalCwd);
+    if (originalHome === undefined) {
+      delete process.env.HOME;
+    } else {
+      process.env.HOME = originalHome;
+    }
+    vi.restoreAllMocks();
+    await fs.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('prompts are each invoked exactly once for a 2-skill package in TTY mode', async () => {
+    // Set up 2 skill directories
+    const skillsDir = path.join(tmpDir, 'skills');
+    await writeSkill(skillsDir, 'skill-alpha');
+    await writeSkill(skillsDir, 'skill-beta');
+
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-pkg', version: '1.0.0', skillet: { skills: 'skills' } }),
+      'utf8',
+    );
+
+    // Mock select to return 'user' (scope choice)
+    vi.mocked(select).mockResolvedValue('user');
+    // Mock checkbox to return [] (no targets — avoids actual installs)
+    vi.mocked(checkbox).mockResolvedValue([]);
+
+    await run({
+      pkg: { name: 'test-pkg', version: '1.0.0' },
+      argv: ['node', 'cli.js', 'install'],
+    });
+
+    // After refactor: each prompt fires exactly once regardless of skill count
+    expect(vi.mocked(select)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(checkbox)).toHaveBeenCalledTimes(1);
+  });
+
+  it('single-skill package: prompts still fire exactly once (no regression)', async () => {
+    // Set up 1 skill directory
+    const skillsDir = path.join(tmpDir, 'skills');
+    await writeSkill(skillsDir, 'skill-only');
+
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-pkg', version: '1.0.0', skillet: { skills: 'skills' } }),
+      'utf8',
+    );
+
+    vi.mocked(select).mockResolvedValue('user');
+    vi.mocked(checkbox).mockResolvedValue([]);
+
+    await run({
+      pkg: { name: 'test-pkg', version: '1.0.0' },
+      argv: ['node', 'cli.js', 'install'],
+    });
+
+    expect(vi.mocked(select)).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(checkbox)).toHaveBeenCalledTimes(1);
   });
 });

@@ -119,8 +119,40 @@ async function runInstallPrompts(
   return selected;
 }
 
-async function runInstall(
+async function resolveTargets(
+  opts: {
+    target: string[];
+    scope?: string;
+    yes?: boolean;
+    requestorRoot?: string;
+  },
+  isTTY: boolean,
+): Promise<TargetOption[]> {
+  const home = process.env.HOME ?? process.env.USERPROFILE ?? os.homedir();
+  const cwd = process.cwd();
+  const allTargets = buildTargetList(home, cwd, opts);
+
+  if (!isTTY || opts.yes) {
+    // Non-interactive: use detected targets (or --target filtered), scope defaults to user
+    let selected: TargetOption[];
+    if (opts.target.length > 0) {
+      selected = allTargets.filter((t) => opts.target.includes(t.adapter.id));
+    } else {
+      selected = allTargets.filter((t) => t.detected);
+    }
+    // If no scope specified, default to user
+    if (!opts.scope) {
+      selected = selected.filter((t) => t.scope === 'user');
+    }
+    return selected;
+  } else {
+    return runInstallPrompts(allTargets, opts);
+  }
+}
+
+async function installSkill(
   skill: NormalizedSkill,
+  selectedTargets: TargetOption[],
   pkg: { name: string; version: string },
   hooks: RunOptions['hooks'],
   opts: {
@@ -131,38 +163,8 @@ async function runInstall(
     requestorRoot?: string;
   },
   verbMode: 'fun' | 'standard',
-  _resolvedDisplayName: string,
-  _resolvedWordmarkName: string,
 ): Promise<void> {
   const isTTY = process.stdout.isTTY ?? false;
-
-  const home = process.env.HOME ?? process.env.USERPROFILE ?? os.homedir();
-  const cwd = process.cwd();
-
-  const allTargets = buildTargetList(home, cwd, opts);
-
-  let selectedTargets: TargetOption[];
-
-  if (!isTTY || opts.yes) {
-    // Non-interactive: use detected targets (or --target filtered), scope defaults to user
-    if (opts.target.length > 0) {
-      selectedTargets = allTargets.filter((t) => opts.target.includes(t.adapter.id));
-    } else {
-      selectedTargets = allTargets.filter((t) => t.detected);
-    }
-    // If no scope specified, default to user
-    if (!opts.scope) {
-      selectedTargets = selectedTargets.filter((t) => t.scope === 'user');
-    }
-  } else {
-    selectedTargets = await runInstallPrompts(allTargets, opts);
-  }
-
-  if (selectedTargets.length === 0) {
-    console.log('  No targets selected.');
-    return;
-  }
-
   const installOpts: InstallOptions = {
     pkg,
     requestorRoot: opts.requestorRoot,
@@ -170,7 +172,6 @@ async function runInstall(
   };
   const verb =
     verbMode === 'standard' ? pickStandardVerb('install', isTTY) : pickVerb('install', isTTY);
-  const start = Date.now();
 
   for (const { adapter, scope } of selectedTargets) {
     if (isTTY) {
@@ -190,25 +191,6 @@ async function runInstall(
       console.log(`[${pkg.name}] ${verb.active} ${adapter.id} (${scope})…`);
       console.log(`[${pkg.name}] ✔ ${verb.done} — ${installPath}`);
     }
-  }
-
-  if (isTTY) {
-    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
-    console.log(
-      `\n  ${selectedTargets.length} target${selectedTargets.length !== 1 ? 's' : ''} installed · ${elapsed}s`,
-    );
-    // Cross-promotion hint: only in TTY, not CI, only if create-skillet not already installed
-    if (!process.env.CI) {
-      const { spawnSync } = await import('node:child_process');
-      const { status } = spawnSync('which', ['create-skillet'], { stdio: 'ignore' });
-      if (status !== 0) {
-        process.stdout.write(dim('  Tip: publish your own skill — npm create skillet\n'));
-      }
-    }
-  } else {
-    console.log(
-      `[${pkg.name}] ${selectedTargets.length} target${selectedTargets.length !== 1 ? 's' : ''} installed`,
-    );
   }
 }
 
@@ -450,15 +432,47 @@ function registerInstallCommand(
       process.stdout.write(
         renderFullHeader({ resolvedWordmarkName, resolvedDisplayName, pkg, coreVersion }),
       );
+      const isTTY = process.stdout.isTTY ?? false;
+      const selectedTargets = await resolveTargets({ ...opts, requestorRoot }, isTTY);
+
+      if (selectedTargets.length === 0) {
+        console.log('  No targets selected.');
+        return;
+      }
+
+      const start = Date.now();
       for (const skill of skills) {
-        await runInstall(
+        await installSkill(
           skill,
+          selectedTargets,
           pkg,
           hooks,
           { ...opts, requestorRoot },
           verbMode,
-          resolvedDisplayName,
-          resolvedWordmarkName,
+        );
+      }
+
+      const skillCount = skills.length;
+      const targetCount = selectedTargets.length;
+      const skillWord = skillCount === 1 ? 'skill' : 'skills';
+      const targetWord = targetCount === 1 ? 'target' : 'targets';
+
+      if (isTTY) {
+        const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+        console.log(
+          `\n  ${skillCount} ${skillWord} × ${targetCount} ${targetWord} installed · ${elapsed}s`,
+        );
+        // Cross-promotion hint: only in TTY, not CI, only if create-skillet not already installed
+        if (!process.env.CI) {
+          const { spawnSync } = await import('node:child_process');
+          const { status } = spawnSync('which', ['create-skillet'], { stdio: 'ignore' });
+          if (status !== 0) {
+            process.stdout.write(dim('  Tip: publish your own skill — npm create skillet\n'));
+          }
+        }
+      } else {
+        console.log(
+          `[${pkg.name}] ${skillCount} ${skillWord} × ${targetCount} ${targetWord} installed`,
         );
       }
     });
