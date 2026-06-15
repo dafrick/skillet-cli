@@ -1,11 +1,11 @@
 ## 1. Update prompt message labels
 
-- [ ] 1.1 In `packages/create/src/prompts.ts` line 41, change `message: 'Description:'` to `message: 'Description (optional):'`
-- [ ] 1.2 In `packages/create/src/prompts.ts` line 45, change `message: 'Author:'` to `message: 'Author (optional):'`
+- [x] 1.1 In `packages/create/src/prompts.ts` line 41, change `message: 'Description:'` to `message: 'Description (optional):'`
+- [x] 1.2 In `packages/create/src/prompts.ts` line 45, change `message: 'Author:'` to `message: 'Author (optional):'`
 
 ## 2. Add regression tests
 
-- [ ] 2.1 In `packages/create/test/unit/prompts.test.ts`, add a test in the `collectConfig` suite that calls `collectConfig` with a single-skill `DetectionResult`, then asserts that the `input` mock was called with a `message` containing `'Description (optional):'` and another call with `'Author (optional):'`
+- [x] 2.1 In `packages/create/test/unit/prompts.test.ts`, add a test in the `collectConfig` suite that calls `collectConfig` with a single-skill `DetectionResult`, then asserts that the `input` mock was called with a `message` containing `'Description (optional):'` and another call with `'Author (optional):'`
 
 ## 3. Update the OpenSpec spec
 
