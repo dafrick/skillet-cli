@@ -19,5 +19,5 @@
 
 ## 4. Verify
 
-- [ ] 4.1 Run the full create package test suite to check for regressions: `pnpm --filter @skillet-cli/create test`
-- [ ] 4.2 Run the full monorepo lint and type-check: `pnpm lint && pnpm typecheck`
+- [x] 4.1 Run the full create package test suite to check for regressions: `pnpm --filter @skillet-cli/create test`
+- [x] 4.2 Run the full monorepo lint and type-check: `pnpm lint && pnpm typecheck`
