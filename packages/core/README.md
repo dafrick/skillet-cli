@@ -97,15 +97,11 @@ Skills from `superpowers-base` are installed alongside `travel-planner`'s own sk
 
 > **Note:** Dependency packages are discovered by their `skillet` marker only. A dependency that calls `run({ skillDir })` without a marker in `package.json` cannot be discovered as a skill dependency, even if its CLI produces skills when run directly.
 
-## Back-compatibility
-
-Packages that call `run({ skillDir, pkg })` explicitly continue to work without any changes. The `skillet` marker is the fallback used only when `skillDir` is not provided.
-
 ## RunOptions
 
 | Option | Type | Description |
 |---|---|---|
-| `skillDir` | `string \| undefined` | Path to a single skill tree directory. When omitted, core discovers skill trees via the `skillet` marker in `package.json`. |
+| `skillDir` | `string \| undefined` | Explicit skill directory override. When omitted, core reads `skillet.skillDir` from `package.json` (single skill) or scans via `skillet.skills` (multi-skill packages). |
 | `pkg` | `{ name: string; version: string }` | Your package's name and version (used by the update notifier and `requestedBy` attribution) |
 | `hooks.transform` | `(skill: NormalizedSkill) => NormalizedSkill` | Modify the normalized skill before adapter dispatch; may be async |
 | `hooks.beforeInstall` | `(skill: NormalizedSkill, adapter: Adapter, ctx: Context) => void` | Run before each adapter install; may be async |
