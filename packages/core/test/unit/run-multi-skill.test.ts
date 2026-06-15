@@ -131,7 +131,7 @@ describe('run() — multi-skill discovery', () => {
     expect(new Set(transformCallCount)).toEqual(new Set(['brainstorming', 'debugging']));
   });
 
-  it('single skillDir provided explicitly still works (wraps in array, not broken)', async () => {
+  it('skillet.skillDir pointing at a standalone directory (not under skills/) resolves one skill', async () => {
     // Create a standalone skill dir (not under a skills/ parent)
     const skillDir = path.join(tmpDir, 'my-skill');
     await fs.mkdir(skillDir, { recursive: true });
@@ -140,12 +140,16 @@ describe('run() — multi-skill discovery', () => {
       '---\nname: my-skill\ndescription: My test skill\n---\nBody.\n',
       'utf8',
     );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-pkg', version: '1.0.0', skillet: { skillDir } }),
+      'utf8',
+    );
 
     const transformCallCount: string[] = [];
 
     await run({
       pkg: { name: 'test-pkg', version: '1.0.0' },
-      skillDir,
       argv: ['node', 'cli.js', '--help'],
       hooks: {
         transform: (skill) => {

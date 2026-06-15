@@ -1,9 +1,6 @@
 /**
- * Back-compatibility regression tests for @skillet-cli/core v0.2.0.
+ * Integration tests for @skillet-cli/core v0.2.0+ features.
  * Tasks 5.1–5.3 + requestorRoot wiring for direct installs.
- *
- * TDD: tests were written first, then verified green without any code changes
- * because back-compatibility was already preserved in v0.2.0.
  */
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
@@ -44,10 +41,10 @@ async function readManifest(installPath: string): Promise<SkillManifest> {
 }
 
 // ---------------------------------------------------------------------------
-// Task 5.1 — run({ skillDir }) still works (regression test)
+// Task 5.1 — run() installs end-to-end using skillet.skillDir in package.json
 // ---------------------------------------------------------------------------
 
-describe('5.1: run({ skillDir }) back-compatibility', () => {
+describe('5.1: run() installs skill end-to-end via skillet.skillDir', () => {
   let sandbox: Sandbox;
 
   beforeEach(async () => {
@@ -58,25 +55,29 @@ describe('5.1: run({ skillDir }) back-compatibility', () => {
     await sandbox[Symbol.asyncDispose]();
   });
 
-  it('calling run() with an explicit skillDir installs the skill end-to-end', async () => {
-    // Write a package.json in the sandbox cwd so readPackageName() works
+  it('installs the skill when skillet.skillDir points at the fixture directory', async () => {
     await fs.writeFile(
       path.join(sandbox.cwd, 'package.json'),
-      JSON.stringify({ name: 'my-skill-package', version: '1.0.0', type: 'module' }, null, 2),
+      JSON.stringify(
+        {
+          name: 'my-skill-package',
+          version: '1.0.0',
+          type: 'module',
+          skillet: { skillDir: helloSkillDir },
+        },
+        null,
+        2,
+      ),
       'utf8',
     );
 
     const pkg = { name: 'my-skill-package', version: '1.0.0' };
 
-    // Invoke run() with skillDir pointing at the hello-skill fixture.
-    // Use --yes and --target to pick a specific adapter without interaction.
     await run({
-      skillDir: helloSkillDir,
       pkg,
       argv: ['node', 'cli.js', 'install', '--yes', '--target', 'claude', '--scope', 'user'],
     });
 
-    // Assert the skill was installed under ~/.claude/skills/hello-skill/
     const skillMdPath = path.join(sandbox.home, '.claude', 'skills', 'hello-skill', 'SKILL.md');
     const stat = await fs.stat(skillMdPath);
     expect(stat.isFile()).toBe(true);
@@ -87,7 +88,7 @@ describe('5.1: run({ skillDir }) back-compatibility', () => {
 // Task 5.1 extra — requestorRoot is wired for direct installs
 // ---------------------------------------------------------------------------
 
-describe('5.1/requestorRoot: direct run() install records requestedBy with package name', () => {
+describe('5.1/requestorRoot: run() install records requestedBy with package name', () => {
   let sandbox: Sandbox;
 
   beforeEach(async () => {
@@ -98,18 +99,21 @@ describe('5.1/requestorRoot: direct run() install records requestedBy with packa
     await sandbox[Symbol.asyncDispose]();
   });
 
-  it('manifest requestedBy contains the package name after a direct run() install', async () => {
+  it('manifest requestedBy contains the package name after a run() install', async () => {
     const pkgName = 'direct-install-pkg';
     await fs.writeFile(
       path.join(sandbox.cwd, 'package.json'),
-      JSON.stringify({ name: pkgName, version: '1.0.0', type: 'module' }, null, 2),
+      JSON.stringify(
+        { name: pkgName, version: '1.0.0', type: 'module', skillet: { skillDir: helloSkillDir } },
+        null,
+        2,
+      ),
       'utf8',
     );
 
     const pkg = { name: pkgName, version: '1.0.0' };
 
     await run({
-      skillDir: helloSkillDir,
       pkg,
       argv: ['node', 'cli.js', 'install', '--yes', '--target', 'claude', '--scope', 'user'],
     });

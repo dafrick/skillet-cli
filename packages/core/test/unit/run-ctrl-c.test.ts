@@ -52,6 +52,15 @@ describe('run() — Ctrl+C (ExitPromptError)', () => {
   it('exits with code 0 and prints Exiting... when user presses Ctrl+C during a prompt', async () => {
     const skillDir = path.join(tmpDir, 'my-skill');
     await writeSkill(skillDir, 'my-skill');
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify(
+        { name: 'test-pkg', version: '1.0.0', type: 'module', skillet: { skillDir } },
+        null,
+        2,
+      ),
+      'utf8',
+    );
 
     // Force TTY so install prompts are shown
     const isTTYDesc = Object.getOwnPropertyDescriptor(process.stdout, 'isTTY');
@@ -70,7 +79,6 @@ describe('run() — Ctrl+C (ExitPromptError)', () => {
     const stderrSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
 
     await run({
-      skillDir,
       pkg: { name: 'test-pkg', version: '1.0.0' },
       argv: ['node', 'cli.js', 'install'],
     });
