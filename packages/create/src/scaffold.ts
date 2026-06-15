@@ -64,8 +64,8 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     const pkgSetArgs = [
       `name=${config.name}`,
       `version=${config.version}`,
-      `description=${config.description}`,
-      `author=${config.author}`,
+      ...(config.description ? [`description=${config.description}`] : []),
+      ...(config.author ? [`author=${config.author}`] : []),
       `license=${config.license}`,
       'type=module',
       `engines.node=>=24`,

@@ -194,6 +194,55 @@ describe('buildBinCliJs — generated bin/cli.js content', () => {
   });
 });
 
+describe('executeScaffold — description and author guards', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+  });
+
+  function getPkgSetArgs(): string[] {
+    return mockSpawnSync.mock.calls
+      .filter(
+        (c) =>
+          typeof c[0] === 'string' &&
+          c[0].includes('npm') &&
+          c[0].includes('"pkg"') &&
+          c[0].includes('"set"'),
+      )
+      .map((c) => c[0] as string);
+  }
+
+  // Task 1.1: empty description is omitted from npm pkg set args
+  it('does NOT include description= in npm pkg set args when config.description is empty', async () => {
+    await executeScaffold({ ...baseConfig, description: '' });
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('description='))).toBe(false);
+  });
+
+  // Task 1.2: empty author is omitted from npm pkg set args
+  it('does NOT include author= in npm pkg set args when config.author is empty', async () => {
+    await executeScaffold({ ...baseConfig, author: '' });
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('author='))).toBe(false);
+  });
+
+  // Task 1.3: regression guards — non-empty values ARE included
+  it('DOES include description= in npm pkg set args when config.description is non-empty', async () => {
+    await executeScaffold({ ...baseConfig, description: 'A great skill' });
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('description=') && a.includes('A great skill'))).toBe(
+      true,
+    );
+  });
+
+  it('DOES include author= in npm pkg set args when config.author is non-empty', async () => {
+    await executeScaffold({ ...baseConfig, author: 'Jane Doe' });
+    const allArgs = getPkgSetArgs();
+    expect(allArgs.some((a) => a.includes('author=') && a.includes('Jane Doe'))).toBe(true);
+  });
+});
+
 describe('executeScaffold — repository URL guard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
