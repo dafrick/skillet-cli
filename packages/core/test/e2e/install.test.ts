@@ -6,6 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const CLI_PATH = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../bin/cli.js');
+const HELLO_SKILL_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../fixtures/hello-skill',
+);
 
 interface RunResult {
   stdout: string;
@@ -43,6 +47,15 @@ async function withSandbox<T>(fn: (home: string, cwd: string) => Promise<T>): Pr
   const cwd = path.join(root, 'project');
   await fs.mkdir(home, { recursive: true });
   await fs.mkdir(cwd, { recursive: true });
+  await fs.writeFile(
+    path.join(cwd, 'package.json'),
+    JSON.stringify(
+      { name: '@skillet-cli/core', version: '0.3.0', skillet: { skillDir: HELLO_SKILL_PATH } },
+      null,
+      2,
+    ),
+    'utf8',
+  );
   try {
     return await fn(home, cwd);
   } finally {
