@@ -38,12 +38,12 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
   });
 
   const description = await input({
-    message: 'Description:',
+    message: 'Description (optional):',
     default: detected.description || '',
   });
 
   const author = await input({
-    message: 'Author:',
+    message: 'Author (optional):',
     default: detected.gitUser || detected.author || '',
   });
 

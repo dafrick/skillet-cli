@@ -138,6 +138,27 @@ describe('collectConfig — multi-skill mode', () => {
     expect(skillPathCallCount).toBe(0);
   });
 
+  it('uses "Description (optional):" and "Author (optional):" as prompt messages', async () => {
+    const detected = makeDetectionResult({
+      discoveredSkillDirs: ['skills/brainstorming/'],
+    });
+
+    mockInput
+      .mockResolvedValueOnce('my-skill') // name
+      .mockResolvedValueOnce('1.0.0') // version
+      .mockResolvedValueOnce('A test skill') // description
+      .mockResolvedValueOnce('Test Author') // author
+      .mockResolvedValueOnce('') // repositoryUrl
+      .mockResolvedValueOnce('MIT') // license
+      .mockResolvedValueOnce('skills/brainstorming/'); // skillDir
+
+    await collectConfig(detected);
+
+    const inputMessages = mockInput.mock.calls.map((c) => (c[0] as { message: string }).message);
+    expect(inputMessages).toContain('Description (optional):');
+    expect(inputMessages).toContain('Author (optional):');
+  });
+
   // Task 2.5: root-level filtering test
   it('filters root-level "./" from discoveredSkillDirs when computing isMultiSkill and skillsParentDirs', async () => {
     const detected = makeDetectionResult({
