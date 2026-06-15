@@ -120,6 +120,8 @@ All `hooks` fields are optional. `NormalizedSkill`, `Adapter`, and `Context` are
 
 - **`skillet.skillDir` in `package.json`**: declare the direct path to a single skill directory; takes precedence over `skillet.skills` when present
 - **Simplified `bin/cli.js`**: `create-skillet` now generates `await run({ pkg })` with no explicit `skillDir` — skill location is read entirely from `package.json`
+- **Noise file exclusion**: `copyTree` skips `.git`, `node_modules`, `.DS_Store`, and `.skill-manifest.json` when copying skill files during install
+- **Publish file scoping**: exported `DEFAULT_IGNORE` constant; skill packages now have `files` restricted to `bin/` and the skill directory, preventing accidental inclusion of dev artifacts
 
 ### v0.2.0
 

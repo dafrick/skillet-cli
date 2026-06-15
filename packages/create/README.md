@@ -54,3 +54,20 @@ npx your-package-name install
 ```
 
 See [`@skillet-cli/core`](https://www.npmjs.com/package/@skillet-cli/core) for the full skill author guide.
+
+## Changelog
+
+### v0.2.0
+
+- **Multi-skill repo support**: wizard detects multiple skill directories and prompts you to choose which one to package
+- **`skillet.skillDir` as source of truth**: generated `bin/cli.js` calls `run({ pkg })` with no hardcoded path — skill location is read entirely from `package.json`
+- **Accurate `package.json` preview**: final `package.json` state is displayed after all `npm pkg set` commands complete, reflecting the true written values
+- **SKILL.md detection**: wizard summary accurately indicates whether a `SKILL.md` file is present in the selected skill directory
+- **Publish file scoping**: scaffolded `package.json` sets `files` to `bin/` and the skill directory, preventing dev artifacts from being included in the published package
+- **npm install output**: replaced spinner with plain stdout so actual install progress is visible
+- **Post-move display**: shows the updated skill directory path after a directory move
+- **Bug fixes**: `bin/cli.js` and `package.json` are correctly rewritten after a skill directory move
+
+### v0.1.0
+
+Initial release.
