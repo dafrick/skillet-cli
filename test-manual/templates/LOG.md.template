@@ -1,11 +1,10 @@
 # Session Log: <repo-name>
 
-<!-- Guide pre-fills this block before handing LOG.md to the test user. Test user fills in `tester:` only. -->
+<!-- Guide pre-fills this block before handing LOG.md to the test user. Test user fills in `tester:` only. The guide does NOT pre-fill `create-skillet-version:` — discovering the tool is what Step 2 measures. -->
 ```
 repo:
 tier:
 env:
-create-skillet-version:
 date:
 tester:
 docker-image:
@@ -28,3 +27,10 @@ docker-image:
 
 -->
 <!-- Append entries below. -->
+
+---
+
+<!-- Post-session: After you have discovered and used the tool, fill in the version below. -->
+```
+create-skillet-version:
+```

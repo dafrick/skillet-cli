@@ -48,7 +48,7 @@ Classify the repo before the session begins. Record the tier in `TEST-RUN.md`.
    Use `org-repo` format for the slug (replace `/` with `-`). For example, `netresearch/agent-rules-skill` → `netresearch-agent-rules-skill`.
 
 5. Open `runs/YYYY-MM-DD-<repo-slug>/TASK.md` and fill in the repo URL, target environment, and any repo-specific context.
-6. Pre-fill `LOG.md`'s frontmatter (`repo`, `tier`, `env`, `create-skillet-version`, `date`, `docker-image`) before handing it to the test user. The test user fills in `tester:` only and writes the append-only log entries.
+6. Pre-fill `LOG.md`'s frontmatter (`repo`, `tier`, `env`, `date`, `docker-image`) before handing it to the test user. The test user fills in `tester:` only and writes the append-only log entries. (`create-skillet-version` is intentionally excluded — discovering the tool is what Step 2 measures; the tester fills it in post-session.)
 7. If the test user is a coding agent, the run folder already contains `AGENT-SUPPLEMENT.md` — include it alongside `TASK.md` in the agent's context.
 
 ---
