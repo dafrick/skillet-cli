@@ -1,9 +1,23 @@
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { run } from '../../src/run.js';
 import { createSandbox } from './helpers/sandbox.js';
 
 const helloSkillDir = fileURLToPath(new URL('../../fixtures/hello-skill', import.meta.url));
+
+async function writePkg(cwd: string, name: string): Promise<void> {
+  await fs.writeFile(
+    path.join(cwd, 'package.json'),
+    JSON.stringify(
+      { name, version: '1.0.0', type: 'module', skillet: { skillDir: helloSkillDir } },
+      null,
+      2,
+    ),
+    'utf8',
+  );
+}
 
 // Helper: captures console.log output during a run() call
 async function captureRun(options: Parameters<typeof run>[0]): Promise<string> {
@@ -29,9 +43,9 @@ describe('verbMode integration', () => {
   // ── Already-existing test (Group 4) ─────────────────────────────────────────
   it('verbMode: standard emits lowercased standard verb in non-TTY install', async () => {
     const sandbox = await createSandbox();
+    await writePkg(sandbox.cwd, 'test-skill');
     try {
       const combined = await captureRun({
-        skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         verbMode: 'standard',
         argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
@@ -46,6 +60,7 @@ describe('verbMode integration', () => {
   // ── Task 6.5: update with verbMode: 'standard' ───────────────────────────────
   it('6.5: verbMode: standard + update logs standard verb in non-TTY path', async () => {
     const sandbox = await createSandbox();
+    await writePkg(sandbox.cwd, 'test-skill');
     try {
       // TODO: This test needs a helper that pre-seeds an install with a stale content hash
       // so that applyUpdate returns action === 'updated', triggering the non-TTY log path.
@@ -53,7 +68,6 @@ describe('verbMode integration', () => {
       // pickStandardVerb('update', false).active (e.g. 'updating') and .done (e.g. 'updated').
       // For now we verify the command completes without error when no installs are present.
       const combined = await captureRun({
-        skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         verbMode: 'standard',
         argv: ['node', 'test-skill', 'update'],
@@ -68,17 +82,16 @@ describe('verbMode integration', () => {
   // ── Task 6.5: uninstall with verbMode: 'standard' ────────────────────────────
   it('6.5: verbMode: standard + uninstall emits "removing" in non-TTY logs', async () => {
     const sandbox = await createSandbox();
+    await writePkg(sandbox.cwd, 'test-skill');
     try {
       // Install first
       await run({
-        skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         verbMode: 'standard',
         argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
       });
 
       const combined = await captureRun({
-        skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         verbMode: 'standard',
         argv: ['node', 'test-skill', 'uninstall', '--yes'],
@@ -94,6 +107,7 @@ describe('verbMode integration', () => {
   // ── Task 6.6: verbMode: 'fun' (default) produces cooking verbs ───────────────
   it('6.6: verbMode: fun (default) install emits a cooking verb active form', async () => {
     const sandbox = await createSandbox();
+    await writePkg(sandbox.cwd, 'test-skill');
     try {
       const COOKING_INSTALL_ACTIVE = [
         'searing into',
@@ -107,7 +121,6 @@ describe('verbMode integration', () => {
       let found = false;
       for (let attempt = 0; attempt < 5; attempt++) {
         const combined = await captureRun({
-          skillDir: helloSkillDir,
           pkg: { name: 'test-skill', version: '1.0.0' },
           // No verbMode = defaults to 'fun'
           argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
@@ -127,10 +140,10 @@ describe('verbMode integration', () => {
 
   it('6.6: verbMode: fun uninstall emits a cooking (culinary) verb active form', async () => {
     const sandbox = await createSandbox();
+    await writePkg(sandbox.cwd, 'test-skill');
     try {
       // Install first
       await run({
-        skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         argv: ['node', 'test-skill', 'install', '--yes', '--target', 'agents'],
       });
@@ -144,7 +157,6 @@ describe('verbMode integration', () => {
       ];
 
       const combined = await captureRun({
-        skillDir: helloSkillDir,
         pkg: { name: 'test-skill', version: '1.0.0' },
         // No verbMode = defaults to 'fun'
         argv: ['node', 'test-skill', 'uninstall', '--yes'],
