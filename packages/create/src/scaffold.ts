@@ -73,6 +73,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       `bin.${config.name}=./bin/cli.js`,
       `files[0]=bin`,
       ...filesArgs,
+      'scripts.prepublishOnly=create-skillet check',
     ];
 
     runSync('npm', ['pkg', 'set', ...pkgSetArgs], 'npm pkg set');
@@ -115,7 +116,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
 
     spinner.succeed('Plating done');
 
-    // Step 6: npm install @skillet-cli/core
+    // Step 6: npm install @skillet-cli/core + create-skillet (devDep)
     process.stdout.write(
       'Installing @skillet-cli/core (this may take a few minutes on first run)…\n',
     );
@@ -126,6 +127,15 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     if (installResult.status !== 0) {
       throw new Error(
         `npm install @skillet-cli/core exited with code ${installResult.status ?? 'null'}`,
+      );
+    }
+    const devInstallResult = spawnSync('npm install --save-dev create-skillet@latest', [], {
+      stdio: 'inherit',
+      shell: true,
+    });
+    if (devInstallResult.status !== 0) {
+      throw new Error(
+        `npm install create-skillet exited with code ${devInstallResult.status ?? 'null'}`,
       );
     }
     process.stdout.write('Install complete.\n');
