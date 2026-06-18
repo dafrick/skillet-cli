@@ -565,6 +565,15 @@ describe('executeScaffold — npm install progress output', () => {
     stdoutSpy.mockRestore();
   });
 
+  it('installs @skillet-cli/core@latest (not bare @skillet-cli/core) to ensure the latest version is always used', async () => {
+    await executeScaffold(baseConfig);
+
+    const calls = mockSpawnSync.mock.calls;
+    const installCall = calls.find((c) => typeof c[0] === 'string' && c[0].includes('npm install'));
+    expect(installCall).toBeDefined();
+    expect(installCall![0]).toContain('@skillet-cli/core@latest');
+  });
+
   it('writes a message containing @skillet-cli/core to stdout before the install spawnSync call', async () => {
     const writtenMessages: string[] = [];
     const spawnSyncCallOrder: Array<{ cmd: string; stdoutIndexAtCall: number }> = [];
