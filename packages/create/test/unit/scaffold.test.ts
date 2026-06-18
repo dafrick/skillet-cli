@@ -39,11 +39,13 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 });
 
 import { spawnSync } from 'node:child_process';
+import * as fsp from 'node:fs/promises';
 import type { WizardConfig } from '../../src/prompts.js';
 import { buildBinCliJs, executeScaffold } from '../../src/scaffold.js';
 
 const mockSpawnSync = vi.mocked(spawnSync);
 const mockFsExistsSync = vi.mocked(fs.existsSync);
+const mockFspWriteFile = vi.mocked(fsp.writeFile);
 
 function makeSuccessResult() {
   return { status: 0, stdout: Buffer.from(''), stderr: Buffer.from('') } as ReturnType<
@@ -620,5 +622,23 @@ describe('executeScaffold — npm install progress output', () => {
     await executeScaffold(baseConfig);
 
     expect(writtenMessages.some((msg) => msg.includes('Install complete.'))).toBe(true);
+  });
+});
+
+describe('executeScaffold — .npmignore', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+  });
+
+  it('writes a .npmignore containing **/node_modules to prevent nested node_modules from being published', async () => {
+    await executeScaffold(baseConfig);
+
+    const npmignoreCall = mockFspWriteFile.mock.calls.find(
+      (c) => typeof c[0] === 'string' && (c[0] as string).endsWith('.npmignore'),
+    );
+    expect(npmignoreCall).toBeDefined();
+    expect(String(npmignoreCall![1])).toContain('**/node_modules');
   });
 });
