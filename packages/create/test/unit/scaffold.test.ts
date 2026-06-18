@@ -642,3 +642,52 @@ describe('executeScaffold — .npmignore', () => {
     expect(String(npmignoreCall![1])).toContain('**/node_modules');
   });
 });
+
+describe('executeScaffold — create-skillet devDep and prepublishOnly (task 7.5)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+  });
+
+  function getSpawnCmds(): string[] {
+    return mockSpawnSync.mock.calls.map((c) => String(c[0]));
+  }
+
+  function getPkgSetArgs(): string[] {
+    return getSpawnCmds().filter((cmd) => cmd.includes('"pkg"') && cmd.includes('"set"'));
+  }
+
+  it('installs create-skillet@latest as a devDependency', async () => {
+    await executeScaffold(baseConfig);
+    const cmds = getSpawnCmds();
+    expect(cmds.some((c) => c.includes('create-skillet@latest') && c.includes('--save-dev'))).toBe(
+      true,
+    );
+  });
+
+  it('installs create-skillet after @skillet-cli/core', async () => {
+    const cmdOrder: string[] = [];
+    mockSpawnSync.mockImplementation((cmd: unknown) => {
+      cmdOrder.push(String(cmd));
+      return makeSuccessResult();
+    });
+
+    await executeScaffold(baseConfig);
+
+    const coreIdx = cmdOrder.findIndex((c) => c.includes('@skillet-cli/core@latest'));
+    const csIdx = cmdOrder.findIndex((c) => c.includes('create-skillet@latest'));
+    expect(coreIdx).toBeGreaterThanOrEqual(0);
+    expect(csIdx).toBeGreaterThan(coreIdx);
+  });
+
+  it('sets scripts.prepublishOnly=create-skillet check in npm pkg set', async () => {
+    await executeScaffold(baseConfig);
+    const pkgSetArgs = getPkgSetArgs();
+    expect(
+      pkgSetArgs.some(
+        (a) => a.includes('scripts.prepublishOnly') && a.includes('create-skillet check'),
+      ),
+    ).toBe(true);
+  });
+});

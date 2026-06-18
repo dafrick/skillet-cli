@@ -29,6 +29,10 @@ vi.mock('../../src/skill-dir.js', () => ({
   setupSkillDir: vi.fn(),
 }));
 
+vi.mock('../../src/check.js', () => ({
+  runCheck: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('@skillet-cli/ui', () => ({
   generateWordmark: vi.fn().mockReturnValue('SKILLET'),
   renderFullHeader: vi.fn().mockReturnValue(''),
@@ -44,6 +48,7 @@ vi.mock('@skillet-cli/ui', () => ({
 // ---------------------------------------------------------------------------
 
 import { confirm } from '@inquirer/prompts';
+import { runCheck } from '../../src/check.js';
 import type { DetectionResult } from '../../src/detect.js';
 import { detectEnvironment } from '../../src/detect.js';
 import type { WizardConfig } from '../../src/prompts.js';
@@ -57,6 +62,7 @@ const mockDetectEnvironment = vi.mocked(detectEnvironment);
 const mockCollectConfig = vi.mocked(collectConfig);
 const mockExecuteScaffold = vi.mocked(executeScaffold);
 const mockSetupSkillDir = vi.mocked(setupSkillDir);
+const mockRunCheck = vi.mocked(runCheck);
 
 function makeFakeDetected(overrides: Partial<DetectionResult> = {}): DetectionResult {
   return {
@@ -409,5 +415,66 @@ describe('skillMdStatus', () => {
       discoveredSkillDirs: ['skill/openspec-auto/'],
     });
     expect(skillMdStatus(detected)).toBe('found');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 7.6: Commander routing
+// ---------------------------------------------------------------------------
+
+async function invokeWithArgs(args: string[]): Promise<void> {
+  const originalArgv = process.argv;
+  process.argv = args;
+  try {
+    vi.resetModules();
+    const { run } = await import('../../src/run.js');
+    await run();
+  } finally {
+    process.argv = originalArgv;
+  }
+}
+
+describe('run.ts — Commander routing (task 7.6)', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    mockConfirm.mockResolvedValue(true);
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+    mockRunCheck.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('routes create-skillet (no args) to wizard — detectEnvironment is called', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeWithArgs(['node', 'create-skillet']);
+
+    expect(mockDetectEnvironment).toHaveBeenCalled();
+  });
+
+  it('routes create-skillet check to runCheck with interactive: true', async () => {
+    await invokeWithArgs(['node', 'create-skillet', 'check']);
+
+    expect(mockRunCheck).toHaveBeenCalledWith({ interactive: true });
+    expect(mockDetectEnvironment).not.toHaveBeenCalled();
+  });
+
+  it('routes create-skillet mypackage to wizard with nameArg — detectEnvironment called', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ name: 'mypackage' }));
+    mockCollectConfig.mockResolvedValue(makeFakeConfig({ name: 'mypackage' }));
+
+    await invokeWithArgs(['node', 'create-skillet', 'mypackage']);
+
+    expect(mockDetectEnvironment).toHaveBeenCalledWith('mypackage');
+    expect(mockRunCheck).not.toHaveBeenCalledWith({ interactive: true });
   });
 });

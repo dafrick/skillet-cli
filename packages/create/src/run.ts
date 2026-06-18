@@ -1,11 +1,10 @@
 import { createRequire } from 'node:module';
-import path from 'node:path';
 import { confirm } from '@inquirer/prompts';
 import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
+import { runCheck } from './check.js';
 import { type DetectionResult, detectEnvironment } from './detect.js';
 import { collectConfig } from './prompts.js';
-import { printPublishPreview } from './publish-preview.js';
 import { executeScaffold } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
 
@@ -114,21 +113,30 @@ program
       await setupSkillDir(detected);
     }
 
-    // Step 7b: Publish preview
-    await printPublishPreview(path.join(detected.cwd, config.skillDir));
+    // Step 7b: Publish preview (read-only — no prompts, no .npmignore writes)
+    await runCheck({ interactive: false });
 
     // Step 8: Completion block
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
     process.stdout.write(`\nDone in ${elapsed}s — Your skill package is ready.\n\n`);
     process.stdout.write(`  Next steps:\n`);
-    process.stdout.write(`    npx . install    — test locally\n`);
+    process.stdout.write(`    npx . install         — test locally\n`);
+    process.stdout.write(`    create-skillet check  — verify what will be published\n`);
     if (detected.isPrivate && !config.removePrivate) {
       process.stdout.write(`    Remove "private": true first: npm pkg delete private\n`);
     } else {
-      process.stdout.write(`    npm publish      — publish to npm\n`);
+      process.stdout.write(`    npm publish           — publish to npm\n`);
     }
     process.stdout.write('\n');
   });
+
+program.addCommand(
+  new Command('check')
+    .description('Check publish readiness — verify tarball contents before npm publish')
+    .action(async () => {
+      await runCheck({ interactive: true });
+    }),
+);
 
 export async function run(): Promise<void> {
   await program.parseAsync(process.argv);
