@@ -112,7 +112,7 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     process.stdout.write(
       'Installing @skillet-cli/core (this may take a few minutes on first run)…\n',
     );
-    const installResult = spawnSync('npm install @skillet-cli/core', [], {
+    const installResult = spawnSync('npm install @skillet-cli/core@latest', [], {
       stdio: 'inherit',
       shell: true,
     });
