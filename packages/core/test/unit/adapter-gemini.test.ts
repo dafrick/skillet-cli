@@ -20,6 +20,14 @@ afterEach(() => {
 const skill = { name: 'my-skill', sourceDir: '/some/source/dir' };
 
 describe('geminiAdapter', () => {
+  it('has id "gemini"', () => {
+    expect(geminiAdapter.id).toBe('gemini');
+  });
+
+  it('has label "Gemini CLI"', () => {
+    expect(geminiAdapter.label).toBe('Gemini CLI');
+  });
+
   it('detect() returns user scope when ~/.gemini/ exists', () => {
     fs.mkdirSync(path.join(tmpHome, '.gemini'));
     const result = geminiAdapter.detect({ home: tmpHome, cwd: tmpCwd });
@@ -37,6 +45,13 @@ describe('geminiAdapter', () => {
     fs.mkdirSync(path.join(tmpCwd, '.gemini'));
     const result = geminiAdapter.detect({ home: tmpHome, cwd: tmpCwd });
     expect(result.scopes).toContain('user');
+    expect(result.scopes).toContain('project');
+  });
+
+  it('detect() does not return user scope when only .gemini/ exists in cwd', () => {
+    fs.mkdirSync(path.join(tmpCwd, '.gemini'));
+    const result = geminiAdapter.detect({ home: tmpHome, cwd: tmpCwd });
+    expect(result.scopes).not.toContain('user');
     expect(result.scopes).toContain('project');
   });
 
