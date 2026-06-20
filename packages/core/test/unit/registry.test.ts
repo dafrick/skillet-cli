@@ -58,3 +58,11 @@ describe('registry', () => {
     expect(registry.get(id)).toBe(adapter);
   });
 });
+
+describe('default registry includes built-in adapters', () => {
+  it('registry.list() includes gemini adapter after package import', async () => {
+    await import('../../src/adapters/index.js');
+    const ids = registry.list().map((a) => a.id);
+    expect(ids).toContain('gemini');
+  });
+});
