@@ -1,10 +1,5 @@
 ## ADDED Requirements
 
-### Requirement: Gemini auto-loads skills without configuration; SKILL.md frontmatter is required
-Gemini CLI scans `~/.gemini/skills/` (user) and `.gemini/skills/` (project) at session start with no additional configuration. However, Gemini silently skips any skill whose `SKILL.md` does not have valid YAML frontmatter as the very first content — specifically, `name:` and `description:` fields between `---` delimiters with no leading blank lines or text before the opening `---`.
-
-Since `normalizeSkill()` already validates and throws on missing `name` or `description`, a skill that reaches the adapter will always satisfy Gemini's frontmatter requirement. This is noted here to document the coupling: the adapter provides no auto-load guarantee for malformed skill packages.
-
 ### Requirement: gemini adapter detects user scope via ~/.gemini directory
 The `gemini` adapter's `detect()` SHALL return `user` in its scopes array when `~/.gemini/` exists on the user's system.
 

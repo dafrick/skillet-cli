@@ -35,3 +35,7 @@ When running interactively and a frontmatter-position violation is detected, the
 #### Scenario: Re-running check after fix reports no violation
 - **WHEN** the fix is accepted and `create-skillet check` is run again
 - **THEN** no frontmatter-lint warning is emitted for that skill
+
+#### Scenario: Fix emits a review reminder
+- **WHEN** the fix is accepted and `SKILL.md` is rewritten
+- **THEN** the command emits a message advising the user to review the rewritten file, noting that comments and unusual whitespace inside the frontmatter block may not have been preserved by the round-trip through gray-matter

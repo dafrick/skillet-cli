@@ -58,6 +58,17 @@ Codex CLI loads project-level skills from `.agents/skills/` relative to the curr
 - **WHEN** `codexAdapter.render(skill, ctx)` is called
 - **THEN** it returns `skill.sourceDir` unchanged
 
+### Requirement: Codex adapter provides an install note for user scope
+`codexAdapter.installNote('user')` SHALL return a string explaining that the install path is shared with generic agents environments. `codexAdapter.installNote('project')` SHALL return `undefined`.
+
+#### Scenario: installNote for user scope returns shared-path explanation
+- **WHEN** `codexAdapter.installNote('user')` is called
+- **THEN** it returns a non-empty string mentioning both `~/.agents/skills/` and the generic agents environment
+
+#### Scenario: installNote for project scope returns undefined
+- **WHEN** `codexAdapter.installNote('project')` is called
+- **THEN** it returns `undefined`
+
 ### Requirement: Codex adapter has correct id and label
 The `codex` adapter SHALL have `id: 'codex'` and `label: 'Codex CLI'`.
 
@@ -68,3 +79,19 @@ The `codex` adapter SHALL have `id: 'codex'` and `label: 'Codex CLI'`.
 #### Scenario: adapter label is Codex CLI
 - **WHEN** `codexAdapter.label` is read
 - **THEN** it equals `'Codex CLI'`
+
+## MODIFIED Requirements
+
+### Requirement: Adapter interface gains optional installNote method
+The `Adapter` interface SHALL gain an optional `installNote?(scope: Scope): string | undefined` method.
+
+When an adapter implements `installNote`:
+- The installer calls `installNote(scope)` after the user confirms scope selection
+- If the return value is a non-empty string, the installer displays it as a contextual note
+- If the return value is `undefined` or the method is absent, no note is shown
+
+Existing adapters that do not implement `installNote` are unaffected.
+
+#### Scenario: installNote absent on passthrough adapters
+- **WHEN** `claudeAdapter.installNote` is read
+- **THEN** it is `undefined`

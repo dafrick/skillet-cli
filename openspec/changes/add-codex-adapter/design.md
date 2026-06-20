@@ -13,6 +13,7 @@ The existing `agents` adapter already installs to `.agents/skills/`. The `codex`
 - Install skills to `$HOME/.agents/skills/<skill.name>/` (user) and `.agents/skills/<skill.name>/` (project) — the directories Codex CLI actually reads.
 - Relabel the existing `agents` adapter to `'Generic agents (.agents/)'` to distinguish it from Codex.
 - Register the new adapter as a built-in alongside `claude`, `copilot`, and `agents`.
+- Surface a scope note at user scope explaining that the install path is shared with generic agents environments, so users understand the consequence without needing to know the implementation.
 
 **Non-Goals:**
 - Installing to `.codex/skills/` — Codex CLI does not read from there.
@@ -42,6 +43,18 @@ The existing `agents` adapter already installs to `.agents/skills/`. The `codex`
 
 **Rationale**: Now that `codex` also installs to `.agents/skills/`, users see both adapters in the install prompt. The label distinction makes clear that `agents` is the fallback for any tool reading `.agents/`, while `codex` is the Codex-specific adapter.
 
+### Decision: Surface shared install path via optional installNote?() method
+
+**Choice**: Add an optional `installNote?(scope: Scope): string | undefined` method to the `Adapter` interface. `codexAdapter` implements it for `'user'` scope, returning: `"installs to ~/.agents/skills/ — also available to any generic agents environment"`. The installer renders the string (if any) as a contextual note during scope confirmation.
+
+**Rationale**: Codex user-scope installs to `~/.agents/skills/`, the same path the generic `agents` adapter uses. A user selecting Codex user scope implicitly installs for all agents-based environments. This is correct and desirable, but non-obvious. The note makes the consequence visible without requiring the user to understand the underlying path overlap.
+
+The method is optional on the interface (duck-typed) so existing adapters need no changes. The orchestration checks `typeof adapter.installNote === 'function'` — no coupling to any specific adapter id. Any future adapter that shares an install path with another environment can use the same hook.
+
+**Alternatives considered**:
+- Hardcode a check in install orchestration for `adapter.id === 'codex'` — rejected because it couples orchestration to a specific adapter, violating the adapter abstraction.
+- Add a `sharedEnvironments?: string[]` metadata field — more expressive but higher surface area for a single use case.
+
 ### Decision: Register codex as the fourth built-in
 
 **Choice**: `registry.register(codexAdapter)` in `packages/core/src/adapters/index.ts`.
@@ -50,7 +63,7 @@ The existing `agents` adapter already installs to `.agents/skills/`. The `codex`
 
 ## Risks / Trade-offs
 
-- **Same install paths as agents adapter** → Both `codex` and `agents` install to `.agents/skills/`. Running `skillet install` in a project with both `.agents/` and `.codex/config.toml` will show both in the adapter list and install to the same location. This is harmless (idempotent copies) but may confuse users. Mitigation: adapter labels clearly distinguish the two.
+- **Same install paths as agents adapter** → Both `codex` and `agents` install to `.agents/skills/`. Running `skillet install` in a project with both `.agents/` and `.codex/config.toml` will show both in the adapter list and install to the same location. This is harmless (idempotent copies) but may confuse users. Mitigation: adapter labels clearly distinguish the two; the `installNote` on the Codex user-scope path explicitly surfaces the shared-path consequence.
 - **Codex changes skill-loading path** → If OpenAI moves skill discovery to a different directory, the adapter silently becomes useless. Mitigation: adapter tests pin the path; a failing test signals the need for an update.
 - **The skillet repo itself triggers project detection** → The skillet repo has a `.codex/` directory. If `config.toml` exists there, it will trigger Codex project detection when running `skillet install` inside the repo. Acceptable: it means Codex is configured there.
 
@@ -58,6 +71,8 @@ The existing `agents` adapter already installs to `.agents/skills/`. The `codex`
 
 Additive change — no migration required:
 1. Update `agentsAdapter.label` in `agents.ts`
-2. Add `packages/core/src/adapters/codex.ts`
-3. Register in `packages/core/src/adapters/index.ts`
-4. Update specs and tests
+2. Add optional `installNote?(scope: Scope): string | undefined` to the `Adapter` interface in `adapters/types.ts`
+3. Add `packages/core/src/adapters/codex.ts` (implements `installNote` for user scope)
+4. Register in `packages/core/src/adapters/index.ts`
+5. Update install orchestration in `packages/core/src/install.ts` to render `installNote` when present
+6. Update specs and tests
