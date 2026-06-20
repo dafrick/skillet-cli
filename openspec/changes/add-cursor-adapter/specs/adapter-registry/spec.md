@@ -23,10 +23,6 @@ The library SHALL register `claude`, `copilot`, `agents`, and `cursor` adapters 
 - **WHEN** `detect()` is called on the `agents` adapter regardless of environment
 - **THEN** it returns both user and project scope as available
 
-#### Scenario: cursor adapter detected when ~/.cursor exists
-- **WHEN** `~/.cursor/` directory exists on the user's system
-- **THEN** the `cursor` adapter's `detect()` returns a result including user scope
-
 #### Scenario: cursor adapter detected when .cursor/ exists in cwd
 - **WHEN** a `.cursor/` directory exists in the current working directory
 - **THEN** the `cursor` adapter's `detect()` returns a result including project scope
