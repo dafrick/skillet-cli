@@ -71,4 +71,10 @@ describe('default registry includes built-in adapters', () => {
     expect(registry.get('codex')).toBeDefined();
     expect(registry.get('codex')?.id).toBe('codex');
   });
+
+  it('registry.get("cursor") returns cursor adapter after package import', async () => {
+    await import('../../src/adapters/index.js');
+    expect(registry.get('cursor')).toBeDefined();
+    expect(registry.get('cursor')?.id).toBe('cursor');
+  });
 });

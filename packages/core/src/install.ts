@@ -182,7 +182,13 @@ export async function performInstall(
   }
 
   if (!skipCopy) {
-    await copyTree(renderSrc, installPath);
+    if (typeof adapter.renderFile === 'function') {
+      await mkdir(installPath, { recursive: true });
+      const fileContent = await adapter.renderFile(skill, ctx);
+      await writeFile(path.join(installPath, `${skill.name}.mdc`), fileContent, 'utf8');
+    } else {
+      await copyTree(renderSrc, installPath);
+    }
   }
 
   // For a drifted same-source update, only union requestorRoot into the existing manifest

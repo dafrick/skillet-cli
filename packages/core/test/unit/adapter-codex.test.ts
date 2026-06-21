@@ -18,7 +18,15 @@ afterEach(() => {
   fs.rmSync(tmpCwd, { recursive: true, force: true });
 });
 
-const skill = { name: 'my-skill', sourceDir: '/some/source/dir' };
+const skill = {
+  name: 'my-skill',
+  sourceDir: '/some/source/dir',
+  description: 'test skill',
+  declaredVersion: undefined,
+  frontmatter: {},
+  body: '',
+  contentHash: 'sha256:abc',
+};
 
 describe('codexAdapter', () => {
   it('has id "codex"', () => {
