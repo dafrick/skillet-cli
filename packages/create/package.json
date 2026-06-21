@@ -41,7 +41,8 @@
     "@inquirer/prompts": "^7.5.2",
     "@skillet-cli/core": "workspace:*",
     "chalk": "^5.4.1",
-    "commander": "^14.0.0"
+    "commander": "^14.0.0",
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
     "@skillet-cli/ui": "workspace:*",

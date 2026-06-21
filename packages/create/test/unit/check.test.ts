@@ -14,7 +14,7 @@ vi.mock('node:fs', async (importOriginal) => {
 
 vi.mock('node:fs/promises', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs/promises')>();
-  return { ...actual, appendFile: vi.fn() };
+  return { ...actual, appendFile: vi.fn(), readFile: vi.fn(), writeFile: vi.fn() };
 });
 
 vi.mock('@inquirer/prompts', () => ({
@@ -24,6 +24,7 @@ vi.mock('@inquirer/prompts', () => ({
 
 vi.mock('@skillet-cli/core', () => ({
   DEFAULT_IGNORE: new Set(['.git', 'node_modules', '.DS_Store', '.skill-manifest.json']),
+  lintSkillFrontmatter: vi.fn(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -33,14 +34,18 @@ vi.mock('@skillet-cli/core', () => ({
 import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import { checkbox, confirm } from '@inquirer/prompts';
+import { lintSkillFrontmatter } from '@skillet-cli/core';
 import { classifyFile, runCheck } from '../../src/check.js';
 
 const mockSpawnSync = vi.mocked(spawnSync);
 const mockFsExistsSync = vi.mocked(fs.existsSync);
 const mockFsReadFileSync = vi.mocked(fs.readFileSync);
 const mockFspAppendFile = vi.mocked(fsp.appendFile);
+const mockFspReadFile = vi.mocked(fsp.readFile);
+const mockFspWriteFile = vi.mocked(fsp.writeFile);
 const mockCheckbox = vi.mocked(checkbox);
 const mockConfirm = vi.mocked(confirm);
+const mockLintSkillFrontmatter = vi.mocked(lintSkillFrontmatter);
 
 const SKILL_DIR = 'skill/my-skill';
 
@@ -147,6 +152,9 @@ describe('runCheck — preview mode', () => {
       return true;
     });
     vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    mockFspReadFile.mockResolvedValue('---\nname: test\ndescription: test\n---\n');
+    mockFspWriteFile.mockResolvedValue(undefined);
+    mockLintSkillFrontmatter.mockReturnValue(true);
     setupPackageMocks();
   });
 
@@ -209,6 +217,9 @@ describe('runCheck — violation detection', () => {
     vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
     vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
     exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+    mockFspReadFile.mockResolvedValue('---\nname: test\ndescription: test\n---\n');
+    mockFspWriteFile.mockResolvedValue(undefined);
+    mockLintSkillFrontmatter.mockReturnValue(true);
     setupPackageMocks();
   });
 
@@ -257,6 +268,9 @@ describe('runCheck — interactive flow', () => {
     vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
     exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
     mockFspAppendFile.mockResolvedValue(undefined);
+    mockFspReadFile.mockResolvedValue('---\nname: test\ndescription: test\n---\n');
+    mockFspWriteFile.mockResolvedValue(undefined);
+    mockLintSkillFrontmatter.mockReturnValue(true);
     setupPackageMocks();
   });
 
@@ -337,5 +351,143 @@ describe('runCheck — interactive flow', () => {
     await runCheck({ interactive: true });
 
     expect(exitSpy).not.toHaveBeenCalledWith(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runCheck — frontmatter lint, preview mode (tasks 3.1, 3.2)
+// ---------------------------------------------------------------------------
+
+describe('runCheck — frontmatter lint, preview mode', () => {
+  let stdoutChunks: string[];
+  let stderrChunks: string[];
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+
+  const VALID_SKILL_MD = '---\nname: test-skill\ndescription: A test skill\n---\n\nBody.\n';
+  const INVALID_SKILL_MD = '\n---\nname: test-skill\ndescription: A test skill\n---\n\nBody.\n';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    stdoutChunks = [];
+    stderrChunks = [];
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      stdoutChunks.push(String(chunk));
+      return true;
+    });
+    vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+      stderrChunks.push(String(chunk));
+      return true;
+    });
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+    mockFspReadFile.mockResolvedValue(VALID_SKILL_MD);
+    mockFspWriteFile.mockResolvedValue(undefined);
+    mockLintSkillFrontmatter.mockReturnValue(true);
+    setupPackageMocks();
+  });
+
+  afterEach(() => {
+    exitSpy.mockRestore();
+  });
+
+  it('emits no frontmatter warning when all SKILL.md files start with ---', async () => {
+    mockSpawnSync.mockReturnValue(
+      makeSpawnResult(makePackOutput([{ path: `${SKILL_DIR}/SKILL.md`, size: 200 }])),
+    );
+    mockLintSkillFrontmatter.mockReturnValue(true);
+
+    await runCheck({ interactive: false });
+
+    const allOutput = [...stdoutChunks, ...stderrChunks].join('');
+    expect(allOutput).not.toContain('frontmatter');
+  });
+
+  it('emits frontmatter warning and exits 0 when SKILL.md does not start with ---', async () => {
+    mockSpawnSync.mockReturnValue(
+      makeSpawnResult(makePackOutput([{ path: `${SKILL_DIR}/SKILL.md`, size: 200 }])),
+    );
+    mockFspReadFile.mockResolvedValue(INVALID_SKILL_MD);
+    mockLintSkillFrontmatter.mockReturnValue(false);
+
+    await runCheck({ interactive: false });
+
+    const allOutput = [...stdoutChunks, ...stderrChunks].join('');
+    expect(allOutput).toContain('frontmatter');
+    expect(exitSpy).not.toHaveBeenCalledWith(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runCheck — frontmatter lint, interactive mode (tasks 3.3, 3.4, 3.5)
+// ---------------------------------------------------------------------------
+
+describe('runCheck — frontmatter lint, interactive mode', () => {
+  let stdoutChunks: string[];
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+
+  const VALID_SKILL_MD = '---\nname: test-skill\ndescription: A test skill\n---\n\nBody.\n';
+  const INVALID_SKILL_MD = '\n---\nname: test-skill\ndescription: A test skill\n---\n\nBody.\n';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    stdoutChunks = [];
+    vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      stdoutChunks.push(String(chunk));
+      return true;
+    });
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+    mockFspReadFile.mockResolvedValue(VALID_SKILL_MD);
+    mockFspWriteFile.mockResolvedValue(undefined);
+    mockLintSkillFrontmatter.mockReturnValue(true);
+    setupPackageMocks();
+  });
+
+  afterEach(() => {
+    exitSpy.mockRestore();
+  });
+
+  it('prompts user to fix when frontmatter violation found in interactive mode', async () => {
+    mockSpawnSync.mockReturnValue(
+      makeSpawnResult(makePackOutput([{ path: `${SKILL_DIR}/SKILL.md`, size: 200 }])),
+    );
+    mockFspReadFile.mockResolvedValue(INVALID_SKILL_MD);
+    mockLintSkillFrontmatter.mockReturnValue(false);
+    mockConfirm.mockResolvedValue(false);
+
+    await runCheck({ interactive: true });
+
+    expect(mockConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('frontmatter') }),
+    );
+  });
+
+  it('rewrites SKILL.md with --- as first line when user accepts fix', async () => {
+    mockSpawnSync.mockReturnValue(
+      makeSpawnResult(makePackOutput([{ path: `${SKILL_DIR}/SKILL.md`, size: 200 }])),
+    );
+    mockFspReadFile.mockResolvedValue(INVALID_SKILL_MD);
+    mockLintSkillFrontmatter.mockReturnValue(false);
+    mockConfirm.mockResolvedValue(true);
+
+    await runCheck({ interactive: true });
+
+    expect(mockFspWriteFile).toHaveBeenCalledOnce();
+    const [, writtenContent] = mockFspWriteFile.mock.calls[0] as [string, string];
+    expect(writtenContent).toMatch(/^---\n/);
+    expect(writtenContent).toContain('name: test-skill');
+    expect(writtenContent).toContain('description: A test skill');
+  });
+
+  it('does not modify SKILL.md when user declines fix', async () => {
+    mockSpawnSync.mockReturnValue(
+      makeSpawnResult(makePackOutput([{ path: `${SKILL_DIR}/SKILL.md`, size: 200 }])),
+    );
+    mockFspReadFile.mockResolvedValue(INVALID_SKILL_MD);
+    mockLintSkillFrontmatter.mockReturnValue(false);
+    mockConfirm.mockResolvedValue(false);
+
+    await runCheck({ interactive: true });
+
+    expect(mockFspWriteFile).not.toHaveBeenCalled();
   });
 });

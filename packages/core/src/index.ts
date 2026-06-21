@@ -8,6 +8,7 @@ export { gcUninstall, scanInstalledSkills } from './gc.js';
 export { DEFAULT_IGNORE, hashSkill } from './hash.js';
 export type { InstallOptions, InstallRecord } from './install.js';
 export { computeRenderHash, findExistingInstalls, LIB_VERSION, performInstall } from './install.js';
+export { lintSkillFrontmatter } from './lint.js';
 export type { SkilletMarker } from './marker.js';
 export { discoverSkillTrees, readPackageName, readSkilletMarker } from './marker.js';
 export type { NormalizedSkill } from './normalize.js';

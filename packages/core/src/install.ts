@@ -6,6 +6,7 @@ import { registry } from './adapters/index.js';
 import type { Adapter, Context } from './adapters/types.js';
 import { detectDrift, isStale } from './drift.js';
 import { DEFAULT_IGNORE, hashSkill } from './hash.js';
+import { lintSkillFrontmatter } from './lint.js';
 import type { NormalizedSkill } from './normalize.js';
 import type { Scope, SkillManifest } from './types.js';
 
@@ -110,6 +111,18 @@ export async function performInstall(
   scope: Scope,
   opts: InstallOptions,
 ): Promise<string> {
+  // Frontmatter lint — warn if SKILL.md doesn't start with ---
+  try {
+    const rawContent = await readFile(path.join(skill.sourceDir, 'SKILL.md'), 'utf8');
+    if (!lintSkillFrontmatter(rawContent)) {
+      process.stderr.write(
+        `⚠ ${skill.name}: SKILL.md frontmatter is not at the start of the file — this skill will not auto-load in Gemini CLI and is discouraged for Claude Code.\n`,
+      );
+    }
+  } catch {
+    // SKILL.md not readable — skip lint
+  }
+
   const ctx = makeContext(scope);
   const renderSrc = adapter.render(skill, ctx);
   const installPath = adapter.resolveInstallPath(skill, ctx);
