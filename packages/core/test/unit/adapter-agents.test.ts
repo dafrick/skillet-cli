@@ -20,6 +20,10 @@ afterEach(() => {
 const skill = { name: 'my-skill', sourceDir: '/some/source/dir' };
 
 describe('agentsAdapter', () => {
+  it('has label "Generic agents (.agents/)"', () => {
+    expect(agentsAdapter.label).toBe('Generic agents (.agents/)');
+  });
+
   it('detect() returns only user scope when ~/.agents/ exists', () => {
     fs.mkdirSync(path.join(tmpHome, '.agents'));
     const result = agentsAdapter.detect({ home: tmpHome, cwd: tmpCwd });

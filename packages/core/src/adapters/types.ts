@@ -22,4 +22,5 @@ export interface Adapter {
   supportsScope(scope: Scope): boolean;
   resolveInstallPath(skill: NormalizedSkillBase, ctx: Context): string;
   render(skill: NormalizedSkillBase, ctx: Context): string;
+  installNote?(scope: Scope): string | undefined;
 }

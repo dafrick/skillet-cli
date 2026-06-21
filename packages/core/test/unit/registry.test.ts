@@ -65,4 +65,10 @@ describe('default registry includes built-in adapters', () => {
     const ids = registry.list().map((a) => a.id);
     expect(ids).toContain('gemini');
   });
+
+  it('registry.get("codex") returns codex adapter after package import', async () => {
+    await import('../../src/adapters/index.js');
+    expect(registry.get('codex')).toBeDefined();
+    expect(registry.get('codex')?.id).toBe('codex');
+  });
 });
