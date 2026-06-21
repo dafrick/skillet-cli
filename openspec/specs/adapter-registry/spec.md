@@ -36,8 +36,8 @@ Every adapter SHALL implement the following interface:
 - **WHEN** `detect(ctx)` is called on a machine where the target agent is not installed
 - **THEN** it returns an empty or `none` result indicating no detectable scope
 
-### Requirement: Three built-in v0.1 adapters registered by default
-The library SHALL register `claude`, `copilot`, and `agents` adapters automatically when the package is imported.
+### Requirement: Four built-in v0.1 adapters registered by default
+The library SHALL register `claude`, `copilot`, `agents`, and `gemini` adapters automatically when the package is imported.
 
 #### Scenario: claude adapter detected when ~/.claude exists
 - **WHEN** `~/.claude/` directory exists on the user's system
@@ -58,6 +58,14 @@ The library SHALL register `claude`, `copilot`, and `agents` adapters automatica
 #### Scenario: agents adapter always available
 - **WHEN** `detect()` is called on the `agents` adapter regardless of environment
 - **THEN** it returns both user and project scope as available
+
+#### Scenario: gemini adapter detected when ~/.gemini exists
+- **WHEN** `~/.gemini/` directory exists on the user's system
+- **THEN** the `gemini` adapter's `detect()` returns a result including user scope
+
+#### Scenario: gemini adapter detected (project) when .gemini/ exists in cwd
+- **WHEN** a `.gemini/` directory exists in the current working directory
+- **THEN** the `gemini` adapter's `detect()` returns a result including project scope
 
 ### Requirement: Adapters support user and/or project scope
 The library SHALL allow each adapter to declare which scopes it supports. An error SHALL be raised if a caller requests an unsupported scope for a given adapter.
