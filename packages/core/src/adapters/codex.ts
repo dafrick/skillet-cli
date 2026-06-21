@@ -3,16 +3,16 @@ import * as path from 'node:path';
 import type { Scope } from '../types.js';
 import type { Adapter, Context, NormalizedSkillBase } from './types.js';
 
-export const agentsAdapter: Adapter = {
-  id: 'agents',
-  label: 'Generic agents (.agents/)',
+export const codexAdapter: Adapter = {
+  id: 'codex',
+  label: 'Codex CLI',
 
   detect(ctx: Omit<Context, 'scope'>) {
     const scopes: Scope[] = [];
-    if (fs.existsSync(path.join(ctx.home, '.agents'))) {
+    if (fs.existsSync(path.join(ctx.home, '.codex'))) {
       scopes.push('user');
     }
-    if (fs.existsSync(path.join(ctx.cwd, '.agents'))) {
+    if (fs.existsSync(path.join(ctx.cwd, '.codex', 'config.toml'))) {
       scopes.push('project');
     }
     return { scopes };
@@ -31,5 +31,12 @@ export const agentsAdapter: Adapter = {
 
   render(skill: NormalizedSkillBase, _ctx: Context): string {
     return skill.sourceDir;
+  },
+
+  installNote(scope: Scope): string | undefined {
+    if (scope === 'user') {
+      return 'installs to ~/.agents/skills/ — also available to any generic agents environment';
+    }
+    return undefined;
   },
 };
