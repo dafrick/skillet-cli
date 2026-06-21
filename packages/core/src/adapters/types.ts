@@ -1,4 +1,7 @@
+import type { NormalizedSkill } from '../normalize.js';
 import type { Scope } from '../types.js';
+
+export type { NormalizedSkill };
 
 export interface Context {
   scope: Scope;
@@ -20,7 +23,8 @@ export interface Adapter {
   label: string;
   detect(ctx: Omit<Context, 'scope'>): DetectResult;
   supportsScope(scope: Scope): boolean;
-  resolveInstallPath(skill: NormalizedSkillBase, ctx: Context): string;
-  render(skill: NormalizedSkillBase, ctx: Context): string;
+  resolveInstallPath(skill: NormalizedSkill, ctx: Context): string;
+  render(skill: NormalizedSkill, ctx: Context): string;
+  renderFile?(skill: NormalizedSkill, ctx: Context): Promise<string>;
   installNote?(scope: Scope): string | undefined;
 }
