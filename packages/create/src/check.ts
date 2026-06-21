@@ -3,7 +3,8 @@ import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
 import { checkbox, confirm } from '@inquirer/prompts';
-import { DEFAULT_IGNORE } from '@skillet-cli/core';
+import { DEFAULT_IGNORE, lintSkillFrontmatter } from '@skillet-cli/core';
+import matter from 'gray-matter';
 
 interface PackFile {
   path: string;
@@ -209,8 +210,45 @@ export async function runCheck({ interactive }: { interactive: boolean }): Promi
     process.exit(1);
   }
 
+  // Frontmatter lint — check each skill directory's SKILL.md
+  const frontmatterViolations: Array<{ skillMdPath: string; content: string }> = [];
+  for (const skillPath of skillPaths) {
+    const skillMdPath = path.join(cwd, skillPath, 'SKILL.md');
+    try {
+      const content = await fsp.readFile(skillMdPath, 'utf8');
+      if (!lintSkillFrontmatter(content)) {
+        frontmatterViolations.push({ skillMdPath, content });
+        process.stdout.write(
+          `\n⚠ ${skillPath}/SKILL.md: SKILL.md frontmatter is not at the start of the file — this skill will not auto-load in Gemini CLI and is discouraged for Claude Code.\n`,
+        );
+      }
+    } catch {
+      // SKILL.md missing — skip lint
+    }
+  }
+
   // Preview mode: display only, no prompts, no .npmignore writes
   if (!interactive) return;
+
+  // Interactive: offer to fix any frontmatter violations
+  for (const { skillMdPath, content } of frontmatterViolations) {
+    const shouldFix = await confirm({
+      message: 'Fix SKILL.md by moving frontmatter to the start of the file?',
+      default: true,
+    });
+    if (shouldFix) {
+      const fmStart = content.indexOf('---');
+      if (fmStart !== -1) {
+        const fmSlice = content.slice(fmStart);
+        const parsed = matter(fmSlice);
+        const rewritten = matter.stringify(parsed.content, parsed.data);
+        await fsp.writeFile(skillMdPath, rewritten, 'utf8');
+        process.stdout.write(
+          '\nSKILL.md was rewritten. Please review — comments and unusual whitespace inside the frontmatter block may not have been preserved.\n',
+        );
+      }
+    }
+  }
 
   // Interactive: nothing to review if no ambiguous items
   if (ambiguous.length === 0) return;
