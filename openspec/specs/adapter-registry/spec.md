@@ -27,6 +27,7 @@ Every adapter SHALL implement the following interface:
 - `supportsScope(scope: 'user' | 'project'): boolean` — declares supported scopes
 - `resolveInstallPath(skill: NormalizedSkill, ctx: Context): string` — returns the absolute install directory
 - `render(skill: NormalizedSkill, ctx: Context): string` — returns the path of the tree to copy (passthrough adapters return `skill.sourceDir`)
+- `renderFile?(skill: NormalizedSkill, ctx: Context): Promise<string>` — optional; when present, the installer writes the returned string as `<skill.name>.mdc` inside `resolveInstallPath()` instead of copying a directory tree
 
 #### Scenario: Passthrough adapter render returns sourceDir
 - **WHEN** a Bucket A adapter's `render()` is called
@@ -36,8 +37,8 @@ Every adapter SHALL implement the following interface:
 - **WHEN** `detect(ctx)` is called on a machine where the target agent is not installed
 - **THEN** it returns an empty or `none` result indicating no detectable scope
 
-### Requirement: Four built-in v0.1 adapters registered by default
-The library SHALL register `claude`, `copilot`, `agents`, `gemini`, and `codex` adapters automatically when the package is imported.
+### Requirement: Six built-in v0.1 adapters registered by default
+The library SHALL register `claude`, `copilot`, `agents`, `gemini`, `codex`, and `cursor` adapters automatically when the package is imported.
 
 #### Scenario: claude adapter detected when ~/.claude exists
 - **WHEN** `~/.claude/` directory exists on the user's system
@@ -74,6 +75,10 @@ The library SHALL register `claude`, `copilot`, `agents`, `gemini`, and `codex` 
 #### Scenario: codex adapter detects project scope when .codex/config.toml exists in cwd
 - **WHEN** a `.codex/config.toml` file exists in the current working directory
 - **THEN** the `codex` adapter's `detect()` includes project scope
+
+#### Scenario: cursor adapter detected when .cursor/ exists in cwd
+- **WHEN** a `.cursor/` directory exists in the current working directory
+- **THEN** the `cursor` adapter's `detect()` returns a result including project scope
 
 ### Requirement: agents adapter label updated to distinguish from Codex
 The `agents` adapter SHALL have `label: 'Generic agents (.agents/)'` to distinguish it from the new `codex` adapter, which also installs to `.agents/skills/` but has Codex-specific detection.
