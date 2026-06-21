@@ -37,7 +37,7 @@ Every adapter SHALL implement the following interface:
 - **THEN** it returns an empty or `none` result indicating no detectable scope
 
 ### Requirement: Four built-in v0.1 adapters registered by default
-The library SHALL register `claude`, `copilot`, `agents`, and `gemini` adapters automatically when the package is imported.
+The library SHALL register `claude`, `copilot`, `agents`, `gemini`, and `codex` adapters automatically when the package is imported.
 
 #### Scenario: claude adapter detected when ~/.claude exists
 - **WHEN** `~/.claude/` directory exists on the user's system
@@ -66,6 +66,21 @@ The library SHALL register `claude`, `copilot`, `agents`, and `gemini` adapters 
 #### Scenario: gemini adapter detected (project) when .gemini/ exists in cwd
 - **WHEN** a `.gemini/` directory exists in the current working directory
 - **THEN** the `gemini` adapter's `detect()` returns a result including project scope
+
+#### Scenario: codex adapter detected when ~/.codex exists
+- **WHEN** `~/.codex/` directory exists on the user's system
+- **THEN** the `codex` adapter's `detect()` returns a result including user scope
+
+#### Scenario: codex adapter detects project scope when .codex/config.toml exists in cwd
+- **WHEN** a `.codex/config.toml` file exists in the current working directory
+- **THEN** the `codex` adapter's `detect()` includes project scope
+
+### Requirement: agents adapter label updated to distinguish from Codex
+The `agents` adapter SHALL have `label: 'Generic agents (.agents/)'` to distinguish it from the new `codex` adapter, which also installs to `.agents/skills/` but has Codex-specific detection.
+
+#### Scenario: agents adapter label
+- **WHEN** `agentsAdapter.label` is read
+- **THEN** it equals `'Generic agents (.agents/)'`
 
 ### Requirement: Adapters support user and/or project scope
 The library SHALL allow each adapter to declare which scopes it supports. An error SHALL be raised if a caller requests an unsupported scope for a given adapter.
