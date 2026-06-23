@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
 import { createSpinner } from '@skillet-cli/ui';
+import { generatePluginManifests } from './plugin-manifests.js';
 import type { WizardConfig } from './prompts.js';
 
 // shell:true is required on Windows where npm is a .cmd batch file that
@@ -74,6 +75,9 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
       `files[0]=bin`,
       ...filesArgs,
       'scripts.prepublishOnly=create-skillet check',
+      ...(config.generateClaudePlugin || config.generateGeminiPlugin
+        ? ['scripts.postpublish=create-skillet post-publish']
+        : []),
     ];
 
     runSync('npm', ['pkg', 'set', ...pkgSetArgs], 'npm pkg set');
@@ -115,6 +119,9 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     await fsp.writeFile(npmignorePath, '**/node_modules\n', 'utf8');
 
     spinner.succeed('Plating done');
+
+    // Step 6b: Generate plugin manifests (if requested)
+    await generatePluginManifests(config);
 
     // Step 6: npm install @skillet-cli/core + create-skillet (devDep)
     process.stdout.write(

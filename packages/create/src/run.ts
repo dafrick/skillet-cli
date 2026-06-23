@@ -1,4 +1,6 @@
+import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
+import * as path from 'node:path';
 import { confirm } from '@inquirer/prompts';
 import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
@@ -15,6 +17,56 @@ export function skillMdStatus(detected: DetectionResult): string {
   if (detected.discoveredSkillDirs.length > 1)
     return `found in ${detected.discoveredSkillDirs.length} locations`;
   return 'not found';
+}
+
+export function deriveOwnerRepo(repositoryUrl: string): string | null {
+  if (!repositoryUrl) return null;
+  const url = repositoryUrl.replace(/^git\+/, '').replace(/\.git$/, '');
+  try {
+    const parsed = new URL(url);
+    const parts = parsed.pathname.replace(/^\//, '').split('/').filter(Boolean);
+    if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+  } catch {
+    // not a valid URL
+  }
+  return null;
+}
+
+export async function runPostPublish(): Promise<void> {
+  const cwd = process.cwd();
+  const pkgPath = path.join(cwd, 'package.json');
+  let pkgName = '';
+  let pkgVersion = '';
+  try {
+    const raw = fs.readFileSync(pkgPath, 'utf8');
+    const pkg = JSON.parse(raw) as { name?: string; version?: string };
+    pkgName = pkg.name ?? '';
+    pkgVersion = pkg.version ?? '';
+  } catch {
+    // no package.json — exit silently
+    return;
+  }
+
+  const hasClaudePlugin = fs.existsSync(path.join(cwd, '.claude-plugin', 'plugin.json'));
+  const hasGemini = fs.existsSync(path.join(cwd, 'gemini-extension.json'));
+
+  if (!hasClaudePlugin && !hasGemini) return;
+
+  if (hasClaudePlugin) {
+    process.stdout.write(`Plugin marketplace live at v${pkgVersion}\n`);
+    process.stdout.write(`  claude plugin install ${pkgName}@${pkgName}\n`);
+    process.stdout.write(`  copilot plugin install ${pkgName}@${pkgName}\n`);
+    process.stdout.write('\n');
+  }
+
+  if (hasGemini) {
+    process.stdout.write('Gemini: create a GitHub Release to mark this as the latest version:\n');
+    process.stdout.write(`  gh release create v${pkgVersion}\n`);
+    process.stdout.write(
+      "  (or via github.com — Gemini's gallery checks for the Latest release)\n",
+    );
+    process.stdout.write('\n');
+  }
 }
 
 const _require = createRequire(import.meta.url);
@@ -127,6 +179,28 @@ program
     } else {
       process.stdout.write(`    npm publish           — publish to npm\n`);
     }
+
+    // Plugin marketplace share instructions
+    const ownerRepo = config.generateClaudePlugin ? deriveOwnerRepo(config.repositoryUrl) : null;
+    if (ownerRepo) {
+      process.stdout.write('\nPlugin marketplace ready:\n');
+      process.stdout.write('  Share with your users:\n');
+      process.stdout.write(`    claude plugin marketplace add ${ownerRepo}\n`);
+      process.stdout.write(`    claude plugin install ${config.name}@${config.name}\n`);
+      process.stdout.write('\n');
+      process.stdout.write("  Copilot CLI (same commands, replace 'claude' with 'copilot')\n");
+      if (config.generateGeminiPlugin) {
+        process.stdout.write('\n');
+        process.stdout.write("  Gemini: add topic 'gemini-cli-extension' to your GitHub repo\n");
+        process.stdout.write(
+          `          then users install via: gemini extensions install ${config.repositoryUrl.replace(/^git\+/, '').replace(/\.git$/, '')}\n`,
+        );
+      }
+      process.stdout.write('\n');
+      process.stdout.write(
+        `  Before each release: git tag v{version} && git push origin v{version}\n`,
+      );
+    }
     process.stdout.write('\n');
   });
 
@@ -135,6 +209,14 @@ program.addCommand(
     .description('Check publish readiness — verify tarball contents before npm publish')
     .action(async () => {
       await runCheck({ interactive: true });
+    }),
+);
+
+program.addCommand(
+  new Command('post-publish')
+    .description('Print post-publish next steps (run via postpublish npm lifecycle hook)')
+    .action(async () => {
+      await runPostPublish();
     }),
 );
 

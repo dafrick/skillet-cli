@@ -13,6 +13,8 @@ export interface WizardConfig {
   isMultiSkill: boolean;
   skillsParentDirs: string[];
   removePrivate: boolean;
+  generateClaudePlugin: boolean;
+  generateGeminiPlugin: boolean;
 }
 
 export function deriveParentDirs(discoveredSkillDirs: string[]): string[] {
@@ -65,6 +67,16 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
       default: true,
     });
   }
+
+  const hasRemote = Boolean(repositoryUrl);
+  const generateClaudePlugin = await confirm({
+    message: 'Generate Claude Code + Copilot CLI plugin manifests (.claude-plugin/)?',
+    default: hasRemote,
+  });
+  const generateGeminiPlugin = await confirm({
+    message: 'Generate Gemini CLI extension manifest (gemini-extension.json)?',
+    default: hasRemote,
+  });
 
   let skillDir: string;
   let isMultiSkill = false;
@@ -124,5 +136,7 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
     isMultiSkill,
     skillsParentDirs,
     removePrivate,
+    generateClaudePlugin,
+    generateGeminiPlugin,
   };
 }
