@@ -20,8 +20,8 @@ export async function generatePluginManifests(
       );
     } else {
       const skills = config.isMultiSkill
-        ? config.skillsParentDirs.map((d) => './' + d)
-        : ['./' + config.skillDir.replace(/\/+$/, '')];
+        ? config.skillsParentDirs.map((d) => `./${d}`)
+        : [`./${config.skillDir.replace(/\/+$/, '')}`];
 
       const pluginJson = {
         name: config.name,
@@ -31,7 +31,7 @@ export async function generatePluginManifests(
         license: config.license,
         skills,
       };
-      await fsp.writeFile(pluginJsonPath, JSON.stringify(pluginJson, null, 2) + '\n', 'utf8');
+      await fsp.writeFile(pluginJsonPath, `${JSON.stringify(pluginJson, null, 2)}\n`, 'utf8');
     }
 
     // marketplace.json
@@ -54,7 +54,7 @@ export async function generatePluginManifests(
       };
       await fsp.writeFile(
         marketplaceJsonPath,
-        JSON.stringify(marketplaceJson, null, 2) + '\n',
+        `${JSON.stringify(marketplaceJson, null, 2)}\n`,
         'utf8',
       );
     }
@@ -70,7 +70,7 @@ export async function generatePluginManifests(
     } else {
       const contextFileName = config.isMultiSkill
         ? 'GEMINI.md'
-        : config.skillDir.replace(/\/+$/, '') + '/SKILL.md';
+        : `${config.skillDir.replace(/\/+$/, '')}/SKILL.md`;
 
       const geminiJson = {
         name: config.name,
@@ -78,7 +78,7 @@ export async function generatePluginManifests(
         description: config.description,
         contextFileName,
       };
-      await fsp.writeFile(geminiExtPath, JSON.stringify(geminiJson, null, 2) + '\n', 'utf8');
+      await fsp.writeFile(geminiExtPath, `${JSON.stringify(geminiJson, null, 2)}\n`, 'utf8');
     }
 
     // GEMINI.md — only for multi-skill
@@ -87,8 +87,7 @@ export async function generatePluginManifests(
       if (fs.existsSync(geminiMdPath)) {
         process.stdout.write('⚠ GEMINI.md already exists — skipping (delete to regenerate)\n');
       } else {
-        const geminiMdContent =
-          config.skillsParentDirs.map((d) => '@./' + d + '/SKILL.md').join('\n') + '\n';
+        const geminiMdContent = `${config.skillsParentDirs.map((d) => `@./${d}/SKILL.md`).join('\n')}\n`;
         await fsp.writeFile(geminiMdPath, geminiMdContent, 'utf8');
       }
     }
