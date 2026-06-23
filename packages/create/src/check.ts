@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { checkbox, confirm } from '@inquirer/prompts';
 import { DEFAULT_IGNORE, lintSkillFrontmatter } from '@skillet-cli/core';
 import matter from 'gray-matter';
+import { validatePluginManifests } from './plugin-manifests.js';
 
 interface PackFile {
   path: string;
@@ -226,6 +227,9 @@ export async function runCheck({ interactive }: { interactive: boolean }): Promi
       // SKILL.md missing — skip lint
     }
   }
+
+  // Plugin manifest validation (version sync + git readiness)
+  await validatePluginManifests(cwd);
 
   // Preview mode: display only, no prompts, no .npmignore writes
   if (!interactive) return;

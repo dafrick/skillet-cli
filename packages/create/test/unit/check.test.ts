@@ -27,6 +27,12 @@ vi.mock('@skillet-cli/core', () => ({
   lintSkillFrontmatter: vi.fn(),
 }));
 
+// Mock validatePluginManifests so check.test.ts doesn't need to set up manifest fixtures
+vi.mock('../../src/plugin-manifests.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/plugin-manifests.js')>();
+  return { ...actual, validatePluginManifests: vi.fn().mockResolvedValue(undefined) };
+});
+
 // ---------------------------------------------------------------------------
 // Imports — after mocks
 // ---------------------------------------------------------------------------

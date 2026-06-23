@@ -64,6 +64,8 @@ const baseConfig: WizardConfig = {
   isMultiSkill: false,
   skillsParentDirs: [],
   removePrivate: false,
+  generateClaudePlugin: false,
+  generateGeminiPlugin: false,
 };
 
 describe('executeScaffold — npm init conditional', () => {
@@ -689,5 +691,55 @@ describe('executeScaffold — create-skillet devDep and prepublishOnly (task 7.5
         (a) => a.includes('scripts.prepublishOnly') && a.includes('create-skillet check'),
       ),
     ).toBe(true);
+  });
+});
+
+describe('executeScaffold — postpublish script (task 27)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    mockFsExistsSync.mockReturnValue(true);
+  });
+
+  function getPkgSetArgs(): string[] {
+    return mockSpawnSync.mock.calls
+      .filter(
+        (c) =>
+          typeof c[0] === 'string' &&
+          c[0].includes('npm') &&
+          c[0].includes('"pkg"') &&
+          c[0].includes('"set"'),
+      )
+      .map((c) => c[0] as string);
+  }
+
+  it('includes scripts.postpublish=create-skillet post-publish when generateClaudePlugin is true', async () => {
+    await executeScaffold({ ...baseConfig, generateClaudePlugin: true });
+    const pkgSetArgs = getPkgSetArgs();
+    expect(
+      pkgSetArgs.some(
+        (a) => a.includes('scripts.postpublish') && a.includes('create-skillet post-publish'),
+      ),
+    ).toBe(true);
+  });
+
+  it('includes scripts.postpublish=create-skillet post-publish when generateGeminiPlugin is true', async () => {
+    await executeScaffold({ ...baseConfig, generateGeminiPlugin: true });
+    const pkgSetArgs = getPkgSetArgs();
+    expect(
+      pkgSetArgs.some(
+        (a) => a.includes('scripts.postpublish') && a.includes('create-skillet post-publish'),
+      ),
+    ).toBe(true);
+  });
+
+  it('does NOT include scripts.postpublish when both generateClaudePlugin and generateGeminiPlugin are false', async () => {
+    await executeScaffold({
+      ...baseConfig,
+      generateClaudePlugin: false,
+      generateGeminiPlugin: false,
+    });
+    const pkgSetArgs = getPkgSetArgs();
+    expect(pkgSetArgs.some((a) => a.includes('scripts.postpublish'))).toBe(false);
   });
 });

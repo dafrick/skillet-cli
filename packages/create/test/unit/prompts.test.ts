@@ -112,8 +112,11 @@ describe('collectConfig — removePrivate behavior', () => {
       .mockResolvedValueOnce('MIT')
       .mockResolvedValueOnce('skill/'); // skill content path
 
-    // First confirm call is for private removal (true = remove), any subsequent confirm won't be hit
-    mockConfirm.mockResolvedValueOnce(true);
+    // confirm calls: (1) removePrivate, (2) generateClaudePlugin, (3) generateGeminiPlugin
+    mockConfirm
+      .mockResolvedValueOnce(true) // removePrivate: true
+      .mockResolvedValueOnce(false) // generateClaudePlugin
+      .mockResolvedValueOnce(false); // generateGeminiPlugin
 
     const config = await collectConfig(detected);
 
@@ -134,15 +137,18 @@ describe('collectConfig — removePrivate behavior', () => {
       .mockResolvedValueOnce('MIT')
       .mockResolvedValueOnce('skill/');
 
-    // Decline private removal
-    mockConfirm.mockResolvedValueOnce(false);
+    // confirm calls: (1) removePrivate, (2) generateClaudePlugin, (3) generateGeminiPlugin
+    mockConfirm
+      .mockResolvedValueOnce(false) // removePrivate: false
+      .mockResolvedValueOnce(false) // generateClaudePlugin
+      .mockResolvedValueOnce(false); // generateGeminiPlugin
 
     const config = await collectConfig(detected);
 
     expect(config.removePrivate).toBe(false);
   });
 
-  // Task 1.6: no prompt shown and removePrivate: false when isPrivate is false
+  // Task 1.6: no private prompt shown and removePrivate: false when isPrivate is false
   it('no private prompt shown and removePrivate is false when isPrivate is false', async () => {
     const detected = makeDetectionResult({ isPrivate: false });
 
@@ -156,14 +162,18 @@ describe('collectConfig — removePrivate behavior', () => {
       .mockResolvedValueOnce('MIT')
       .mockResolvedValueOnce('skill/');
 
-    // confirm should NOT be called when isPrivate is false
+    // confirm is called for plugin distribution prompts but NOT for private removal
     mockConfirm.mockResolvedValue(true);
 
     const config = await collectConfig(detected);
 
     expect(config.removePrivate).toBe(false);
-    // confirm should not have been called at all
-    expect(mockConfirm).not.toHaveBeenCalled();
+    // The private removal confirm should not have been called
+    // (plugin distribution prompts use confirm but private prompt is skipped)
+    const privateCalls = mockConfirm.mock.calls.filter((c) =>
+      (c[0] as { message: string }).message.toLowerCase().includes('private'),
+    );
+    expect(privateCalls).toHaveLength(0);
   });
 });
 
