@@ -115,6 +115,8 @@ function makeFakeConfig(overrides: Partial<WizardConfig> = {}): WizardConfig {
     isMultiSkill: false,
     skillsParentDirs: [],
     removePrivate: false,
+    generateClaudePlugin: false,
+    generateGeminiPlugin: false,
     ...overrides,
   };
 }

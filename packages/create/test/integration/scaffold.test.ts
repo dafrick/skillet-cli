@@ -17,6 +17,8 @@ const baseConfig: WizardConfig = {
   isMultiSkill: false,
   skillsParentDirs: [],
   removePrivate: false,
+  generateClaudePlugin: false,
+  generateGeminiPlugin: false,
 };
 
 describe('executeScaffold — integration (filesystem)', () => {

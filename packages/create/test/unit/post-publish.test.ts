@@ -35,7 +35,9 @@ describe('runPostPublish', () => {
       return str.includes('.claude-plugin');
     });
     await runPostPublish();
-    const output = writeSpy.mock.calls.map((c) => c[0]).join('');
+    const output = writeSpy.mock.calls
+      .map((c: Parameters<typeof process.stdout.write>) => c[0])
+      .join('');
     expect(output).toContain('Plugin marketplace live at v1.1.0');
     expect(output).toContain('claude plugin install my-skill@my-skill');
     expect(output).toContain('copilot plugin install my-skill@my-skill');
@@ -48,7 +50,9 @@ describe('runPostPublish', () => {
       return str.includes('gemini-extension.json');
     });
     await runPostPublish();
-    const output = writeSpy.mock.calls.map((c) => c[0]).join('');
+    const output = writeSpy.mock.calls
+      .map((c: Parameters<typeof process.stdout.write>) => c[0])
+      .join('');
     expect(output).toContain('Gemini:');
     expect(output).toContain('gh release create v1.1.0');
     expect(output).not.toContain('Plugin marketplace live');
@@ -57,7 +61,9 @@ describe('runPostPublish', () => {
   it('both manifests → prints both sections', async () => {
     vi.mocked(fsModule.existsSync).mockReturnValue(true);
     await runPostPublish();
-    const output = writeSpy.mock.calls.map((c) => c[0]).join('');
+    const output = writeSpy.mock.calls
+      .map((c: Parameters<typeof process.stdout.write>) => c[0])
+      .join('');
     expect(output).toContain('Plugin marketplace live at v1.1.0');
     expect(output).toContain('claude plugin install my-skill@my-skill');
     expect(output).toContain('Gemini:');
@@ -70,7 +76,9 @@ describe('runPostPublish', () => {
       return str.includes('.claude-plugin');
     });
     await runPostPublish();
-    const output = writeSpy.mock.calls.map((c) => c[0]).join('');
+    const output = writeSpy.mock.calls
+      .map((c: Parameters<typeof process.stdout.write>) => c[0])
+      .join('');
     expect(output).not.toContain('Gemini:');
   });
 
