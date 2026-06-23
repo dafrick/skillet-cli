@@ -101,8 +101,8 @@ async function runValidate(
   const stderrWrites: string[] = [];
   let exitCode: number | null = null;
 
-  const mockExit = vi.spyOn(process, 'exit').mockImplementation((code?: number) => {
-    exitCode = code ?? 0;
+  const mockExit = vi.spyOn(process, 'exit').mockImplementation((code?: string | number | null) => {
+    exitCode = typeof code === 'number' ? code : 0;
     throw new ExitError(exitCode);
   }) as unknown as ReturnType<typeof vi.spyOn>;
 
