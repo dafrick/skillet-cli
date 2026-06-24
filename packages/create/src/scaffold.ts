@@ -124,28 +124,33 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     await generatePluginManifests(config);
 
     // Step 6: npm install @skillet-cli/core + create-skillet (devDep)
-    process.stdout.write(
-      'Installing @skillet-cli/core (this may take a few minutes on first run)…\n',
-    );
+    process.stdout.write('  Installing @skillet-cli/core…\n');
     const installResult = spawnSync('npm install @skillet-cli/core@latest', [], {
-      stdio: 'inherit',
+      stdio: 'pipe',
       shell: true,
+      encoding: 'utf8',
     });
     if (installResult.status !== 0) {
-      throw new Error(
-        `npm install @skillet-cli/core exited with code ${installResult.status ?? 'null'}`,
-      );
+      if (installResult.stderr) {
+        process.stderr.write(String(installResult.stderr));
+      }
+      process.exit(1);
+      return;
     }
+    process.stdout.write('  ✓ Installed @skillet-cli/core\n');
+
     const devInstallResult = spawnSync('npm install --save-dev create-skillet@latest', [], {
-      stdio: 'inherit',
+      stdio: 'pipe',
       shell: true,
+      encoding: 'utf8',
     });
     if (devInstallResult.status !== 0) {
-      throw new Error(
-        `npm install create-skillet exited with code ${devInstallResult.status ?? 'null'}`,
-      );
+      if (devInstallResult.stderr) {
+        process.stderr.write(String(devInstallResult.stderr));
+      }
+      process.exit(1);
+      return;
     }
-    process.stdout.write('Install complete.\n');
   } catch (err) {
     spinner.fail('Setup failed');
     const message = err instanceof Error ? err.message : String(err);

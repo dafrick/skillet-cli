@@ -69,14 +69,25 @@ export async function collectConfig(detected: DetectionResult): Promise<WizardCo
   }
 
   const hasRemote = Boolean(repositoryUrl);
-  const generateClaudePlugin = await confirm({
-    message: 'Generate Claude Code + Copilot CLI plugin manifests (.claude-plugin/)?',
+  const marketplace = await confirm({
+    message:
+      'Add plugin/extension marketplace support? (distributes your skill via Claude Code, Copilot CLI, and Gemini CLI plugin galleries)',
     default: hasRemote,
   });
-  const generateGeminiPlugin = await confirm({
-    message: 'Generate Gemini CLI extension manifest (gemini-extension.json)?',
-    default: hasRemote,
-  });
+
+  let generateClaudePlugin = false;
+  let generateGeminiPlugin = false;
+
+  if (marketplace) {
+    generateClaudePlugin = await confirm({
+      message: 'Generate Claude Code + Copilot CLI plugin manifests (.claude-plugin/)?',
+      default: true,
+    });
+    generateGeminiPlugin = await confirm({
+      message: 'Generate Gemini CLI extension manifest (gemini-extension.json)?',
+      default: true,
+    });
+  }
 
   let skillDir: string;
   let isMultiSkill = false;

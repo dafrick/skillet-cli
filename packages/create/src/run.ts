@@ -69,6 +69,8 @@ export async function runPostPublish(): Promise<void> {
   }
 }
 
+export const CANCEL_MESSAGE = 'No changes made. Re-run `create-skillet` to start over.';
+
 const _require = createRequire(import.meta.url);
 const pkg = _require('../package.json') as { name: string; version: string };
 
@@ -138,12 +140,13 @@ program
     } else {
       process.stdout.write(`  skillDir:     ${config.skillDir}\n`);
     }
-    process.stdout.write('\nCommands to run:\n');
+    process.stdout.write("\nHere's what I'll do:\n");
     if (!detected.hasPackageJson) {
-      process.stdout.write('  npm init -y\n');
+      process.stdout.write('  Initialize package.json\n');
     }
-    process.stdout.write('  npm pkg set name=... version=... (and other fields)\n');
-    process.stdout.write('  npm install @skillet-cli/core\n');
+    process.stdout.write('  Set package fields (name, version, description, etc.)\n');
+    process.stdout.write('  Write bin/cli.js\n');
+    process.stdout.write('  Install @skillet-cli/core\n');
     process.stdout.write('\n');
 
     const proceedFinal = await confirm({
@@ -152,7 +155,7 @@ program
     });
 
     if (!proceedFinal) {
-      process.stdout.write('No changes made. Re-run `create-skillet` to start over.\n');
+      process.stdout.write(`${CANCEL_MESSAGE}\n`);
       process.exit(0);
       return;
     }

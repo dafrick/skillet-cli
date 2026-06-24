@@ -614,7 +614,7 @@ describe('executeScaffold — npm install progress output', () => {
     expect(startCalls.some((label) => label.toLowerCase().includes('firing'))).toBe(false);
   });
 
-  it('writes "Install complete." to stdout after the install spawnSync completes with status 0', async () => {
+  it('writes "✓ Installed @skillet-cli/core" to stdout after the install spawnSync completes with status 0', async () => {
     const writtenMessages: string[] = [];
     stdoutSpy.mockImplementation((chunk: unknown) => {
       writtenMessages.push(String(chunk));
@@ -623,7 +623,55 @@ describe('executeScaffold — npm install progress output', () => {
 
     await executeScaffold(baseConfig);
 
-    expect(writtenMessages.some((msg) => msg.includes('Install complete.'))).toBe(true);
+    expect(writtenMessages.some((msg) => msg.includes('✓ Installed @skillet-cli/core'))).toBe(true);
+  });
+
+  it('uses stdio: "pipe" (not "inherit") for the npm install @skillet-cli/core spawnSync call', async () => {
+    const spawnSyncCalls: Array<{ cmd: string; options: unknown }> = [];
+    mockSpawnSync.mockImplementation((cmd: unknown, _args: unknown, options: unknown) => {
+      spawnSyncCalls.push({ cmd: String(cmd), options });
+      return makeSuccessResult();
+    });
+
+    await executeScaffold(baseConfig);
+
+    const installCall = spawnSyncCalls.find((c) => c.cmd.includes('@skillet-cli/core@latest'));
+    expect(installCall).toBeDefined();
+    expect((installCall!.options as { stdio?: unknown }).stdio).toBe('pipe');
+  });
+
+  it('writes captured stderr to process.stderr and calls process.exit(1) when npm install fails', async () => {
+    const stderrMessages: string[] = [];
+    const localStderrSpy = vi
+      .spyOn(process.stderr, 'write')
+      .mockImplementation((chunk: unknown) => {
+        stderrMessages.push(String(chunk));
+        return true;
+      });
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+
+    mockSpawnSync.mockImplementation((cmd: unknown) => {
+      if (String(cmd).includes('@skillet-cli/core@latest')) {
+        return {
+          status: 1,
+          stdout: '',
+          stderr: 'npm ERR! network timeout',
+          pid: 1,
+          output: [],
+          signal: null,
+        } as ReturnType<typeof import('node:child_process').spawnSync>;
+      }
+      return makeSuccessResult();
+    });
+
+    await executeScaffold(baseConfig);
+
+    // Assertions before restore — mockRestore() clears call history
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(stderrMessages.some((m) => m.includes('npm ERR!'))).toBe(true);
+
+    exitSpy.mockRestore();
+    localStderrSpy.mockRestore();
   });
 });
 
