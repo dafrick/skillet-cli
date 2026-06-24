@@ -1,20 +1,22 @@
-## ADDED Requirements
-
+## Purpose
+Show what will be published after the wizard scaffolds the package, so skill authors can spot accidental inclusions before running `npm publish`.
+## Requirements
 ### Requirement: Publish preview lists files that will be published (shown after setupSkillDir)
-After `setupSkillDir` completes in the `create-skillet` wizard, a publish preview SHALL display the contents of the skill content directory that will be included in the published npm package, and SHALL note which entries (if any) are excluded because they match the standard ignore set (`.git`, `node_modules`, `.DS_Store`, `.skill-manifest.json`). The preview is an informational post-completion summary printed to stdout; the user has already confirmed by the time this output appears.
+After `setupSkillDir` completes in the `create-skillet` wizard, a publish preview SHALL display the tarball contents grouped by classification tier (skill content, infrastructure, ambiguous). Entries within each tier SHALL be displayed with directories collapsed to a single `dirname/ (N files)` row by default. When violations are present and the wizard is running in interactive mode, the CLI SHALL enter the interactive `.npmignore` triage flow (see `interactive-npmignore` spec) rather than printing a static "add to .npmignore" instruction. In non-interactive mode, violations continue to be reported as a static message.
 
-#### Scenario: Preview shows skill directory file tree
-- **WHEN** the wizard has completed `setupSkillDir` and the skill content directory exists on disk
-- **THEN** the output lists the files and subdirectories inside the skill content directory that will be published
+#### Scenario: Preview shows skill directory file tree with collapsed directories
+- **WHEN** the wizard has completed `setupSkillDir` and the tarball contains entries inside directories
+- **THEN** the classification tiers are shown with directory entries collapsed to `dirname/ (N files)` rows by default, rather than a flat list of every file path
 
-#### Scenario: Excluded entries noted in preview
-- **WHEN** the skill content directory contains entries matching the standard ignore set (e.g., `node_modules/`)
-- **THEN** the preview output notes those entries as excluded, so the user knows they will not be published
+#### Scenario: Violations trigger interactive triage in interactive mode
+- **WHEN** the publish preview is shown in interactive (TTY) mode and violation-tier entries are present
+- **THEN** the CLI enters the interactive triage flow from the `interactive-npmignore` spec instead of printing "add them to .npmignore and rerun"
 
-#### Scenario: Preview is a post-setupSkillDir informational summary
-- **WHEN** the publish preview is displayed
-- **THEN** the file inclusion list is printed to stdout immediately after `setupSkillDir` completes (after the user has already confirmed), serving as a confirmation of what was packaged
+#### Scenario: Violations reported statically in non-interactive mode
+- **WHEN** the publish preview is shown in non-interactive mode (post-wizard read-only pass or non-TTY) and violations are present
+- **THEN** violations are reported as a static message (unchanged behavior); no interactive prompt is shown
 
 #### Scenario: Skill directory does not exist after setupSkillDir (error path)
 - **WHEN** `setupSkillDir` completes but the skill content directory is still absent (unexpected error path)
 - **THEN** the preview skips the file tree and instead notes that the directory was not found, without throwing
+
