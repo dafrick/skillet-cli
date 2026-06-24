@@ -36,6 +36,8 @@ The current tool is correct but not polished. This change makes `create-skillet`
 
 **Alternative considered**: Present violations as a flat expanded list immediately. Rejected — violation lists can be 50+ entries (e.g., a `node_modules` subtree snuck into the tarball); collapsing makes the list scannable.
 
+**TTY detection / interactive flag**: The triage flow (`triageViolations`) is always called from a site that has already resolved interactivity. Callers determine interactivity via `process.stdout.isTTY` (or an explicit `--interactive` flag) and pass `{ interactive: boolean }` into `runCheck`. `triageViolations` itself never inspects TTY — it is only called when `interactive: true`. This keeps TTY concerns at the boundary (the CLI entry point) rather than scattered through the triage logic.
+
 ### Decision 2: .npmignore is written by the CLI, not printed
 
 **Problem**: Current output is: "1 violation(s) found — add them to .npmignore". Users must manually copy paths.
@@ -70,3 +72,4 @@ Simple text substitution in `run.ts`. The preview block currently says "Commands
 - **`.npmignore` append on re-run**: If an author runs `check` twice, they could accumulate duplicate entries. Mitigated by deduplicating entries before writing.
 - **npm pipe on slow connections**: Piping npm suppresses live progress. If `npm install` hangs (e.g., registry timeout), the author sees no feedback. Mitigated by showing a spinner during the install.
 - **Inquirer version constraints**: Prompt chaining (show expand prompt only if collapsible dirs exist) is straightforward in `@inquirer/prompts` v3+ but must be verified against the pinned version in the repo.
+- **`.npmignore` write permission failure**: If the working directory is read-only or `.npmignore` is owned by root, the file write will throw. The triage flow SHALL catch `EACCES`/`EROFS` errors and print a diagnostic ("Could not write .npmignore — permission denied") rather than crashing. The user falls back to the static exclusion list that was shown before the write attempt.
