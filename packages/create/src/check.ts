@@ -5,11 +5,19 @@ import * as path from 'node:path';
 import { checkbox, confirm } from '@inquirer/prompts';
 import { DEFAULT_IGNORE, lintSkillFrontmatter } from '@skillet-cli/core';
 import matter from 'gray-matter';
+import { triageViolations } from './npmignore-triage.js';
 import { validatePluginManifests } from './plugin-manifests.js';
 
-interface PackFile {
+export interface PackFile {
   path: string;
   size: number;
+}
+
+export interface DisplayEntry {
+  label: string;
+  paths: string[];
+  isDir: boolean;
+  totalSize: number;
 }
 
 interface NpmPackManifest {
@@ -52,7 +60,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function getSkillPaths(cwd: string): string[] {
+export function getSkillPaths(cwd: string): string[] {
   const pkgPath = path.join(cwd, 'package.json');
   if (!fs.existsSync(pkgPath)) {
     throw new Error('No package.json found in current directory');
@@ -130,11 +138,62 @@ export function classifyFile(file: PackFile, skillPaths: string[]): ClassifiedFi
   return { packPath: filePath, size, tier: 'ambiguous' };
 }
 
+export function collapseToDirectories(files: ClassifiedFile[], parentPrefix = ''): DisplayEntry[] {
+  const topLevelFiles: ClassifiedFile[] = [];
+  const byFirstSegment = new Map<string, ClassifiedFile[]>();
+
+  for (const f of files) {
+    const relativePath =
+      parentPrefix && f.packPath.startsWith(parentPrefix)
+        ? f.packPath.slice(parentPrefix.length)
+        : f.packPath;
+
+    const slash = relativePath.indexOf('/');
+    if (slash === -1) {
+      topLevelFiles.push(f);
+    } else {
+      const segment = relativePath.slice(0, slash);
+      const group = byFirstSegment.get(segment) ?? [];
+      group.push(f);
+      byFirstSegment.set(segment, group);
+    }
+  }
+
+  const result: DisplayEntry[] = [];
+
+  for (const f of topLevelFiles) {
+    result.push({ label: f.packPath, paths: [f.packPath], isDir: false, totalSize: f.size });
+  }
+
+  for (const [segment, dirFiles] of byFirstSegment) {
+    const fullSegment = parentPrefix ? `${parentPrefix}${segment}` : segment;
+    const totalSize = dirFiles.reduce((s, f) => s + f.size, 0);
+    if (dirFiles.length === 1) {
+      result.push({
+        label: dirFiles[0].packPath,
+        paths: [dirFiles[0].packPath],
+        isDir: false,
+        totalSize: dirFiles[0].size,
+      });
+    } else {
+      result.push({
+        label: `${fullSegment}/ (${dirFiles.length} files)`,
+        paths: dirFiles.map((f) => f.packPath),
+        isDir: true,
+        totalSize,
+      });
+    }
+  }
+
+  return result;
+}
+
 function printTier(label: string, files: ClassifiedFile[]): void {
   if (files.length === 0) return;
   process.stdout.write(`\n  ${label}\n`);
-  for (const f of files) {
-    process.stdout.write(`      ${f.packPath.padEnd(48)} ${formatSize(f.size)}\n`);
+  const collapsed = collapseToDirectories(files);
+  for (const entry of collapsed) {
+    process.stdout.write(`      ${entry.label.padEnd(48)} ${formatSize(entry.totalSize)}\n`);
   }
 }
 
@@ -202,13 +261,17 @@ export async function runCheck({ interactive }: { interactive: boolean }): Promi
 
   process.stdout.write('\n──────────────────────────────────────────\n');
 
-  // Violations always cause non-zero exit, regardless of mode
+  // Violations: interactive → triage flow; non-interactive → static message + exit 1
   if (violations.length > 0) {
-    process.stderr.write(
-      `\n${violations.length} violation(s) found — these entries must not be published.\n` +
-        'Add them to .npmignore and rerun npm publish.\n',
-    );
-    process.exit(1);
+    if (interactive) {
+      await triageViolations(violations, skillPaths, cwd);
+    } else {
+      process.stderr.write(
+        `\n${violations.length} violation(s) found — these entries must not be published.\n` +
+          'Add them to .npmignore and rerun npm publish.\n',
+      );
+      process.exit(1);
+    }
   }
 
   // Frontmatter lint — check each skill directory's SKILL.md

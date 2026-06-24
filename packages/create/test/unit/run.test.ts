@@ -53,7 +53,7 @@ import type { DetectionResult } from '../../src/detect.js';
 import { detectEnvironment } from '../../src/detect.js';
 import type { WizardConfig } from '../../src/prompts.js';
 import { collectConfig } from '../../src/prompts.js';
-import { skillMdStatus } from '../../src/run.js';
+import { CANCEL_MESSAGE, skillMdStatus } from '../../src/run.js';
 import { executeScaffold } from '../../src/scaffold.js';
 import { setupSkillDir } from '../../src/skill-dir.js';
 
@@ -236,6 +236,86 @@ describe('run.ts — preview block output', () => {
 
     const allOutput = writtenLines.join('');
     expect(allOutput).not.toContain('skillsParent:');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 1.1: "Here's what I'll do:" framing and CANCEL_MESSAGE
+// ---------------------------------------------------------------------------
+
+describe('run.ts — preview block: "Here\'s what I\'ll do:" framing', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+    mockConfirm.mockResolvedValue(true);
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('writes "Here\'s what I\'ll do:" heading in the preview block', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain("Here's what I'll do:");
+  });
+
+  it('does NOT write "Commands to run:" in the preview block', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).not.toContain('Commands to run:');
+  });
+
+  it('writes plain-English step descriptions (not raw npm commands) in the preview block', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('Set package fields');
+    expect(allOutput).toContain('Write bin/cli.js');
+    expect(allOutput).toContain('Install @skillet-cli/core');
+  });
+
+  it('exports CANCEL_MESSAGE constant that contains the cancel text', () => {
+    expect(CANCEL_MESSAGE).toContain('No changes made');
+    expect(CANCEL_MESSAGE).toContain('create-skillet');
+  });
+
+  it('writes CANCEL_MESSAGE when user declines at the preview confirm', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    // First confirm (early gate): true; second confirm (preview): false
+    mockConfirm.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+    try {
+      await invokeRunAction();
+    } finally {
+      exitSpy.mockRestore();
+    }
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain(CANCEL_MESSAGE);
   });
 });
 

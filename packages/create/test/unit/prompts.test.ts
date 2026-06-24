@@ -101,7 +101,7 @@ describe('collectConfig — removePrivate behavior', () => {
   it('collectConfig includes removePrivate: true when isPrivate and user confirms removal', async () => {
     const detected = makeDetectionResult({ isPrivate: true });
 
-    // input calls (6 metadata prompts + 1 skill path) + confirm for private removal
+    // input calls (6 metadata prompts + 1 skill path)
     mockInput
       .mockReset()
       .mockResolvedValueOnce('my-skill')
@@ -112,11 +112,10 @@ describe('collectConfig — removePrivate behavior', () => {
       .mockResolvedValueOnce('MIT')
       .mockResolvedValueOnce('skill/'); // skill content path
 
-    // confirm calls: (1) removePrivate, (2) generateClaudePlugin, (3) generateGeminiPlugin
+    // confirm calls: (1) removePrivate, (2) marketplace opt-in (false → no sub-prompts)
     mockConfirm
       .mockResolvedValueOnce(true) // removePrivate: true
-      .mockResolvedValueOnce(false) // generateClaudePlugin
-      .mockResolvedValueOnce(false); // generateGeminiPlugin
+      .mockResolvedValueOnce(false); // marketplace: false → generateClaudePlugin/GeminiPlugin both false
 
     const config = await collectConfig(detected);
 
@@ -137,11 +136,10 @@ describe('collectConfig — removePrivate behavior', () => {
       .mockResolvedValueOnce('MIT')
       .mockResolvedValueOnce('skill/');
 
-    // confirm calls: (1) removePrivate, (2) generateClaudePlugin, (3) generateGeminiPlugin
+    // confirm calls: (1) removePrivate, (2) marketplace opt-in (false → no sub-prompts)
     mockConfirm
       .mockResolvedValueOnce(false) // removePrivate: false
-      .mockResolvedValueOnce(false) // generateClaudePlugin
-      .mockResolvedValueOnce(false); // generateGeminiPlugin
+      .mockResolvedValueOnce(false); // marketplace: false
 
     const config = await collectConfig(detected);
 
@@ -338,5 +336,102 @@ describe('collectConfig — license prompt default', () => {
     );
     expect(licenseCalls).toHaveLength(1);
     expect((licenseCalls[0][0] as { default: string }).default).toBe('MIT');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// collectConfig — plugin/extension marketplace prompt consolidation (task 1.3)
+// ---------------------------------------------------------------------------
+
+describe('collectConfig — marketplace prompt consolidation', () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mockInput.mockResolvedValue('my-skill');
+  });
+
+  afterEach(() => {
+    vi.resetAllMocks();
+  });
+
+  function makeInputSequence(overrides: { repositoryUrl?: string } = {}) {
+    mockInput
+      .mockResolvedValueOnce('my-skill') // name
+      .mockResolvedValueOnce('1.0.0') // version
+      .mockResolvedValueOnce('A test skill') // description
+      .mockResolvedValueOnce('Test Author') // author
+      .mockResolvedValueOnce(overrides.repositoryUrl ?? '') // repositoryUrl
+      .mockResolvedValueOnce('MIT') // license
+      .mockResolvedValueOnce('skill/'); // skillDir
+  }
+
+  it('generateClaudePlugin and generateGeminiPlugin are both false when marketplace opt-in is declined', async () => {
+    const detected = makeDetectionResult({ isPrivate: false });
+    makeInputSequence();
+
+    // confirm: (1) marketplace: false → no sub-prompts
+    mockConfirm.mockResolvedValueOnce(false);
+
+    const config = await collectConfig(detected);
+
+    expect(config.generateClaudePlugin).toBe(false);
+    expect(config.generateGeminiPlugin).toBe(false);
+  });
+
+  it('generateClaudePlugin and generateGeminiPlugin reflect sub-prompt answers when marketplace opted in', async () => {
+    const detected = makeDetectionResult({ isPrivate: false });
+    makeInputSequence({ repositoryUrl: 'https://github.com/org/repo' });
+
+    // confirm: (1) marketplace: true, (2) claude: true, (3) gemini: false
+    mockConfirm
+      .mockResolvedValueOnce(true) // marketplace
+      .mockResolvedValueOnce(true) // claude+copilot
+      .mockResolvedValueOnce(false); // gemini
+
+    const config = await collectConfig(detected);
+
+    expect(config.generateClaudePlugin).toBe(true);
+    expect(config.generateGeminiPlugin).toBe(false);
+  });
+
+  it('sub-prompts are NOT called when marketplace is declined', async () => {
+    const detected = makeDetectionResult({ isPrivate: false });
+    makeInputSequence();
+
+    mockConfirm.mockResolvedValueOnce(false); // marketplace: false
+
+    await collectConfig(detected);
+
+    // Only 1 confirm call (marketplace gate) — no sub-prompts
+    expect(mockConfirm).toHaveBeenCalledTimes(1);
+    const [firstCall] = mockConfirm.mock.calls;
+    expect((firstCall[0] as { message: string }).message).toContain('marketplace');
+  });
+
+  it('marketplace prompt defaults to true when repositoryUrl is present', async () => {
+    const detected = makeDetectionResult({
+      isPrivate: false,
+      repositoryUrl: 'https://github.com/org/repo',
+    });
+    makeInputSequence({ repositoryUrl: 'https://github.com/org/repo' });
+
+    // marketplace: false (we just want to check the default)
+    mockConfirm.mockResolvedValueOnce(false);
+
+    await collectConfig(detected);
+
+    const marketplaceCall = mockConfirm.mock.calls[0];
+    expect((marketplaceCall[0] as { default: boolean }).default).toBe(true);
+  });
+
+  it('marketplace prompt defaults to false when repositoryUrl is absent', async () => {
+    const detected = makeDetectionResult({ isPrivate: false, repositoryUrl: '' });
+    makeInputSequence({ repositoryUrl: '' });
+
+    mockConfirm.mockResolvedValueOnce(false);
+
+    await collectConfig(detected);
+
+    const marketplaceCall = mockConfirm.mock.calls[0];
+    expect((marketplaceCall[0] as { default: boolean }).default).toBe(false);
   });
 });

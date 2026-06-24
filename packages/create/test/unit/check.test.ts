@@ -41,7 +41,7 @@ import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import { checkbox, confirm } from '@inquirer/prompts';
 import { lintSkillFrontmatter } from '@skillet-cli/core';
-import { classifyFile, runCheck } from '../../src/check.js';
+import { classifyFile, collapseToDirectories, runCheck } from '../../src/check.js';
 
 const mockSpawnSync = vi.mocked(spawnSync);
 const mockFsExistsSync = vi.mocked(fs.existsSync);
@@ -69,6 +69,87 @@ function makeSpawnResult(stdout: string, status = 0) {
     typeof spawnSync
   >;
 }
+
+// ---------------------------------------------------------------------------
+// collapseToDirectories unit tests (task 3.3)
+// ---------------------------------------------------------------------------
+
+describe('collapseToDirectories', () => {
+  function makeFile(packPath: string, size = 100) {
+    return { packPath, size, tier: 'skill-content' as const };
+  }
+
+  it('returns empty array for empty input', () => {
+    expect(collapseToDirectories([])).toEqual([]);
+  });
+
+  it('collapses multiple files under the same first-segment directory', () => {
+    const files = [
+      makeFile('node_modules/lodash/index.js'),
+      makeFile('node_modules/lodash/utils.js'),
+      makeFile('node_modules/semver/index.js'),
+    ];
+    const result = collapseToDirectories(files);
+    expect(result).toHaveLength(1);
+    expect(result[0].label).toBe('node_modules/ (3 files)');
+    expect(result[0].isDir).toBe(true);
+    expect(result[0].paths).toHaveLength(3);
+  });
+
+  it('shows a single file under a directory as an individual path (not collapsed)', () => {
+    const files = [makeFile('fixtures/seed.sql')];
+    const result = collapseToDirectories(files);
+    expect(result).toHaveLength(1);
+    expect(result[0].label).toBe('fixtures/seed.sql');
+    expect(result[0].isDir).toBe(false);
+  });
+
+  it('shows top-level files (no directory prefix) individually', () => {
+    const files = [makeFile('.env'), makeFile('README.md')];
+    const result = collapseToDirectories(files);
+    expect(result).toHaveLength(2);
+    expect(result.every((r) => !r.isDir)).toBe(true);
+    expect(result.map((r) => r.label)).toContain('.env');
+    expect(result.map((r) => r.label)).toContain('README.md');
+  });
+
+  it('handles mixed: collapses multi-file dirs, shows single-file dirs and top-level files individually', () => {
+    const files = [
+      makeFile('node_modules/lodash/index.js'),
+      makeFile('node_modules/semver/index.js'),
+      makeFile('.env'),
+    ];
+    const result = collapseToDirectories(files);
+    // node_modules has 2 files → collapse
+    // .env is top-level → individual
+    const dirEntry = result.find((r) => r.isDir);
+    const fileEntries = result.filter((r) => !r.isDir);
+    expect(dirEntry).toBeDefined();
+    expect(dirEntry!.label).toBe('node_modules/ (2 files)');
+    expect(fileEntries.map((r) => r.label)).toContain('.env');
+  });
+
+  it('with parentPrefix expands one level into children', () => {
+    const files = [
+      makeFile('node_modules/lodash/index.js'),
+      makeFile('node_modules/lodash/utils.js'),
+      makeFile('node_modules/semver/index.js'), // single file under semver → individual
+    ];
+    const result = collapseToDirectories(files, 'node_modules/');
+    const dirEntry = result.find((r) => r.isDir);
+    const fileEntry = result.find((r) => !r.isDir);
+    expect(dirEntry).toBeDefined();
+    expect(dirEntry!.label).toBe('node_modules/lodash/ (2 files)');
+    expect(fileEntry).toBeDefined();
+    expect(fileEntry!.label).toBe('node_modules/semver/index.js');
+  });
+
+  it('sums totalSize correctly for collapsed directory rows', () => {
+    const files = [makeFile('dir/a.js', 100), makeFile('dir/b.js', 200)];
+    const result = collapseToDirectories(files);
+    expect(result[0].totalSize).toBe(300);
+  });
+});
 
 // ---------------------------------------------------------------------------
 // classifyFile unit tests (task 7.3)
