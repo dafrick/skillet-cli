@@ -22,7 +22,7 @@ Skillet solves this once. Authors ship a small npm package powered by `@skillet-
 - **One dependency ships a complete installer.** Add `@skillet-cli/core` to your package, call `run()`. The CLI, prompts, adapters, drift detection, and UX are all included. Nothing else to wire up.
 - **Standard package distribution.** Skills ship as npm packages — via GitHub Package Registry, npmjs.com, or any compatible registry. Skillet adds an installer, not a new distribution channel. Your existing publish workflow is enough.
 - **UX is skillet's job, not yours.** Scope selection, auto-detection of agent environments, drift detection, update prompts, rich terminal output — everything that makes an installer feel polished comes out of the box. Write great skills; let skillet handle the rest.
-- **Broad reach that expands over time.** Skillet ships with adapters for Claude Code, GitHub Copilot, and generic agents. As the ecosystem grows, so does adapter support — without changes to your skill.
+- **Broad reach that expands over time.** Skillet ships with adapters for Claude Code, GitHub Copilot, Gemini CLI, Codex, Cursor, and generic agents. As the ecosystem grows, so does adapter support — without changes to your skill.
 
 ## Using Skillet
 
