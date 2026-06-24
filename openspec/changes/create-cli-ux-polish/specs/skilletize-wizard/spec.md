@@ -10,6 +10,7 @@ After all configuration prompts, the wizard SHALL display a human-readable summa
 #### Scenario: User declines at preview
 - **WHEN** the user answers "no" at the preview confirmation
 - **THEN** the wizard prints "No changes made. Re-run `create-skillet` to start over." and exits with code 0 without touching the filesystem
+- **Implementation note**: export the cancel message as a named constant (e.g., `CANCEL_MESSAGE`) so that tests assert against the constant rather than a string literal, preventing message-drift failures
 
 #### Scenario: Preview uses "Here's what I'll do:" framing
 - **WHEN** the wizard displays the pre-execution summary

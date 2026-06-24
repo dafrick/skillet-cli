@@ -9,7 +9,7 @@
 
 - [ ] 2.1 In `scaffold.ts`, change the `spawnSync` call for `npm install @skillet-cli/core` from `stdio: 'inherit'` to `stdio: 'pipe'`
 - [ ] 2.2 Write a progress line before the install (`  Installing @skillet-cli/core…`) and a success line after (`  ✓ Installed @skillet-cli/core`); on non-zero exit, write captured stderr to terminal and exit with code 1
-- [ ] 2.3 Update `skilletize-wizard` spec requirement "Install step emits plain progress output, not a spinner" to reflect piped stdio; update corresponding unit and integration tests
+- [ ] 2.3 Update unit and integration tests for the install step to assert on the new piped-stdio behavior (progress line before, success/failure line after)
 
 ## 3. Directory collapsing in file display
 
@@ -19,13 +19,14 @@
 
 ## 4. Interactive .npmignore triage
 
+- [ ] 4.0 Verify that the pinned `@inquirer/prompts` version in `packages/create/package.json` is v3 or higher (required for prompt chaining used in the expand loop); if below v3, upgrade the dependency before starting task 4.2
 - [ ] 4.1 Create `src/npmignore-triage.ts` exporting `async function triageViolations(violations: PackFile[], cwd: string): Promise<void>` — entry point for the interactive flow
 - [ ] 4.2 Implement initial checkbox render inside `triageViolations`: build collapsed display rows from violation entries, present via `@inquirer/prompts` `checkbox`, pre-select all (included by default), return set of unchecked (excluded) entries
 - [ ] 4.3 Implement the expand loop: after the initial checkbox, if any selected rows are collapsed directories, offer a follow-up `checkbox` ("Any directories you'd like to inspect further?"); for each chosen directory, replace its row with direct children collapsed one level; repeat until user declines or no collapsible dirs remain
 - [ ] 4.4 Implement `.npmignore` write: collect excluded entries (collapsed dir → `dirname/`, file → path), deduplicate against existing `.npmignore` content if the file exists, append new entries
 - [ ] 4.5 Implement post-write re-check: re-run `npm pack --dry-run --json` and re-classify; print zero-violation success message or summarize remaining violations and exit with code 1
-- [ ] 4.6 Wire `triageViolations` into `runCheck`: in interactive mode (`{ interactive: true }`), replace the current static violation message with a call to `triageViolations`; in non-interactive mode leave the static message unchanged
-- [ ] 4.7 Write unit tests for `triageViolations` covering: no violations (skipped), single top-level file excluded, single directory collapsed and excluded, directory expanded then child excluded, .npmignore append deduplication
+- [ ] 4.6 Wire `triageViolations` into `runCheck`: pass `{ interactive: process.stdout.isTTY === true }` from the CLI entry point into `runCheck`; in interactive mode, replace the current static violation message with a call to `triageViolations`; in non-interactive mode leave the static message unchanged
+- [ ] 4.7 Write unit tests for `triageViolations` covering: no violations (skipped), single top-level file excluded, single directory collapsed and excluded, directory expanded then child excluded, .npmignore append deduplication, `.npmignore` write permission failure (`EACCES`) prints diagnostic and does not throw
 
 ## 5. Integration & regression
 

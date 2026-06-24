@@ -18,7 +18,7 @@ When `create-skillet check` (or the post-wizard publish preview in non-interacti
 ---
 
 ### Requirement: Triage presents violations as a collapsible directory tree
-The triage prompt SHALL display violation entries grouped by directory. Entries whose path begins with the same first path segment SHALL be collapsed into a single `dirname/ (N files)` row. Top-level file entries (no directory prefix) appear as individual rows. All entries are pre-selected (included in the package) by default; the user unchecks entries to exclude them.
+The triage prompt SHALL display violation entries grouped by directory. Entries whose path begins with the same first path segment SHALL be collapsed into a single `dirname/ (N files)` row, **provided that directory contains two or more files**. A directory entry containing exactly one file SHALL be displayed as the individual file path (e.g., `fixtures/seed.sql`) rather than as a collapsed row (e.g., `fixtures/ (1 file)`). Top-level file entries (no directory prefix) appear as individual rows. All entries are pre-selected (included in the package) by default; the user unchecks entries to exclude them.
 
 #### Scenario: Directory entries collapsed by default
 - **WHEN** the triage prompt is shown and three violation entries share the prefix `node_modules/`
@@ -28,9 +28,13 @@ The triage prompt SHALL display violation entries grouped by directory. Entries 
 - **WHEN** a violation entry has no directory component (e.g., `.env`)
 - **THEN** it appears as its own row in the checkbox list
 
+#### Scenario: Single-file directory shown as individual path
+- **WHEN** the violation set contains exactly one file under a directory prefix (e.g., `fixtures/seed.sql`)
+- **THEN** the entry appears as `fixtures/seed.sql` (not as `fixtures/ (1 file)`)
+
 #### Scenario: Mixed directories and files
 - **WHEN** the violation set contains both `node_modules/lodash/index.js` and `.env`
-- **THEN** the list shows `node_modules/ (1 file)` and `.env` as separate rows
+- **THEN** the list shows `node_modules/lodash/index.js` (individual path, single file under `node_modules/`) and `.env` as separate rows
 
 ---
 
