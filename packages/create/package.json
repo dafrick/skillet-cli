@@ -1,6 +1,6 @@
 {
   "name": "create-skillet",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Interactive wizard to package a skill for any AI agent",
   "license": "MIT",
   "repository": {

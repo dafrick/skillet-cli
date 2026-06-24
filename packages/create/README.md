@@ -17,11 +17,11 @@ Run it in the directory you want to package. The wizard detects defaults from yo
 ## What it does
 
 1. **Detects defaults** — reads your git user name/email, derives a package name from the directory or git remote, and pre-fills the repository URL from `git remote get-url origin`
-2. **Prompts for configuration** — package name, version, description, author, repository URL, and license. If a git remote is detected, also prompts whether to generate Claude Code + Copilot CLI plugin manifests (`.claude-plugin/`) and a Gemini CLI extension manifest (`gemini-extension.json`). If multiple skill directories are detected, all are packaged together automatically; otherwise you confirm or override the skill directory path
-3. **Shows a preview** — displays the full `npm pkg set` command before writing anything
+2. **Prompts for configuration** — package name, version, description, author, repository URL, and license. Prompts whether to add plugin/extension marketplace support (a single gate that enables Claude Code + Copilot CLI and/or Gemini CLI manifest generation); defaults to on when a git remote is detected. If multiple skill directories are detected, all are packaged together automatically; otherwise you confirm or override the skill directory path
+3. **Shows a preview** — displays a plain-English summary of what will be set up ("Initialize package.json", "Set package fields", "Write bin/cli.js", "Install @skillet-cli/core") before writing anything
 4. **Scaffolds the package** — runs `npm init -y` if there is no `package.json`, then `npm pkg set` to apply all fields
 5. **Writes `bin/cli.js`** — a ready-to-run entry point that calls `@skillet-cli/core`
-6. **Installs the runtime** — runs `npm install @skillet-cli/core`
+6. **Installs the runtime** — runs `npm install @skillet-cli/core` with a progress line and ✓ success confirmation instead of raw npm output
 7. **Selects skill files** — for single-skill packages, shows a checkbox list of files to move into `skill/` (or a single confirm for large directories); pre-selects `SKILL.md` and common resource folders. Skipped for multi-skill packages
 8. **Generates plugin manifests** (when opted in) — writes `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` for Claude Code and Copilot CLI plugin marketplace distribution, and/or `gemini-extension.json` for Gemini CLI gallery distribution
 
@@ -88,6 +88,14 @@ Prints post-publish next steps after `npm publish` succeeds. Wire it up as a `po
 When `.claude-plugin/plugin.json` is present, prints the `claude plugin marketplace add` and install commands for your users. When `gemini-extension.json` is present, reminds you to create a GitHub Release so Gemini's gallery picks up the new version.
 
 ## Changelog
+
+### v0.5.0
+
+- **"Here's what I'll do:" preview**: wizard shows a plain-English summary of what will be set up before writing anything — "Initialize package.json", "Set package fields", "Write bin/cli.js", "Install @skillet-cli/core"
+- **Marketplace prompt consolidation**: two plugin prompts consolidated into a single "Add plugin/extension marketplace support?" gate, followed by opt-in sub-prompts for Claude Code + Copilot CLI and Gemini CLI manifests; defaults to on when a git remote is detected
+- **Suppressed npm install output**: install runs piped with a progress line and ✓ success line instead of raw npm output
+- **Directory collapsing in `check`**: tarball file list groups multi-file directories into collapsed rows (e.g. `node_modules/ (42 files)`); single-file directories are shown as individual paths
+- **Interactive `.npmignore` triage**: when `create-skillet check` finds violations and stdout is a TTY, launches an interactive checkbox to select entries to exclude, writes them to `.npmignore`, and re-runs the check; gracefully handles write-permission errors
 
 ### v0.4.0
 
