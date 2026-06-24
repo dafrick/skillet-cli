@@ -112,6 +112,17 @@ All `hooks` fields are optional. `NormalizedSkill`, `Adapter`, and `Context` are
 
 ## Changelog
 
+### v0.4.0
+
+- **Gemini CLI adapter**: detects and installs to `~/.gemini/extensions/<name>/` (user scope) or `.gemini/extensions/<name>/` (project scope)
+- **Codex adapter**: detects and installs to `~/.codex/skills/<name>/` (user scope) or `.codex/skills/<name>/` (project scope)
+- **Cursor adapter**: detects and installs to `~/.cursor/skills/<name>/` (user scope) or `.cursor/skills/<name>/` (project scope)
+- **`lintSkillFrontmatter`**: new exported function — returns `true` when `SKILL.md` YAML frontmatter appears at the start of the file (required for Gemini CLI auto-load)
+
+### v0.3.1
+
+- **Batch scope+target prompts**: for multi-skill packages, scope and target prompts fire exactly once before the skill loop (previously once per skill); a single consolidated summary line is printed after all installs complete
+
 ### v0.3.0
 
 - **`skillet.skillDir` in `package.json`**: declare the direct path to a single skill directory; takes precedence over `skillet.skills` when present
