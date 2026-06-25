@@ -679,10 +679,15 @@ describe('executeScaffold — .npmignore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSpawnSync.mockReturnValue(makeSuccessResult());
-    mockFsExistsSync.mockReturnValue(true);
   });
 
-  it('writes a .npmignore containing **/node_modules to prevent nested node_modules from being published', async () => {
+  it('writes a .npmignore containing **/node_modules when .npmignore does not already exist', async () => {
+    // package.json exists (skip npm init), .npmignore does not
+    mockFsExistsSync.mockImplementation((p: unknown) => {
+      const str = String(p);
+      return str.endsWith('package.json');
+    });
+
     await executeScaffold(baseConfig);
 
     const npmignoreCall = mockFspWriteFile.mock.calls.find(
@@ -690,6 +695,18 @@ describe('executeScaffold — .npmignore', () => {
     );
     expect(npmignoreCall).toBeDefined();
     expect(String(npmignoreCall![1])).toContain('**/node_modules');
+  });
+
+  it('does NOT overwrite .npmignore when it already exists', async () => {
+    // Both package.json and .npmignore already exist
+    mockFsExistsSync.mockReturnValue(true);
+
+    await executeScaffold(baseConfig);
+
+    const npmignoreCall = mockFspWriteFile.mock.calls.find(
+      (c) => typeof c[0] === 'string' && (c[0] as string).endsWith('.npmignore'),
+    );
+    expect(npmignoreCall).toBeUndefined();
   });
 });
 

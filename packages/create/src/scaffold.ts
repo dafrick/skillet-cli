@@ -112,11 +112,12 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     // Step 5: chmod 755
     await fsp.chmod(binPath, 0o755);
 
-    // Write .npmignore to exclude nested node_modules from the published tarball.
-    // npm's built-in node_modules exclusion only covers the package root; skill
-    // subdirectories listed in "files" carry their own node_modules otherwise.
+    // Write .npmignore only when absent — preserves exclusions the author added via
+    // `create-skillet check` interactive triage on a re-run.
     const npmignorePath = path.join(process.cwd(), '.npmignore');
-    await fsp.writeFile(npmignorePath, '**/node_modules\n', 'utf8');
+    if (!fs.existsSync(npmignorePath)) {
+      await fsp.writeFile(npmignorePath, '**/node_modules\n', 'utf8');
+    }
 
     spinner.succeed('Plating done');
 

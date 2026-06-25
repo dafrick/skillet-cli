@@ -19,6 +19,15 @@ export function skillMdStatus(detected: DetectionResult): string {
   return 'not found';
 }
 
+export function printExpansionGuidance(): void {
+  process.stdout.write('\n  To expand your skill:\n');
+  process.stdout.write("    Add a new published directory:  npm pkg set 'files[N]=new-dir/'\n");
+  process.stdout.write(
+    '    Structural changes (new skillDir, multi-skill): re-run create-skillet\n',
+  );
+  process.stdout.write('    Verify what will be published:  create-skillet check\n');
+}
+
 export function deriveOwnerRepo(repositoryUrl: string): string | null {
   if (!repositoryUrl) return null;
   const url = repositoryUrl.replace(/^git\+/, '').replace(/\.git$/, '');
@@ -182,6 +191,7 @@ program
     } else {
       process.stdout.write(`    npm publish           — publish to npm\n`);
     }
+    printExpansionGuidance();
 
     // Plugin marketplace share instructions
     const ownerRepo = config.generateClaudePlugin ? deriveOwnerRepo(config.repositoryUrl) : null;
