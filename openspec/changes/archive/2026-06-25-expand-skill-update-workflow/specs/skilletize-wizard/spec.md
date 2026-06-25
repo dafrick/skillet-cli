@@ -1,4 +1,4 @@
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Scaffold writes .npmignore only when absent
 The `create-skillet` scaffold step SHALL write `.npmignore` (containing `**/node_modules`) only when `.npmignore` does not already exist in the current directory. If `.npmignore` already exists, the scaffold SHALL leave it unchanged. This preserves any exclusions the author added via `create-skillet check` interactive triage or manually.
