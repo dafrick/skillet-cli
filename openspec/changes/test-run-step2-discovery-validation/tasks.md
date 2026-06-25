@@ -8,7 +8,8 @@
 
 - [ ] 2.1 Run `make test-start` to start the Docker container
 - [ ] 2.2 Run `make prep-run REPO_URL=https://github.com/Hao0321/claude-skill-code-cleanup` to clone the repo into the container
-- [ ] 2.3 Dispatch a fresh sub-agent with only `TASK.md`, `LOG.md`, and `AGENT-SUPPLEMENT.md` — no other context, no tool names
+- [ ] 2.2b Create a run-local redacted copy of `AGENT-SUPPLEMENT.md` in the run folder: copy `test-manual/AGENT-SUPPLEMENT.md` and replace the example command on the `send-keys -l` line (currently `"npx create-skillet"`) with a neutral placeholder `"<your-command>"` — this prevents the tmux syntax example from pre-seeding the tool name
+- [ ] 2.3 Dispatch a fresh sub-agent with only `TASK.md`, `LOG.md`, and the **redacted** `AGENT-SUPPLEMENT.md` from step 2.2b — no other context, no tool names
 - [ ] 2.4 Monitor the session; record in `LOG.md` the first documentation URL or resource the tester accessed (e.g. `https://www.npmjs.com/package/create-skillet`) — or note that the tester invoked the tool name directly without a visible search step
 
 ## 3. Grade and document

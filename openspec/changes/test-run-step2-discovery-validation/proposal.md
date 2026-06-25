@@ -8,7 +8,7 @@ Every Step 2 ("Bootstrap") grading in the June 2026 test runs was invalid becaus
 - Commit the completed run folder (`test-manual/runs/2026-06-25-hao0321-claude-skill-code-cleanup/`) with all required artifacts: `TASK.md`, `LOG.md`, `TEST-RUN.md`, and any `issues/` entries
 - Update `TEST-MATRIX.md` to record the T1 result
 
-No source code, harness scripts, or templates are modified.
+No source code, harness scripts, or templates are modified. However, `AGENT-SUPPLEMENT.md` (the tmux interaction guide) contains `"npx create-skillet"` as an example command in its `send-keys` syntax illustration. To prevent this from pre-seeding the tool name, the guide creates a run-local redacted copy with that example replaced by `"<your-command>"` before handing the supplement to the tester.
 
 The tester is not pre-supplied the npm README URL. The harness instead gives only a task description ("package the skills in this repository into an installable npm package"). Issue #60's acceptance criterion #2 — "the tester's starting point is documented as the npm README URL" — is satisfied when the tester discovers that URL through search (recorded in `LOG.md` as first documentation consulted), or the run is graded "not gradeable — agent recall suspected" when the tester invokes the tool name without any search step. Both outcomes document the starting point; the criterion is met either way.
 

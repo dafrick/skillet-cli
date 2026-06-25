@@ -5,7 +5,11 @@ The project SHALL contain at least one completed manual test run for T1 (`Hao032
 
 #### Scenario: Run folder committed with all required artifacts
 - **WHEN** the change is merged
-- **THEN** `test-manual/runs/` contains a directory named `2026-06-25-hao0321-claude-skill-code-cleanup/` (or a date-stamped equivalent) with `TASK.md`, `LOG.md`, and `TEST-RUN.md` present
+- **THEN** `test-manual/runs/` contains a directory named `2026-06-25-hao0321-claude-skill-code-cleanup/` (or a date-stamped equivalent) with `TASK.md`, `LOG.md`, `TEST-RUN.md`, and a redacted `AGENT-SUPPLEMENT.md` present
+
+#### Scenario: Tester's AGENT-SUPPLEMENT.md does not contain tool name
+- **WHEN** examining the `AGENT-SUPPLEMENT.md` committed in the run folder
+- **THEN** the file does not contain `create-skillet` or `npx create-skillet` — the tool-name example has been replaced with a neutral placeholder (e.g. `"<your-command>"`)
 
 #### Scenario: Step 2 grade based on observable tester behavior
 - **WHEN** reviewing `TEST-RUN.md` from the run
