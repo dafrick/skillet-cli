@@ -15,6 +15,10 @@ The project SHALL contain at least one completed manual test run for T1 (`Hao032
 - **WHEN** examining the `LOG.md` frontmatter in the committed run
 - **THEN** the `create-skillet-version:` field is absent from the pre-session block and appears only in the post-session block (filled in after the tester completed their work)
 
+#### Scenario: LOG.md documents the tester's first documentation consulted
+- **WHEN** reviewing `LOG.md` from the run
+- **THEN** the log records the first documentation URL or resource the tester accessed before invoking any tool — either the npm README URL (`https://www.npmjs.com/package/create-skillet`) if the tester searched for it, or an explicit note that the tester invoked the tool name directly without a visible search step (agent recall)
+
 #### Scenario: TEST-MATRIX.md records T1 result
 - **WHEN** examining `test-manual/TEST-MATRIX.md`
 - **THEN** the T1 row for `Hao0321/claude-skill-code-cleanup` is no longer "Untested" and references the run date or folder

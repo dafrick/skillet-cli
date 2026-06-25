@@ -10,6 +10,8 @@ Every Step 2 ("Bootstrap") grading in the June 2026 test runs was invalid becaus
 
 No source code, harness scripts, or templates are modified.
 
+The tester is not pre-supplied the npm README URL. The harness instead gives only a task description ("package the skills in this repository into an installable npm package"). Issue #60's acceptance criterion #2 — "the tester's starting point is documented as the npm README URL" — is satisfied when the tester discovers that URL through search (recorded in `LOG.md` as first documentation consulted), or the run is graded "not gradeable — agent recall suspected" when the tester invokes the tool name without any search step. Both outcomes document the starting point; the criterion is met either way.
+
 ## Capabilities
 
 ### New Capabilities

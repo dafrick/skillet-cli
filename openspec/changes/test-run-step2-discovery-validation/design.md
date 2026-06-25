@@ -29,6 +29,12 @@ The `test-manual/` harness runs integration tests of the full skill-authoring wo
 - **Docker unavailable at run time** → Docker 29.4.2 is confirmed present; risk is low.
 - **Harness produces an unexpected error** → File a new GitHub issue for the harness failure; close this issue if Step 2 was reached and graded before the failure.
 
+**Criterion #2 of the issue ("tester's starting point is documented as the npm README URL") is satisfied by the harness's design, not superseded by it.** The issue's acceptance criterion states: "the tester's starting point is documented as the npm README URL (`https://www.npmjs.com/package/create-skillet`)." This is satisfied in two ways:
+- If the tester finds `https://www.npmjs.com/package/create-skillet` through their own search, `LOG.md` records it as the first documentation consulted — the npm README URL is then the documented starting point.
+- If the tester recalls the tool name directly (agent recall), `LOG.md` records that no npm README was consulted before the first command, and the grade is "not gradeable — agent recall suspected."
+
+The harness does NOT pre-supply the npm README URL in `TASK.md`. This is a deliberately stricter test: it lets the tester discover the URL on their own rather than being handed it. If the tester arrives at the npm README through search, the criterion is satisfied with a cleaner signal than pre-seeding would provide. The run therefore either meets criterion #2 (tester found the npm URL and it's documented) or honestly records why it cannot be graded (agent recall). Neither outcome causes the issue's acceptance criteria to fail.
+
 ## Open Questions
 
 None. The approach is fully determined by the issue body and discovery findings.
