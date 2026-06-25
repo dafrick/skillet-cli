@@ -87,6 +87,45 @@ Prints post-publish next steps after `npm publish` succeeds. Wire it up as a `po
 
 When `.claude-plugin/plugin.json` is present, prints the `claude plugin marketplace add` and install commands for your users. When `gemini-extension.json` is present, reminds you to create a GitHub Release so Gemini's gallery picks up the new version.
 
+## Expanding your skill
+
+Once your skill is published, you'll likely add files, directories, or restructure over time. Here's what to do in each case.
+
+### Adding a new directory to the published package
+
+The `files` field in `package.json` controls what npm includes in the tarball. It is set at scaffold time to `["bin", "<skillDir>"]` (or `["bin", "<parentDir>/"]` for multi-skill). If you add a new top-level directory (e.g. `prompts/` or `scripts/`) that isn't under `skillDir`, you need to add it manually:
+
+```sh
+npm pkg set 'files[2]=prompts/'
+```
+
+Use the next available index (`files[0]` is `bin`, `files[1]` is your skill dir). Then verify:
+
+```sh
+create-skillet check
+```
+
+`create-skillet check` runs `npm pack --dry-run` and shows every file that will be published, so you can confirm the new directory is included before publishing.
+
+### Structural changes (new skillDir, switching to multi-skill)
+
+Re-run `create-skillet`:
+
+```sh
+npx create-skillet
+```
+
+Re-running is safe on an existing package:
+
+- `package.json` is updated in place — only the fields `create-skillet` manages are touched; all other fields are preserved
+- `bin/cli.js` is regenerated (it's always the same content — `run({ pkg })` — so this is a no-op)
+- The `skill/` setup wizard is skipped if `skill/` already exists
+- `.npmignore` is left unchanged if it already exists (so any exclusions you added via `create-skillet check` are preserved)
+
+### Verifying what will be published
+
+Run `create-skillet check` any time to see the current tarball contents classified by type (skill content, infrastructure, violations). This is the right tool to confirm nothing is missing or included by mistake.
+
 ## Changelog
 
 ### v0.5.0
