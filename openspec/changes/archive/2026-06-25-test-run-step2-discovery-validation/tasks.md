@@ -21,5 +21,5 @@
 ## 4. Commit results
 
 - [x] 4.1 Update `TEST-MATRIX.md` T1 row with the run date and result summary
-- [ ] 4.2 Commit the completed run folder (`test-manual/runs/2026-06-25-hao0321-claude-skill-code-cleanup/`) and updated `TEST-MATRIX.md` with a conventional commit message
-- [ ] 4.3 Push to the branch
+- [x] 4.2 Commit the completed run folder (`test-manual/runs/2026-06-25-hao0321-claude-skill-code-cleanup/`) and updated `TEST-MATRIX.md` with a conventional commit message
+- [x] 4.3 Push to the branch
