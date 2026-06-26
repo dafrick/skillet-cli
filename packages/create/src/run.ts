@@ -183,6 +183,28 @@ program
       process.stdout.write(`    npm publish           — publish to npm\n`);
     }
 
+    // To expand your skill block
+    process.stdout.write(`\n  To expand your skill:\n`);
+    process.stdout.write(`    Add a new directory:\n`);
+    process.stdout.write(`      Run \`npm pkg get files\` to see the current array, then:\n`);
+    process.stdout.write(
+      `      npm pkg set files[N]=newdir/   (e.g. files[2]=newdir/ for standard single-skill layout)\n`,
+    );
+    process.stdout.write(`    Add files to an existing skill dir:\n`);
+    process.stdout.write(
+      `      Only a version bump and publish are needed — no wizard re-run required.\n`,
+    );
+    process.stdout.write(`    Structural changes (new bin entry, rename, etc.):\n`);
+    process.stdout.write(
+      `      Re-run \`create-skillet\`. Warning: name, version, description, and author\n`,
+    );
+    process.stdout.write(
+      `      will be re-asked with no pre-population, and bin/cli.js will be overwritten.\n`,
+    );
+    process.stdout.write(
+      `    After any expansion: create-skillet check  — verify tarball contents\n`,
+    );
+
     // Plugin marketplace share instructions
     const ownerRepo = config.generateClaudePlugin ? deriveOwnerRepo(config.repositoryUrl) : null;
     if (ownerRepo) {

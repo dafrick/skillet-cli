@@ -560,3 +560,82 @@ describe('run.ts — Commander routing (task 7.6)', () => {
     expect(mockRunCheck).not.toHaveBeenCalledWith({ interactive: true });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tasks 3–4: "To expand your skill" completion block
+// ---------------------------------------------------------------------------
+
+describe('run.ts — completion block: expansion guidance', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+
+    mockConfirm.mockResolvedValue(true);
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('includes "To expand your skill" heading after the Next steps block', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('To expand your skill');
+  });
+
+  it('includes npm pkg set files instruction for adding a new directory', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('npm pkg set files');
+  });
+
+  it('warns that name, version, description, author are reset on re-run', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toMatch(/name.*version|re-run.*reset|reset.*re-run/i);
+  });
+
+  it('warns that bin/cli.js is always overwritten on re-run', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('bin/cli.js');
+  });
+
+  it('references create-skillet check for post-expansion verification', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected());
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    // Should appear in expansion block (it already appears in Next steps, so check it's still there)
+    const checkCount = (allOutput.match(/create-skillet check/g) ?? []).length;
+    expect(checkCount).toBeGreaterThanOrEqual(2);
+  });
+});
