@@ -8,5 +8,6 @@ coverage/
 test-manual/tmp/*
 !test-manual/tmp/.gitkeep
 
+.agents/
 .openspec-auto.json
 .openspec-auto/
