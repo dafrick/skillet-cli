@@ -28,19 +28,25 @@ If a proposed spec or design requires either of the first two, it is solving the
 
 ## Principles
 
-### 1. We handle complexity; users provide intent
+### 1. Tools explain themselves
+
+Users should be able to pick up any skillet tool and succeed without reading documentation first. Commands, prompts, and output should be self-describing — a user who just runs the command and reads what appears should understand what is happening and what to do next.
+
+If users need to consult external docs to accomplish a basic task, the tool hasn't done its job.
+
+### 3. We handle complexity; users provide intent
 
 Automation over instruction. If a task can be automated, it must be. Users tell us what they want to accomplish; we figure out the how.
 
 When a user wants to expand their published skill to include a new directory, the right answer is a command that does it — not documentation explaining which npm command to run and what array index to use.
 
-### 2. Multiple paths to success
+### 4. Multiple paths to success
 
 If there are multiple intuitive ways to approach a task, all of them must work correctly. Do not force users down a single path or punish the intuitive one.
 
 Design for the user who doesn't know the "right" sequence — they will try what seems reasonable, and that should succeed.
 
-### 3. Consent before irreversible actions
+### 5. Consent before irreversible actions
 
 Before overwriting or resetting user-modified content:
 
@@ -51,25 +57,25 @@ Before overwriting or resetting user-modified content:
 
 This applies to any file we own that the user might also touch, and to any metadata we collect and write back (especially versioned fields).
 
-### 4. Progressive disclosure
+### 6. Progressive disclosure
 
 Output should be clean and compact by default. Show the top-level picture; provide tools to go deeper when needed.
 
 For example, when showing what changed in an install, show which directories were affected — not every individual file. Let the user ask for the detail if they want it. The CLI should feel neat and focused, not like a log file.
 
-### 5. Clarity where it matters
+### 7. Clarity where it matters
 
 Reserve detailed output for moments of anxiety or consequence. Before publishing, show everything that will be included in the tarball — users need to verify nothing inappropriate is going out. Before a destructive action, confirm. After a successful routine operation, be quiet.
 
 The rule is not "always be verbose" or "always be brief" — it is "match the level of information to the stakes of the moment."
 
-### 6. Actionable errors
+### 8. Actionable errors
 
 When something fails, tell the user what to do next or how to diagnose the problem. A useful error has two parts: what went wrong, and the concrete next step to recover or investigate.
 
 Never leave the user stranded with a generic failure message.
 
-### 7. Prefer interactive over sequential
+### 9. Prefer interactive over sequential
 
 When a task involves multiple steps or decisions, prefer a single interactive command that guides the user through them. Avoid designs that require the user to run multiple commands in sequence to accomplish one logical goal.
 
@@ -79,6 +85,8 @@ When a task involves multiple steps or decisions, prefer a single interactive co
 
 | Anti-pattern | Principle violated |
 |---|---|
+| Requiring users to read docs before they can complete a basic task | Tools explain themselves |
+| Output or prompts that don't explain what is happening or what to do next | Tools explain themselves |
 | Instructing users to run tool-internal commands (npm, git, etc.) | We handle complexity |
 | Printing steps that require the user to know an internal detail (array index, flag name, field path) | We handle complexity |
 | Silently overwriting user-modified content | Consent |
