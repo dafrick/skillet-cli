@@ -1,107 +1,90 @@
-# Create-Skillet UX Principles
+# Skillet UX Principles
 
-This document defines the UX principles that govern `create-skillet` design decisions. All proposals and specs should be evaluated against these principles. When a spec violates a principle, the spec is wrong — not the principle.
+These principles apply to all skillet packages — `@skillet-cli/core`, `create-skillet`, and any future tooling in this ecosystem.
 
-A concise version of these principles is embedded in `openspec/config.yaml` so AI agents have them at proposal and spec creation time.
-
----
-
-## Who We Are Building For
-
-Skill authors are people who have great ideas for AI skills but are **not necessarily experts in npm package mechanics**. They know what they want to accomplish — publish a skill, add a directory, update their package — but they should not need to know how npm's `files` array is indexed, or what `npm pkg set` does, or how `.npmignore` interacts with the `files` field.
-
-Our job is to make them successful. Their job is to write great skills.
+For visual design (color palette, output patterns, verb reference, wordmark), see the Ember & Iris design system at `docs/design/cli-design-system.html`.
 
 ---
 
-## Core Principles
+## Our Goal
 
-### 1. One command per lifecycle stage
+Make users successful by handling complexity on their behalf. Skill authors should be able to publish, expand, and maintain their skills. End users should be able to install, update, and manage skills across agent environments. Neither group should need to understand what is happening under the hood to do this well.
 
-Every lifecycle stage (initial scaffold, expanding/updating, verifying, publishing) should be achievable through a single command. Authors should never need to chain obscure npm commands or know implementation details to accomplish a common task.
-
-**What this means in practice:**
-- If expanding a published skill requires updating the `files` array, `create-skillet` does it — the author doesn't type `npm pkg set 'files[2]=prompts/'`.
-- If updating requires knowing the current `files` entries first, `create-skillet` reads them.
-- Documentation that tells users to run raw npm commands is a failure mode, not a solution.
-
-**Anti-pattern:** Printing "run `npm pkg set 'files[N]=new-dir/'`" in the wizard completion block. The user doesn't know what N is and shouldn't have to find out.
+We handle the package mechanics, the file management, the environment detection — everything. Their job is to write great skills and use them.
 
 ---
+
+## Failure Modes
+
+These are unambiguous signals that a design has gone wrong:
+
+- **The user must run npm commands** to accomplish something (the sole exception is `npm publish`, which is intentionally left to the user as an irreversible, credentialed action)
+- **The user must edit files** beyond simple, self-evident content they authored themselves (e.g., writing skill prompt files is fine; manually editing `package.json` fields or `files` arrays is not)
+- **The user is left without guidance** after an error
+
+If a proposed spec or design requires either of the first two, it is solving the wrong problem — reconsider the approach.
+
+---
+
+## Principles
+
+### 1. We handle complexity; users provide intent
+
+Automation over instruction. If a task can be automated, it must be. Users tell us what they want to accomplish; we figure out the how.
+
+When a user wants to expand their published skill to include a new directory, the right answer is a command that does it — not documentation explaining which npm command to run and what array index to use.
 
 ### 2. Multiple paths to success
 
-If there are multiple ways a user might intuitively approach a task, all of them should work correctly. Do not force users down a single path. Punishing the intuitive path erodes trust.
+If there are multiple intuitive ways to approach a task, all of them must work correctly. Do not force users down a single path or punish the intuitive one.
 
-**What this means in practice:**
-- An author who re-runs `create-skillet` when they want to update their package should get the correct update behavior — not a fresh scaffold that clobbers their published version.
-- An author who looks for `create-skillet update` should find it and get the same outcome.
-- An author who just bumps the version and runs `npm publish` (for simple content additions) should also succeed, and we should tell them when that's the right move.
+Design for the user who doesn't know the "right" sequence — they will try what seems reasonable, and that should succeed.
 
-**Decision guide:** When designing a flow, ask "what would three different authors try first?" All three paths should either work or give a clear, helpful redirect.
+### 3. Consent before irreversible actions
 
----
+Before overwriting or resetting user-modified content:
 
-### 3. Consent before destruction
+1. Detect whether the content was modified (not just whether it exists)
+2. Prefer merge over discard — if modifications can be reconciled with the new content, attempt it
+3. Fall back to explicit consent — show what will change and ask
+4. Always report what happened
 
-Never silently destroy or reset user work. Before any action that overwrites user-modified content:
+This applies to any file we own that the user might also touch, and to any metadata we collect and write back (especially versioned fields).
 
-1. **Detect** whether the file has been modified by the user (not just whether it exists).
-2. **Prefer merge**: if the modification can be merged with the new content, attempt it.
-3. **Fall back to consent**: if merge fails or isn't applicable, show the diff/conflict and ask the user what to do.
-4. **Always report**: tell the user what happened — whether merge succeeded, whether they chose to overwrite, etc.
+### 4. Progressive disclosure
 
-**Concrete cases this principle applies to:**
-- `.npmignore`: if the user added exclusions, detect them, try to merge new entries with existing content, warn if the merge is uncertain.
-- `bin/cli.js`: always overwritten by re-run. Before overwriting, check if the user modified it (compare to the canonical generated content). If modified, warn explicitly and ask for consent.
-- `package.json` fields (`name`, `version`, `description`, `author`): re-running the wizard re-collects and resets all of these. This is a footgun. Show current values, ask for confirmation before overwriting, especially for `version` (which maps to a published release).
+Output should be clean and compact by default. Show the top-level picture; provide tools to go deeper when needed.
 
-**Anti-pattern:** Writing `.npmignore` only if it doesn't already exist. This is "safe" in the sense that it doesn't destroy data, but it's not good enough — on a re-run the file may be outdated and a merge is the right behavior.
+For example, when showing what changed in an install, show which directories were affected — not every individual file. Let the user ask for the detail if they want it. The CLI should feel neat and focused, not like a log file.
 
----
+### 5. Clarity where it matters
 
-### 4. Transparent actions
+Reserve detailed output for moments of anxiety or consequence. Before publishing, show everything that will be included in the tarball — users need to verify nothing inappropriate is going out. Before a destructive action, confirm. After a successful routine operation, be quiet.
 
-Show what will change before changing it. Summarize what was done after. Users should never wonder what just happened to their package.
+The rule is not "always be verbose" or "always be brief" — it is "match the level of information to the stakes of the moment."
 
-**What this means in practice:**
-- Before scaffold/update: a preview or summary of the changes about to be made.
-- After scaffold/update: a summary of what was changed, what was preserved, what needs manual attention.
-- When skipping an action (e.g., "`.npmignore` is unchanged — your exclusions were preserved"): say so.
+### 6. Actionable errors
 
----
+When something fails, tell the user what to do next or how to diagnose the problem. A useful error has two parts: what went wrong, and the concrete next step to recover or investigate.
 
-### 5. Fail safely, succeed verbosely
+Never leave the user stranded with a generic failure message.
 
-On success: tell the user exactly what was done and what to do next — do not assume they remember the workflow from the first run.
+### 7. Prefer interactive over sequential
 
-On failure: give a clear, actionable error message. "Something went wrong" is not acceptable. The user should know what failed and have a concrete next step to recover.
+When a task involves multiple steps or decisions, prefer a single interactive command that guides the user through them. Avoid designs that require the user to run multiple commands in sequence to accomplish one logical goal.
 
 ---
 
-## Anti-Patterns Catalogue
+## Anti-Patterns
 
-These are specific mistakes to avoid in proposals and specs:
-
-| Anti-pattern | Principle violated | Better approach |
-|---|---|---|
-| Telling users to run `npm pkg set 'files[N]=...'` | #1 One command | Automate the `files` update in `create-skillet` |
-| Silently not-overwriting a file because it exists | #3 Consent | Detect modifications, merge if possible, ask if not |
-| Silently overwriting a user-modified file | #3 Consent | Detect, warn, ask |
-| Resetting `version` without warning | #3 Consent | Show current value, require explicit confirmation |
-| Documenting re-run as "safe" without caveats | #4 Transparency | List what will and won't change explicitly |
-| Telling users to do X "manually" for a common task | #1 One command | Automate it |
-| Only supporting one entry point for a common operation | #2 Multiple paths | Support all intuitive paths |
-| Printing raw diffs without context | #4 Transparency | Explain what the diff means and what the user's options are |
-
----
-
-## Design Principle Summary (for config.yaml)
-
-> Target audience: skill authors who are not deeply familiar with npm internals. They know what they want to accomplish, not how to do it at the tool level.
->
-> 1. **One command** — never require chaining npm commands; automate what can be automated.
-> 2. **Multiple paths** — if there are multiple intuitive ways to do something, all must work.
-> 3. **Consent before destruction** — detect modifications, prefer merge, fall back to explicit consent. Never silently reset.
-> 4. **Transparent** — show what will change before; summarize what changed after.
-> 5. **Fail safely** — clear errors with concrete recovery steps; verbose success with next steps.
+| Anti-pattern | Principle violated |
+|---|---|
+| Instructing users to run tool-internal commands (npm, git, etc.) | We handle complexity |
+| Printing steps that require the user to know an internal detail (array index, flag name, field path) | We handle complexity |
+| Silently overwriting user-modified content | Consent |
+| Not checking for modifications before overwriting | Consent |
+| Dumping every file or line when a summary would do | Progressive disclosure |
+| Equal verbosity for publish and routine status | Clarity where it matters |
+| Error output with no recovery step or diagnostic pointer | Actionable errors |
+| Requiring multiple sequential commands for one logical operation | Prefer interactive |
+| Documenting a workaround instead of fixing the underlying gap | We handle complexity |
