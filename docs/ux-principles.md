@@ -14,18 +14,6 @@ We handle the package mechanics, the file management, the environment detection 
 
 ---
 
-## Failure Modes
-
-These are unambiguous signals that a design has gone wrong:
-
-- **The user must run npm commands** to accomplish something (the sole exception is `npm publish`, which is intentionally left to the user as an irreversible, credentialed action)
-- **The user must edit files** beyond simple, self-evident content they authored themselves (e.g., writing skill prompt files is fine; manually editing `package.json` fields or `files` arrays is not)
-- **The user is left without guidance** after an error
-
-If a proposed spec or design requires either of the first two, it is solving the wrong problem — reconsider the approach.
-
----
-
 ## Principles
 
 ### 1. Tools explain themselves
@@ -34,19 +22,19 @@ Users should be able to pick up any skillet tool and succeed without reading doc
 
 If users need to consult external docs to accomplish a basic task, the tool hasn't done its job.
 
-### 3. We handle complexity; users provide intent
+### 2. We handle complexity; users provide intent
 
 Automation over instruction. If a task can be automated, it must be. Users tell us what they want to accomplish; we figure out the how.
 
 When a user wants to expand their published skill to include a new directory, the right answer is a command that does it — not documentation explaining which npm command to run and what array index to use.
 
-### 4. Multiple paths to success
+### 3. Multiple paths to success
 
 If there are multiple intuitive ways to approach a task, all of them must work correctly. Do not force users down a single path or punish the intuitive one.
 
 Design for the user who doesn't know the "right" sequence — they will try what seems reasonable, and that should succeed.
 
-### 5. Consent before irreversible actions
+### 4. Consent before irreversible actions
 
 Before overwriting or resetting user-modified content:
 
@@ -57,27 +45,39 @@ Before overwriting or resetting user-modified content:
 
 This applies to any file we own that the user might also touch, and to any metadata we collect and write back (especially versioned fields).
 
-### 6. Progressive disclosure
+### 5. Progressive disclosure
 
 Output should be clean and compact by default. Show the top-level picture; provide tools to go deeper when needed.
 
 For example, when showing what changed in an install, show which directories were affected — not every individual file. Let the user ask for the detail if they want it. The CLI should feel neat and focused, not like a log file.
 
-### 7. Clarity where it matters
+### 6. Clarity where it matters
 
-Reserve detailed output for moments of anxiety or consequence. Before publishing, show everything that will be included in the tarball — users need to verify nothing inappropriate is going out. Before a destructive action, confirm. After a successful routine operation, be quiet.
+At moments of anxiety or consequence — publishing, destructive actions — ensure the user has exactly what they need to make a confident decision. Progressive disclosure still applies: keep the output clean and focused, with the option to expand. What changes at high-stakes moments is that the relevant information is made prominent and the user can confirm before proceeding.
 
-The rule is not "always be verbose" or "always be brief" — it is "match the level of information to the stakes of the moment."
+The rule is not verbosity when stakes are high — it is clarity when clarity matters.
 
-### 8. Actionable errors
+### 7. Actionable errors
 
 When something fails, tell the user what to do next or how to diagnose the problem. A useful error has two parts: what went wrong, and the concrete next step to recover or investigate.
 
 Never leave the user stranded with a generic failure message.
 
-### 9. Prefer interactive over sequential
+### 8. Prefer interactive over sequential
 
 When a task involves multiple steps or decisions, prefer a single interactive command that guides the user through them. Avoid designs that require the user to run multiple commands in sequence to accomplish one logical goal.
+
+---
+
+## Failure Modes
+
+These are unambiguous signals that a design has gone wrong:
+
+- **The user must run npm commands** to accomplish something (the sole exception is `npm publish`, which is intentionally left to the user as an irreversible, credentialed action)
+- **The user must edit files** beyond simple, self-evident content they authored themselves (e.g., writing skill prompt files is fine; manually editing `package.json` fields or `files` arrays is not)
+- **The user is left without guidance** after an error
+
+If a proposed spec or design requires either of the first two, it is solving the wrong problem — reconsider the approach.
 
 ---
 
@@ -92,7 +92,7 @@ When a task involves multiple steps or decisions, prefer a single interactive co
 | Silently overwriting user-modified content | Consent |
 | Not checking for modifications before overwriting | Consent |
 | Dumping every file or line when a summary would do | Progressive disclosure |
-| Equal verbosity for publish and routine status | Clarity where it matters |
+| Treating a high-stakes action the same as a routine one — no focused confirmation | Clarity where it matters |
 | Error output with no recovery step or diagnostic pointer | Actionable errors |
 | Requiring multiple sequential commands for one logical operation | Prefer interactive |
 | Documenting a workaround instead of fixing the underlying gap | We handle complexity |
