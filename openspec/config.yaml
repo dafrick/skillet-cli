@@ -1,11 +1,4 @@
 schema: spec-driven
 
-rules:
-  proposal:
-    - When adding or changing user-facing behavior or output, refer to docs/ux-principles.md
-  design:
-    - When adding or changing user-facing behavior or output, refer to docs/ux-principles.md
-  spec:
-    - When adding or changing user-facing behavior or output, refer to docs/ux-principles.md
-  tasks:
-    - When adding or changing user-facing behavior or output, refer to docs/ux-principles.md
+context: |
+  When adding or changing user-facing behavior or output, refer to docs/ux-principles.md
