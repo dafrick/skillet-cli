@@ -1,13 +1,24 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project context — shown to AI when creating artifacts.
+# Full UX guide: docs/ux-principles.md
+context: |
+  ## Project: create-skillet (packages/create)
+  A scaffolding CLI that helps skill authors publish their AI skills as npm packages.
+  Tech stack: TypeScript ESM, Node.js, commander, @inquirer/prompts, ora (spinners), chalk.
+  Monorepo: pnpm workspaces. Tests: Vitest (unit / integration / E2E). Linting: Biome.
+
+  ## Target audience
+  Skill authors who are NOT deeply familiar with npm internals. They know what they want
+  to accomplish but should never need to know how npm's files array is indexed, what
+  `npm pkg set` does, or how .npmignore interacts with the files field.
+
+  ## UX Principles — see docs/ux-principles.md for the full guide
+  1. ONE COMMAND PER LIFECYCLE STAGE — never require raw npm commands; automate everything.
+  2. MULTIPLE PATHS TO SUCCESS — all intuitive approaches must work (re-run AND explicit command).
+  3. CONSENT BEFORE DESTRUCTION — detect modifications, merge if possible, ask if not; never silently reset.
+  4. TRANSPARENT ACTIONS — show what will change before; summarize what changed after.
+  5. FAIL SAFELY, SUCCEED VERBOSELY — clear errors with recovery steps; verbose success with next steps.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
