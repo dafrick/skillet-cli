@@ -87,6 +87,51 @@ Prints post-publish next steps after `npm publish` succeeds. Wire it up as a `po
 
 When `.claude-plugin/plugin.json` is present, prints the `claude plugin marketplace add` and install commands for your users. When `gemini-extension.json` is present, reminds you to create a GitHub Release so Gemini's gallery picks up the new version.
 
+## Expanding your skill
+
+After your skill package is published you may want to add more content without starting over.
+
+### Adding a new directory
+
+Check the current `files` array first, then add the new directory at the next index:
+
+```sh
+npm pkg get files          # e.g. ["bin", "skill/"]
+npm pkg set files[2]=newdir/
+```
+
+The standard single-skill layout puts `files[0]=bin` and `files[1]=<skillDir>`, so the next directory is `files[2]`. The exact index depends on your current `files` array — always run `npm pkg get files` first to confirm.
+
+After adding the directory entry, bump the version and publish:
+
+```sh
+npm version patch
+npm publish
+```
+
+Run `create-skillet check` to verify the tarball contains the new directory before publishing.
+
+### Adding files to an existing skill directory
+
+If you only add files inside a directory already listed in `files`, no changes to `package.json` are needed. Bump the version and publish:
+
+```sh
+npm version patch
+npm publish
+```
+
+### Structural changes (rename, new bin entry, etc.)
+
+For structural changes — renaming the skill directory, adding a second bin entry, or changing the package layout — re-run `create-skillet`:
+
+```sh
+create-skillet
+```
+
+> **Warning:** Re-running the wizard re-asks `name`, `version`, `description`, and `author` with **no pre-population** from the existing `package.json`. Write down your current values before re-running. `bin/cli.js` is always overwritten on re-run — do not customise it.
+
+Run `create-skillet check` to verify tarball contents after any structural change.
+
 ## Changelog
 
 ### v0.5.0
