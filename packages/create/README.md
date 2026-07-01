@@ -87,7 +87,36 @@ Prints post-publish next steps after `npm publish` succeeds. Wire it up as a `po
 
 When `.claude-plugin/plugin.json` is present, prints the `claude plugin marketplace add` and install commands for your users. When `gemini-extension.json` is present, reminds you to create a GitHub Release so Gemini's gallery picks up the new version.
 
+## Expanding your skill
+
+The wizard prints this same guidance at the end of a successful run. There are three things you'll typically want to do after your first `create-skillet` run, plus two footguns worth knowing about.
+
+**Adding a new content directory** — if you're adding a new top-level directory alongside your skill (not just files inside it), register it in `files`:
+
+```sh
+npm pkg set files[N]=<newDir>/
+```
+
+Check your package's current `files` array first — the right index depends on its length. A single-skill package typically has `files[0]=bin` and `files[1]=<skillDir>`, making `files[2]` the next available index, but multi-skill or manually-edited packages may differ.
+
+**Simple content updates** — editing files within your existing skill directory doesn't need a re-scaffold. Just bump the version and run `npm publish`.
+
+**Structural changes** — if you need to change the package layout itself, re-run `create-skillet`. Before you do:
+
+> [!WARNING]
+> Re-running `create-skillet` resets `name`, `version`, `description`, and `author` to whatever you enter (or accept as defaults) in the prompts. If you've already published, say, `1.2.0`, a re-run can silently reset the version field to the wizard's default — double-check every prompt answer before confirming.
+
+**`bin/cli.js` is always regenerated** — every run of `create-skillet` rewrites `bin/cli.js` unconditionally. This is safe in the normal case, since the file is generated boilerplate, but if you've hand-edited it, those edits will be silently lost on the next run.
+
+Before publishing, verify what will actually be shipped with [`create-skillet check`](#create-skillet-check).
+
 ## Changelog
+
+### v0.6.0
+
+- **`.npmignore` no longer clobbered on re-run**: `create-skillet` only writes `.npmignore` when one doesn't already exist, so re-running the wizard on an existing package no longer overwrites author-customized ignore entries
+- **Expansion guidance in the completion block**: after a successful run, the wizard prints guidance on adding a new content directory, making simple content updates, and handling structural changes (with a warning about the `name`/`version`/`description`/`author` reset on re-run)
+- **New "Expanding your skill" README section**: documents the same guidance, plus the pre-existing `bin/cli.js` regeneration footgun, for reference outside the terminal
 
 ### v0.5.0
 
