@@ -45,13 +45,13 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 6. Metadata diff + consent on the reconfigure path
 
-- [ ] 6.1 Write failing unit tests for a pure function (e.g. `diffMetadata(detected, config)`) that compares `name`, `version`, `description`, `author`, `license` and returns only the changed fields as `{field, current, next}` entries; verify it returns an empty result when nothing changed.
-- [ ] 6.2 Implement `diffMetadata` to satisfy 6.1.
-- [ ] 6.3 Write a failing `run.test.ts` case: on the "Reconfigure everything" path, after `collectConfig()` returns with at least one changed metadata field, a "Changes to published metadata:" block is printed (via `process.stdout.write` assertions) showing `current → new` for each changed field, before the existing preview-confirm step.
-- [ ] 6.4 Write a failing `run.test.ts` case: when no metadata fields changed, the "Changes to published metadata:" block is not printed.
-- [ ] 6.5 Write a failing `run.test.ts` case: when the diff block is shown and the user declines the single confirmation, no `npm pkg set` command runs and `package.json` is left unchanged.
-- [ ] 6.6 Implement the diff rendering in `run.ts`, folded into the existing "Ready to set up" / "Here's what I'll do:" preview step, gated by the existing single confirmation.
-- [ ] 6.7 Run the run.ts test suite and confirm all new and existing tests pass.
+- [x] 6.1 Write failing unit tests for a pure function (e.g. `diffMetadata(detected, config)`) that compares `name`, `version`, `description`, `author`, `license` and returns only the changed fields as `{field, current, next}` entries; verify it returns an empty result when nothing changed.
+- [x] 6.2 Implement `diffMetadata` to satisfy 6.1.
+- [x] 6.3 Write a failing `run.test.ts` case: on the "Reconfigure everything" path, after `collectConfig()` returns with at least one changed metadata field, a "Changes to published metadata:" block is printed (via `process.stdout.write` assertions) showing `current → new` for each changed field, before the existing preview-confirm step.
+- [x] 6.4 Write a failing `run.test.ts` case: when no metadata fields changed, the "Changes to published metadata:" block is not printed.
+- [x] 6.5 Write a failing `run.test.ts` case: when the diff block is shown and the user declines the single confirmation, no `npm pkg set` command runs and `package.json` is left unchanged.
+- [x] 6.6 Implement the diff rendering in `run.ts`, folded into the existing "Ready to set up" / "Here's what I'll do:" preview step, gated by the existing single confirmation.
+- [x] 6.7 Run the run.ts test suite and confirm all new and existing tests pass.
 
 ## 7. bin/cli.js overwrite guard
 

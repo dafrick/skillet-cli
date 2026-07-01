@@ -6,7 +6,7 @@ import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
 import { runCheck } from './check.js';
 import { type DetectionResult, detectEnvironment } from './detect.js';
-import { computeAddDirectoryPlan, computeAddSkillPlan } from './expansion.js';
+import { computeAddDirectoryPlan, computeAddSkillPlan, diffMetadata } from './expansion.js';
 import { collectConfig } from './prompts.js';
 import { executeScaffold, runSync } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
@@ -241,6 +241,22 @@ program
 
     // Step 4: Collect config via prompts
     const config = await collectConfig(detected);
+
+    // Step 4b: Metadata diff — reconfigure path only. Compares the collected
+    // name/version/description/author/license against the values already on
+    // disk, and shows what's about to change before the existing
+    // preview-confirm step. Gated by the same single confirmation below —
+    // no separate prompt. First-time setup never reaches here with
+    // isExistingSkilletPackage true, so no diff block is shown for it.
+    if (detected.isExistingSkilletPackage) {
+      const metadataChanges = diffMetadata(detected, config);
+      if (metadataChanges.length > 0) {
+        process.stdout.write('\nChanges to published metadata:\n');
+        for (const change of metadataChanges) {
+          process.stdout.write(`  ${change.field}: ${change.current} → ${change.next}\n`);
+        }
+      }
+    }
 
     // Step 5: NPM preview + confirm
     process.stdout.write('\nReady to set up:\n');

@@ -6,6 +6,7 @@
  */
 
 import type { DetectionResult } from './detect.js';
+import type { WizardConfig } from './prompts.js';
 
 export interface AddDirectoryPlan {
   /** The normalized directory entry being added (e.g. "prompts/"). */
@@ -86,4 +87,35 @@ export function computeAddSkillPlan(detected: DetectionResult, newSkillDir: stri
     : [...currentFiles, newParentDir];
 
   return { convertedFromSingleSkill, skills, files };
+}
+
+export interface MetadataDiffEntry {
+  field: 'name' | 'version' | 'description' | 'author' | 'license';
+  current: string;
+  next: string;
+}
+
+/**
+ * The metadata fields compared on the "Reconfigure everything" path, in the
+ * order they should be displayed.
+ */
+const DIFFABLE_METADATA_FIELDS = ['name', 'version', 'description', 'author', 'license'] as const;
+
+/**
+ * Compare the collected wizard config against the currently detected
+ * (on-disk) values for `name`, `version`, `description`, `author`, and
+ * `license`, returning only the fields that changed. Used to show a
+ * "Changes to published metadata:" block before overwriting `package.json`
+ * on the reconfigure path — see design.md decision 5.
+ */
+export function diffMetadata(detected: DetectionResult, config: WizardConfig): MetadataDiffEntry[] {
+  const entries: MetadataDiffEntry[] = [];
+  for (const field of DIFFABLE_METADATA_FIELDS) {
+    const current = detected[field] ?? '';
+    const next = config[field] ?? '';
+    if (current !== next) {
+      entries.push({ field, current, next });
+    }
+  }
+  return entries;
 }
