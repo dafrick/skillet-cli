@@ -17,13 +17,13 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 3. Intent menu: branch the bare command on re-run
 
-- [ ] 3.1 In `packages/create/test/unit/run.test.ts`, add a failing test that when `detected.isExistingSkilletPackage` is `true` and the early gate is accepted, the wizard calls the mocked `select()` (already stubbed in the test setup) with the four intent options, instead of proceeding directly into `collectConfig()`.
-- [ ] 3.2 In `packages/create/test/unit/run.test.ts`, add a failing test that when `detected.isExistingSkilletPackage` is `false`, the wizard does not call `select()` and proceeds directly into `collectConfig()` (existing first-run behavior unchanged).
-- [ ] 3.3 In `packages/create/test/unit/run.test.ts`, add a failing test that selecting "Just check what would be published" invokes the same check logic as `create-skillet check` and exits without calling `executeScaffold`.
-- [ ] 3.4 In `packages/create/src/run.ts`, implement the intent-menu branch: after the early gate is accepted, if `detected.isExistingSkilletPackage`, call `select()` with the four options and dispatch accordingly; otherwise keep the existing direct path into `collectConfig()`.
-- [ ] 3.5 Wire the "Just check" option to the existing `runCheck` logic.
-- [ ] 3.6 Wire "Reconfigure everything" to the existing `collectConfig()` → `executeScaffold()` path (behavior unchanged apart from the metadata diff added in section 5).
-- [ ] 3.7 Run the run.ts test suite and confirm all new and existing tests pass.
+- [x] 3.1 In `packages/create/test/unit/run.test.ts`, add a failing test that when `detected.isExistingSkilletPackage` is `true` and the early gate is accepted, the wizard calls the mocked `select()` (already stubbed in the test setup) with the four intent options, instead of proceeding directly into `collectConfig()`.
+- [x] 3.2 In `packages/create/test/unit/run.test.ts`, add a failing test that when `detected.isExistingSkilletPackage` is `false`, the wizard does not call `select()` and proceeds directly into `collectConfig()` (existing first-run behavior unchanged).
+- [x] 3.3 In `packages/create/test/unit/run.test.ts`, add a failing test that selecting "Just check what would be published" invokes the same check logic as `create-skillet check` and exits without calling `executeScaffold`.
+- [x] 3.4 In `packages/create/src/run.ts`, implement the intent-menu branch: after the early gate is accepted, if `detected.isExistingSkilletPackage`, call `select()` with the four options and dispatch accordingly; otherwise keep the existing direct path into `collectConfig()`.
+- [x] 3.5 Wire the "Just check" option to the existing `runCheck` logic.
+- [x] 3.6 Wire "Reconfigure everything" to the existing `collectConfig()` → `executeScaffold()` path (behavior unchanged apart from the metadata diff added in section 5).
+- [x] 3.7 Run the run.ts test suite and confirm all new and existing tests pass.
 
 ## 4. Quick flow: add a directory to the published package
 
