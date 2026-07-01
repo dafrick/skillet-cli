@@ -27,12 +27,12 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 4. Quick flow: add a directory to the published package
 
-- [ ] 4.1 Write a failing unit test for a pure function (e.g. `computeAddDirectoryPlan(currentFiles, newDir)`) that appends a normalized directory entry to the current `files[]` array without disturbing existing entries or exposing an index in its output.
-- [ ] 4.2 Implement `computeAddDirectoryPlan` (in `scaffold.ts` or a new sibling module) to satisfy 4.1.
-- [ ] 4.3 Write a failing `run.test.ts` case: selecting "Add a directory to the published package" prompts only for a directory path (no metadata prompts), displays a plan naming the directory (not an index), asks for a single confirmation, and on accept runs `npm pkg set` for the updated `files` value only.
-- [ ] 4.4 Write a failing `run.test.ts` case: declining the add-directory confirmation results in no `npm pkg set` call.
-- [ ] 4.5 Implement the add-directory flow in `run.ts` (and/or `prompts.ts`) to satisfy 4.3 and 4.4, reusing `computeAddDirectoryPlan`.
-- [ ] 4.6 Run the relevant test suites and confirm all pass.
+- [x] 4.1 Write a failing unit test for a pure function (e.g. `computeAddDirectoryPlan(currentFiles, newDir)`) that appends a normalized directory entry to the current `files[]` array without disturbing existing entries or exposing an index in its output.
+- [x] 4.2 Implement `computeAddDirectoryPlan` (in `scaffold.ts` or a new sibling module) to satisfy 4.1.
+- [x] 4.3 Write a failing `run.test.ts` case: selecting "Add a directory to the published package" prompts only for a directory path (no metadata prompts), displays a plan naming the directory (not an index), asks for a single confirmation, and on accept runs `npm pkg set` for the updated `files` value only.
+- [x] 4.4 Write a failing `run.test.ts` case: declining the add-directory confirmation results in no `npm pkg set` call.
+- [x] 4.5 Implement the add-directory flow in `run.ts` (and/or `prompts.ts`) to satisfy 4.3 and 4.4, reusing `computeAddDirectoryPlan`.
+- [x] 4.6 Run the relevant test suites and confirm all pass.
 
 ## 5. Quick flow: add another skill / convert to multi-skill
 

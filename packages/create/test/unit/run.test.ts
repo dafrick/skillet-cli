@@ -25,6 +25,9 @@ vi.mock('../../src/scaffold.js', () => ({
   runSync: vi.fn(),
 }));
 
+// computeAddDirectoryPlan is a pure function — no mock needed, real
+// implementation exercised via run.ts's add-directory flow.
+
 vi.mock('../../src/skill-dir.js', () => ({
   setupSkillDir: vi.fn(),
 }));
@@ -47,21 +50,23 @@ vi.mock('@skillet-cli/ui', () => ({
 // Imports — after mocks
 // ---------------------------------------------------------------------------
 
-import { confirm, select } from '@inquirer/prompts';
+import { confirm, input, select } from '@inquirer/prompts';
 import { runCheck } from '../../src/check.js';
 import type { DetectionResult } from '../../src/detect.js';
 import { detectEnvironment } from '../../src/detect.js';
 import type { WizardConfig } from '../../src/prompts.js';
 import { collectConfig } from '../../src/prompts.js';
 import { CANCEL_MESSAGE, skillMdStatus } from '../../src/run.js';
-import { executeScaffold } from '../../src/scaffold.js';
+import { executeScaffold, runSync } from '../../src/scaffold.js';
 import { setupSkillDir } from '../../src/skill-dir.js';
 
 const mockConfirm = vi.mocked(confirm);
+const mockInput = vi.mocked(input);
 const mockSelect = vi.mocked(select);
 const mockDetectEnvironment = vi.mocked(detectEnvironment);
 const mockCollectConfig = vi.mocked(collectConfig);
 const mockExecuteScaffold = vi.mocked(executeScaffold);
+const mockRunSync = vi.mocked(runSync);
 const mockSetupSkillDir = vi.mocked(setupSkillDir);
 const mockRunCheck = vi.mocked(runCheck);
 
@@ -633,5 +638,73 @@ describe('run.ts — intent menu on re-run (tasks 3.1–3.3)', () => {
 
     expect(mockRunCheck).toHaveBeenCalledWith({ interactive: true });
     expect(mockExecuteScaffold).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tasks 4.3–4.4: add-directory quick flow
+// ---------------------------------------------------------------------------
+
+describe('run.ts — add-directory flow (tasks 4.3–4.4)', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+    mockRunCheck.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('prompts only for a directory path, shows a plan naming the directory, confirms once, and runs npm pkg set for files only', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({ isExistingSkilletPackage: true, files: ['bin', 'skill'] }),
+    );
+    mockSelect.mockResolvedValue('add-directory');
+    mockInput.mockResolvedValue('prompts/');
+    // Early gate confirm, then the single add-directory confirm — both accepted.
+    mockConfirm.mockResolvedValue(true);
+
+    await invokeRunAction();
+
+    // Only one input() prompt (the directory path) — no metadata prompts.
+    expect(mockInput).toHaveBeenCalledTimes(1);
+    expect(mockCollectConfig).not.toHaveBeenCalled();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('Will add `prompts/` to the published package');
+    expect(allOutput).not.toMatch(/files\[\d+\]/);
+
+    expect(mockRunSync).toHaveBeenCalledTimes(1);
+    expect(mockRunSync).toHaveBeenCalledWith(
+      'npm',
+      ['pkg', 'set', '--json', 'files=["bin","skill","prompts/"]'],
+      expect.any(String),
+    );
+  });
+
+  it('does not call npm pkg set when the add-directory confirmation is declined', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({ isExistingSkilletPackage: true, files: ['bin', 'skill'] }),
+    );
+    mockSelect.mockResolvedValue('add-directory');
+    mockInput.mockResolvedValue('prompts/');
+    // Early gate confirm: true; add-directory confirm: false.
+    mockConfirm.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await invokeRunAction();
+
+    expect(mockRunSync).not.toHaveBeenCalled();
   });
 });
