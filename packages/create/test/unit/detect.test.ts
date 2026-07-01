@@ -517,3 +517,149 @@ describe('detectEnvironment — license detection', () => {
     expect(result.license).toBe('');
   });
 });
+
+// ---------------------------------------------------------------------------
+// detectEnvironment — isExistingSkilletPackage detection (task 2.1)
+// ---------------------------------------------------------------------------
+
+describe('detectEnvironment — isExistingSkilletPackage detection', () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tmpDir = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'detect-test-')));
+    originalCwd = process.cwd();
+    process.chdir(tmpDir);
+    vi.clearAllMocks();
+    mockGitFailure();
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('true when skillet.skillDir is present', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', skillet: { skillDir: 'skill/' } }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.isExistingSkilletPackage).toBe(true);
+  });
+
+  it('true when skillet.skills is present (array form)', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        name: 'my-skill',
+        version: '1.0.0',
+        skillet: { skills: ['skills/a/', 'skills/b/'] },
+      }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.isExistingSkilletPackage).toBe(true);
+  });
+
+  it('true when skillet.skills is present (string form)', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        name: 'my-skill',
+        version: '1.0.0',
+        skillet: { skills: 'skills/a/' },
+      }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.isExistingSkilletPackage).toBe(true);
+  });
+
+  it('false when neither skillet.skillDir nor skillet.skills is present', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0' }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.isExistingSkilletPackage).toBe(false);
+  });
+
+  it('false when no package.json exists', () => {
+    const result = detectEnvironment();
+    expect(result.isExistingSkilletPackage).toBe(false);
+  });
+
+  it('false when skillet.skills is an empty array', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', skillet: { skills: [] } }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.isExistingSkilletPackage).toBe(false);
+  });
+
+  it('false when skillet.skills is an empty string', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', skillet: { skills: '' } }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.isExistingSkilletPackage).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// detectEnvironment — files array capture (task 2.2)
+// ---------------------------------------------------------------------------
+
+describe('detectEnvironment — files array capture', () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tmpDir = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'detect-test-')));
+    originalCwd = process.cwd();
+    process.chdir(tmpDir);
+    vi.clearAllMocks();
+    mockGitFailure();
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('captures the files array from package.json when present', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        name: 'my-skill',
+        version: '1.0.0',
+        files: ['skill/', 'README.md'],
+      }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.files).toEqual(['skill/', 'README.md']);
+  });
+
+  it('is undefined when package.json has no files field', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0' }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.files).toBeUndefined();
+  });
+
+  it('is undefined when no package.json exists', () => {
+    const result = detectEnvironment();
+    expect(result.files).toBeUndefined();
+  });
+});

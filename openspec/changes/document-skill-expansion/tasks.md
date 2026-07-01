@@ -9,11 +9,11 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 2. Detection: recognize an existing skillet package
 
-- [ ] 2.1 In `packages/create/test/unit/detect.test.ts`, add failing tests for `DetectionResult.isExistingSkilletPackage`: true when `skillet.skillDir` present, true when `skillet.skills` present (array form), true when `skillet.skills` present (string form), false when neither present, false when no `package.json`.
-- [ ] 2.2 In `packages/create/test/unit/detect.test.ts`, add a failing test that `DetectionResult.files` captures the existing `files` array from `package.json` (and is empty/undefined when absent).
-- [ ] 2.3 In `packages/create/src/detect.ts`, extend the `PackageJson` interface's `skillet` sub-interface to include `skills?: string | string[]`.
-- [ ] 2.4 In `packages/create/src/detect.ts`, add `isExistingSkilletPackage` and `files` to `DetectionResult` and compute them in `detectEnvironment()`.
-- [ ] 2.5 Run the detect test suite and confirm all new tests pass; confirm no existing detect tests regress.
+- [x] 2.1 In `packages/create/test/unit/detect.test.ts`, add failing tests for `DetectionResult.isExistingSkilletPackage`: true when `skillet.skillDir` present, true when `skillet.skills` present (array form), true when `skillet.skills` present (string form), false when neither present, false when no `package.json`.
+- [x] 2.2 In `packages/create/test/unit/detect.test.ts`, add a failing test that `DetectionResult.files` captures the existing `files` array from `package.json` (and is empty/undefined when absent).
+- [x] 2.3 In `packages/create/src/detect.ts`, extend the `PackageJson` interface's `skillet` sub-interface to include `skills?: string | string[]`.
+- [x] 2.4 In `packages/create/src/detect.ts`, add `isExistingSkilletPackage` and `files` to `DetectionResult` and compute them in `detectEnvironment()`.
+- [x] 2.5 Run the detect test suite and confirm all new tests pass; confirm no existing detect tests regress.
 
 ## 3. Intent menu: branch the bare command on re-run
 

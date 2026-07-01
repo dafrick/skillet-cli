@@ -17,6 +17,10 @@ export interface DetectionResult {
   discoveredSkillDirs: string[];
   repositoryUrl: string;
   gitUser: string;
+  /** True when package.json exists and declares itself a skillet package via skillet.skillDir or skillet.skills. */
+  isExistingSkilletPackage?: boolean;
+  /** The `files` array from package.json, if present. */
+  files?: string[];
 }
 
 /**
@@ -118,7 +122,9 @@ interface PackageJson {
   license?: string;
   skillet?: {
     skillDir?: string;
+    skills?: string | string[];
   };
+  files?: string[];
 }
 
 export function detectEnvironment(nameArg?: string): DetectionResult {
@@ -134,6 +140,8 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
   let description = '';
   let license = '';
   let pkgSkillDir: string | null = null;
+  let hasSkilletSkills = false;
+  let pkgFiles: string[] | undefined;
 
   if (fs.existsSync(pkgJsonPath)) {
     hasPackageJson = true;
@@ -150,6 +158,11 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
       license = pkg.license ?? '';
       if (pkg.skillet?.skillDir) {
         pkgSkillDir = pkg.skillet.skillDir;
+      }
+      const pkgSkills = pkg.skillet?.skills;
+      hasSkilletSkills = Array.isArray(pkgSkills) ? pkgSkills.length > 0 : Boolean(pkgSkills);
+      if (pkg.files) {
+        pkgFiles = pkg.files;
       }
     } catch {
       // ignore parse errors
@@ -195,6 +208,9 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
   const gitEmail = gitOutput(['config', 'user.email']);
   const gitUser = gitName && gitEmail ? `${gitName} <${gitEmail}>` : gitName || '';
 
+  // --- isExistingSkilletPackage ---
+  const isExistingSkilletPackage = hasPackageJson && (pkgSkillDir !== null || hasSkilletSkills);
+
   return {
     cwd,
     name,
@@ -209,5 +225,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
     discoveredSkillDirs,
     repositoryUrl,
     gitUser,
+    isExistingSkilletPackage,
+    files: pkgFiles,
   };
 }
