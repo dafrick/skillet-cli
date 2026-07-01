@@ -2,10 +2,10 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 1. Bug fix: .npmignore overwrite guard
 
-- [ ] 1.1 In `packages/create/test/unit/scaffold.test.ts`, add a failing test: when `.npmignore` already exists with custom content before `executeScaffold` runs, the file is left unchanged after execution.
-- [ ] 1.2 In `packages/create/test/unit/scaffold.test.ts`, add/keep a test that `.npmignore` is still created with default content when it does not already exist.
-- [ ] 1.3 In `packages/create/src/scaffold.ts`, guard the `.npmignore` write with an existence check (`fs.existsSync`) so it is only written when absent.
-- [ ] 1.4 Run the scaffold test suite and confirm both tests pass.
+- [x] 1.1 In `packages/create/test/unit/scaffold.test.ts`, add a failing test: when `.npmignore` already exists with custom content before `executeScaffold` runs, the file is left unchanged after execution.
+- [x] 1.2 In `packages/create/test/unit/scaffold.test.ts`, add/keep a test that `.npmignore` is still created with default content when it does not already exist.
+- [x] 1.3 In `packages/create/src/scaffold.ts`, guard the `.npmignore` write with an existence check (`fs.existsSync`) so it is only written when absent.
+- [x] 1.4 Run the scaffold test suite and confirm both tests pass.
 
 ## 2. Detection: recognize an existing skillet package
 
