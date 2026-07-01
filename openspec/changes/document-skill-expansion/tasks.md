@@ -55,13 +55,13 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 7. bin/cli.js overwrite guard
 
-- [ ] 7.1 Write a failing unit test: extract the `bin/cli.js` content generation into a pure function (e.g. `buildBinCliJs(...)`) and assert it produces byte-identical output to what `scaffold.ts` currently writes.
-- [ ] 7.2 Write a failing `scaffold.test.ts` case: when no `bin/cli.js` exists, it is written unconditionally (no prompt).
-- [ ] 7.3 Write a failing `scaffold.test.ts` case: when existing `bin/cli.js` content matches `buildBinCliJs()` output exactly, it is rewritten (or left as-is) without any warning or prompt.
-- [ ] 7.4 Write a failing `scaffold.test.ts`/`run.test.ts` case: when existing `bin/cli.js` content differs from `buildBinCliJs()` output, the wizard warns and asks for confirmation before overwriting.
-- [ ] 7.5 Write a failing test: declining the `bin/cli.js` overwrite confirmation leaves the existing file untouched and the wizard continues with remaining steps.
-- [ ] 7.6 Implement `buildBinCliJs()` extraction and the comparison/consent guard in `scaffold.ts`, reusing the function both to write the file and to compute the comparison target.
-- [ ] 7.7 Run the scaffold and run test suites and confirm all pass.
+- [x] 7.1 Write a failing unit test: extract the `bin/cli.js` content generation into a pure function (e.g. `buildBinCliJs(...)`) and assert it produces byte-identical output to what `scaffold.ts` currently writes.
+- [x] 7.2 Write a failing `scaffold.test.ts` case: when no `bin/cli.js` exists, it is written unconditionally (no prompt).
+- [x] 7.3 Write a failing `scaffold.test.ts` case: when existing `bin/cli.js` content matches `buildBinCliJs()` output exactly, it is rewritten (or left as-is) without any warning or prompt.
+- [x] 7.4 Write a failing `scaffold.test.ts`/`run.test.ts` case: when existing `bin/cli.js` content differs from `buildBinCliJs()` output, the wizard warns and asks for confirmation before overwriting.
+- [x] 7.5 Write a failing test: declining the `bin/cli.js` overwrite confirmation leaves the existing file untouched and the wizard continues with remaining steps.
+- [x] 7.6 Implement `buildBinCliJs()` extraction and the comparison/consent guard in `scaffold.ts`, reusing the function both to write the file and to compute the comparison target.
+- [x] 7.7 Run the scaffold and run test suites and confirm all pass.
 
 ## 8. README: replace the doc-only "expand your skill" content
 

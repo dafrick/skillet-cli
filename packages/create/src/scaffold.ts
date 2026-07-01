@@ -2,6 +2,7 @@ import { type StdioOptions, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
 import * as path from 'node:path';
+import { confirm } from '@inquirer/prompts';
 import { createSpinner } from '@skillet-cli/ui';
 import { generatePluginManifests } from './plugin-manifests.js';
 import type { WizardConfig } from './prompts.js';
@@ -102,15 +103,41 @@ export async function executeScaffold(config: WizardConfig): Promise<void> {
     const finalPkg = fs.readFileSync(pkgJsonPath, 'utf8');
     process.stdout.write(`\npackage.json written:\n${finalPkg}\n`);
 
-    // Step 4: Write bin/cli.js
-    spinner.start('Plating bin/cli.js…');
+    // Step 4: Write bin/cli.js — gated on a content comparison rather than an
+    // unconditional overwrite. If no bin/cli.js exists yet, write it without
+    // any prompt. If it exists and matches the freshly rendered content
+    // exactly, rewrite silently (idempotent, no-op from the user's
+    // perspective). If it exists and differs, warn and ask for consent
+    // before overwriting; declining leaves the existing file untouched and
+    // the wizard continues with the remaining steps.
     const binDir = path.join(process.cwd(), 'bin');
     await fsp.mkdir(binDir, { recursive: true });
     const binPath = path.join(binDir, 'cli.js');
-    await fsp.writeFile(binPath, buildBinCliJs(), 'utf8');
+    const renderedBinCliJs = buildBinCliJs();
 
-    // Step 5: chmod 755
-    await fsp.chmod(binPath, 0o755);
+    let shouldWriteBinCliJs = true;
+    if (fs.existsSync(binPath)) {
+      const existingBinCliJs = fs.readFileSync(binPath, 'utf8');
+      if (existingBinCliJs !== renderedBinCliJs) {
+        process.stdout.write(
+          '\n⚠  bin/cli.js appears to have been modified since it was generated.\n',
+        );
+        shouldWriteBinCliJs = await confirm({
+          message: 'Overwrite bin/cli.js with the freshly generated version?',
+          default: false,
+        });
+      }
+    }
+
+    if (shouldWriteBinCliJs) {
+      spinner.start('Plating bin/cli.js…');
+      await fsp.writeFile(binPath, renderedBinCliJs, 'utf8');
+
+      // Step 5: chmod 755
+      await fsp.chmod(binPath, 0o755);
+    } else {
+      process.stdout.write('  Skipping bin/cli.js — existing file left untouched.\n');
+    }
 
     // Write .npmignore to exclude nested node_modules from the published tarball.
     // npm's built-in node_modules exclusion only covers the package root; skill
