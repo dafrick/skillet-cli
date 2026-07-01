@@ -19,6 +19,31 @@ export function skillMdStatus(detected: DetectionResult): string {
   return 'not found';
 }
 
+export function buildExpansionGuidance(): string {
+  const lines = [
+    'To expand your skill:',
+    '',
+    '  Add a new top-level content directory:',
+    '    npm pkg set files[N]=<newDir>/',
+    '    (check your current "files" array first — the right index depends on',
+    '    its length; a single-skill package typically has files[0]=bin,',
+    '    files[1]=<skillDir>, making files[2] the next available index, but',
+    '    multi-skill or manually-edited packages may differ)',
+    '',
+    '  Make a simple content update within the existing skill directory:',
+    '    bump the version, then npm publish — no re-scaffold needed',
+    '',
+    '  Make a structural change:',
+    '    re-run create-skillet',
+    '    ⚠  this resets name, version, description, and author to whatever',
+    '       is entered in the prompts',
+    '',
+    '  Before publishing, verify the tarball contents:',
+    '    create-skillet check',
+  ];
+  return lines.join('\n');
+}
+
 export function deriveOwnerRepo(repositoryUrl: string): string | null {
   if (!repositoryUrl) return null;
   const url = repositoryUrl.replace(/^git\+/, '').replace(/\.git$/, '');
@@ -182,6 +207,7 @@ program
     } else {
       process.stdout.write(`    npm publish           — publish to npm\n`);
     }
+    process.stdout.write(`\n${buildExpansionGuidance()}\n`);
 
     // Plugin marketplace share instructions
     const ownerRepo = config.generateClaudePlugin ? deriveOwnerRepo(config.repositoryUrl) : null;

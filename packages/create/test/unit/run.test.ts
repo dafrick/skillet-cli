@@ -441,7 +441,10 @@ describe('run.ts — completion block: npm publish conditional', () => {
     await invokeRunAction();
 
     const allOutput = writtenLines.join('');
-    expect(allOutput).not.toContain('npm publish');
+    // The "Next steps:" block's publish line is omitted; the unconditional
+    // "To expand your skill:" guidance still mentions npm publish in prose,
+    // so we assert on the specific Next-steps line rather than the substring.
+    expect(allOutput).not.toContain('npm publish           — publish to npm');
     expect(allOutput).toContain('npm pkg delete private');
   });
 
@@ -465,6 +468,59 @@ describe('run.ts — completion block: npm publish conditional', () => {
 
     const allOutput = writtenLines.join('');
     expect(allOutput).toContain('npm publish');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Expansion guidance: wired into the completion block, after "Next steps:"
+// and before the plugin marketplace share instructions.
+// ---------------------------------------------------------------------------
+
+describe('run.ts — completion block: expansion guidance', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+
+    mockConfirm.mockResolvedValue(true);
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('prints "To expand your skill:" after "Next steps:" and before plugin marketplace instructions', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isPrivate: false }));
+    mockCollectConfig.mockResolvedValue(
+      makeFakeConfig({
+        removePrivate: false,
+        generateClaudePlugin: true,
+        repositoryUrl: 'https://github.com/owner/my-skill.git',
+      }),
+    );
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('To expand your skill:');
+
+    const nextStepsIndex = allOutput.indexOf('Next steps:');
+    const expandIndex = allOutput.indexOf('To expand your skill:');
+    const marketplaceIndex = allOutput.indexOf('Plugin marketplace ready:');
+
+    expect(nextStepsIndex).toBeGreaterThan(-1);
+    expect(expandIndex).toBeGreaterThan(nextStepsIndex);
+    expect(marketplaceIndex).toBeGreaterThan(-1);
+    expect(marketplaceIndex).toBeGreaterThan(expandIndex);
   });
 });
 
