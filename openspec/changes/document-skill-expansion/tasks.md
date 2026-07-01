@@ -36,12 +36,12 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 5. Quick flow: add another skill / convert to multi-skill
 
-- [ ] 5.1 Write failing unit tests for a pure function (e.g. `computeAddSkillPlan(detected, newSkillDir)`) covering: single-skill → multi-skill conversion (produces a `skillet.skills` value combining the original and new parent directories, plus updated `files[]`), and already-multi-skill → appended entry (existing `skillet.skills` entries preserved, new one appended).
-- [ ] 5.2 Implement `computeAddSkillPlan` to satisfy 5.1.
-- [ ] 5.3 Write a failing `run.test.ts` case: selecting "Add another skill / convert to multi-skill" prompts only for the new skill's directory (no metadata prompts), displays a plan naming the resulting directories (not an index), asks for a single confirmation, and on accept runs the corresponding `npm pkg set` commands for `skillet.skills` and `files` only.
-- [ ] 5.4 Write a failing `run.test.ts` case: declining the add-skill confirmation results in no `npm pkg set` call.
-- [ ] 5.5 Implement the add-skill flow in `run.ts` (and/or `prompts.ts`) to satisfy 5.3 and 5.4, reusing `computeAddSkillPlan`.
-- [ ] 5.6 Run the relevant test suites and confirm all pass.
+- [x] 5.1 Write failing unit tests for a pure function (e.g. `computeAddSkillPlan(detected, newSkillDir)`) covering: single-skill → multi-skill conversion (produces a `skillet.skills` value combining the original and new parent directories, plus updated `files[]`), and already-multi-skill → appended entry (existing `skillet.skills` entries preserved, new one appended).
+- [x] 5.2 Implement `computeAddSkillPlan` to satisfy 5.1.
+- [x] 5.3 Write a failing `run.test.ts` case: selecting "Add another skill / convert to multi-skill" prompts only for the new skill's directory (no metadata prompts), displays a plan naming the resulting directories (not an index), asks for a single confirmation, and on accept runs the corresponding `npm pkg set` commands for `skillet.skills` and `files` only.
+- [x] 5.4 Write a failing `run.test.ts` case: declining the add-skill confirmation results in no `npm pkg set` call.
+- [x] 5.5 Implement the add-skill flow in `run.ts` (and/or `prompts.ts`) to satisfy 5.3 and 5.4, reusing `computeAddSkillPlan`.
+- [x] 5.6 Run the relevant test suites and confirm all pass.
 
 ## 6. Metadata diff + consent on the reconfigure path
 

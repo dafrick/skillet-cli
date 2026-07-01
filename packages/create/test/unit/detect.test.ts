@@ -663,3 +663,73 @@ describe('detectEnvironment — files array capture', () => {
     expect(result.files).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// detectEnvironment — skillsParentDirs capture (task 5, extending task 2)
+// ---------------------------------------------------------------------------
+
+describe('detectEnvironment — skillsParentDirs capture', () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  beforeEach(async () => {
+    tmpDir = await fsp.realpath(await fsp.mkdtemp(path.join(os.tmpdir(), 'detect-test-')));
+    originalCwd = process.cwd();
+    process.chdir(tmpDir);
+    vi.clearAllMocks();
+    mockGitFailure();
+  });
+
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('normalizes array-form skillet.skills into skillsParentDirs', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        name: 'my-skill',
+        version: '1.0.0',
+        skillet: { skills: ['skills-a/', 'skills-b/'] },
+      }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.skillsParentDirs).toEqual(['skills-a/', 'skills-b/']);
+  });
+
+  it('normalizes string-form skillet.skills into a single-element skillsParentDirs array', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        name: 'my-skill',
+        version: '1.0.0',
+        skillet: { skills: 'skills/' },
+      }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.skillsParentDirs).toEqual(['skills/']);
+  });
+
+  it('is undefined when skillet.skills is absent (single-skill package)', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', skillet: { skillDir: 'skill/' } }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.skillsParentDirs).toBeUndefined();
+  });
+
+  it('is undefined when skillet.skills is an empty array', async () => {
+    await fsp.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'my-skill', version: '1.0.0', skillet: { skills: [] } }),
+    );
+
+    const result = detectEnvironment();
+    expect(result.skillsParentDirs).toBeUndefined();
+  });
+});

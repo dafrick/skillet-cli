@@ -21,6 +21,8 @@ export interface DetectionResult {
   isExistingSkilletPackage?: boolean;
   /** The `files` array from package.json, if present. */
   files?: string[];
+  /** The normalized `skillet.skills` value from package.json (string or array form), as an array. Undefined when absent/empty. */
+  skillsParentDirs?: string[];
 }
 
 /**
@@ -142,6 +144,7 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
   let pkgSkillDir: string | null = null;
   let hasSkilletSkills = false;
   let pkgFiles: string[] | undefined;
+  let pkgSkillsParentDirs: string[] | undefined;
 
   if (fs.existsSync(pkgJsonPath)) {
     hasPackageJson = true;
@@ -161,6 +164,9 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
       }
       const pkgSkills = pkg.skillet?.skills;
       hasSkilletSkills = Array.isArray(pkgSkills) ? pkgSkills.length > 0 : Boolean(pkgSkills);
+      if (hasSkilletSkills) {
+        pkgSkillsParentDirs = Array.isArray(pkgSkills) ? pkgSkills : [pkgSkills as string];
+      }
       if (pkg.files) {
         pkgFiles = pkg.files;
       }
@@ -227,5 +233,6 @@ export function detectEnvironment(nameArg?: string): DetectionResult {
     gitUser,
     isExistingSkilletPackage,
     files: pkgFiles,
+    skillsParentDirs: pkgSkillsParentDirs,
   };
 }
