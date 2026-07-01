@@ -11,14 +11,17 @@ import type { WizardConfig } from './prompts.js';
 // CreateProcess cannot execute directly. We build the command string ourselves
 // and double-quote every arg so shell metacharacters (>, |, &, spaces) in
 // values like "engines.node=>=24" or "description=A test skill" are not
-// interpreted by the shell.
+// interpreted by the shell. Any double quotes already present in an arg
+// (e.g. a JSON-stringified value passed to `npm pkg set --json`) are
+// backslash-escaped first so they don't prematurely close the wrapping
+// quotes and corrupt the value.
 export function runSync(
   cmd: string,
   args: string[],
   stepName: string,
   stdioOverride?: StdioOptions,
 ): void {
-  const cmdStr = [cmd, ...args.map((a) => `"${a}"`)].join(' ');
+  const cmdStr = [cmd, ...args.map((a) => `"${a.replace(/"/g, '\\"')}"`)].join(' ');
   const result = spawnSync(cmdStr, [], { stdio: stdioOverride ?? 'inherit', shell: true });
   if (result.status !== 0) {
     throw new Error(`${stepName} exited with code ${result.status ?? 'null'}`);

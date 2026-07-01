@@ -759,7 +759,11 @@ describe('run.ts — add-skill flow (tasks 5.3–5.4)', () => {
     expect(allOutput).toContain('`skills/`');
     expect(allOutput).not.toMatch(/files\[\d+\]/);
 
-    expect(mockRunSync).toHaveBeenCalledTimes(2);
+    // skillet.skills, files, and (since this converts from single-skill) a
+    // delete of the now-stale skillet.skillDir — @skillet-cli/core treats
+    // skillDir as taking precedence over skills, so leaving it behind would
+    // silently shadow the newly-set skills array at runtime.
+    expect(mockRunSync).toHaveBeenCalledTimes(3);
     expect(mockRunSync).toHaveBeenCalledWith(
       'npm',
       ['pkg', 'set', '--json', 'skillet.skills=["skill/","skills/"]'],
@@ -768,6 +772,34 @@ describe('run.ts — add-skill flow (tasks 5.3–5.4)', () => {
     expect(mockRunSync).toHaveBeenCalledWith(
       'npm',
       ['pkg', 'set', '--json', 'files=["bin","skill/","skills/"]'],
+      expect.any(String),
+    );
+    expect(mockRunSync).toHaveBeenCalledWith(
+      'npm',
+      ['pkg', 'delete', 'skillet.skillDir'],
+      expect.any(String),
+    );
+  });
+
+  it('does NOT delete skillet.skillDir when already multi-skill (no conversion)', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({
+        isExistingSkilletPackage: true,
+        skillDir: null,
+        skillsParentDirs: ['skills/'],
+        files: ['bin', 'skills/'],
+      }),
+    );
+    mockSelect.mockResolvedValue('add-skill');
+    mockInput.mockResolvedValue('core/security');
+    mockConfirm.mockResolvedValue(true);
+
+    await invokeRunAction();
+
+    expect(mockRunSync).toHaveBeenCalledTimes(2);
+    expect(mockRunSync).not.toHaveBeenCalledWith(
+      'npm',
+      ['pkg', 'delete', 'skillet.skillDir'],
       expect.any(String),
     );
   });
