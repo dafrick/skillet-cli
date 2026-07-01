@@ -790,3 +790,134 @@ describe('run.ts — add-skill flow (tasks 5.3–5.4)', () => {
     expect(mockRunSync).not.toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tasks 6.3–6.5: metadata diff + consent on the reconfigure path
+// ---------------------------------------------------------------------------
+
+describe('run.ts — metadata diff on reconfigure path (tasks 6.3–6.5)', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+    mockRunCheck.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('prints a "Changes to published metadata:" block showing current -> new for each changed field before the preview-confirm step', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({
+        isExistingSkilletPackage: true,
+        name: 'my-skill',
+        version: '1.0.0',
+        description: 'Old description',
+        author: 'Test Author',
+        license: 'MIT',
+      }),
+    );
+    mockSelect.mockResolvedValue('reconfigure');
+    mockCollectConfig.mockResolvedValue(
+      makeFakeConfig({
+        name: 'my-skill',
+        version: '1.0.0',
+        description: 'New description',
+        author: 'Test Author',
+        license: 'MIT',
+      }),
+    );
+    mockConfirm.mockResolvedValue(true);
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('Changes to published metadata:');
+    expect(allOutput).toContain('description');
+    expect(allOutput).toContain('Old description');
+    expect(allOutput).toContain('New description');
+    expect(allOutput).toContain('→');
+
+    // The diff block must appear before the existing preview step.
+    const diffIndex = allOutput.indexOf('Changes to published metadata:');
+    const previewIndex = allOutput.indexOf('Ready to set up:');
+    expect(diffIndex).toBeGreaterThanOrEqual(0);
+    expect(previewIndex).toBeGreaterThanOrEqual(0);
+    expect(diffIndex).toBeLessThan(previewIndex);
+  });
+
+  it('does NOT print a "Changes to published metadata:" block when no metadata fields changed', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({
+        isExistingSkilletPackage: true,
+        name: 'my-skill',
+        version: '1.0.0',
+        description: 'A test skill',
+        author: 'Test Author',
+        license: 'MIT',
+      }),
+    );
+    mockSelect.mockResolvedValue('reconfigure');
+    mockCollectConfig.mockResolvedValue(
+      makeFakeConfig({
+        name: 'my-skill',
+        version: '1.0.0',
+        description: 'A test skill',
+        author: 'Test Author',
+        license: 'MIT',
+      }),
+    );
+    mockConfirm.mockResolvedValue(true);
+
+    await invokeRunAction();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).not.toContain('Changes to published metadata:');
+  });
+
+  it('does not run npm pkg set and leaves package.json unchanged when the user declines the confirmation after viewing the diff', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({
+        isExistingSkilletPackage: true,
+        name: 'my-skill',
+        version: '1.0.0',
+        description: 'Old description',
+        author: 'Test Author',
+        license: 'MIT',
+      }),
+    );
+    mockSelect.mockResolvedValue('reconfigure');
+    mockCollectConfig.mockResolvedValue(
+      makeFakeConfig({
+        name: 'my-skill',
+        version: '1.0.0',
+        description: 'New description',
+        author: 'Test Author',
+        license: 'MIT',
+      }),
+    );
+    // Early gate confirm: true; final preview confirm: false.
+    mockConfirm.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+    try {
+      await invokeRunAction();
+    } finally {
+      exitSpy.mockRestore();
+    }
+
+    expect(mockRunSync).not.toHaveBeenCalled();
+    expect(mockExecuteScaffold).not.toHaveBeenCalled();
+  });
+});

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { DetectionResult } from '../../src/detect.js';
-import { computeAddDirectoryPlan, computeAddSkillPlan } from '../../src/expansion.js';
+import { computeAddDirectoryPlan, computeAddSkillPlan, diffMetadata } from '../../src/expansion.js';
+import type { WizardConfig } from '../../src/prompts.js';
 
 function makeDetected(overrides: Partial<DetectionResult> = {}): DetectionResult {
   return {
@@ -140,5 +141,113 @@ describe('computeAddSkillPlan', () => {
 
     expect(plan).not.toHaveProperty('index');
     expect(JSON.stringify(plan)).not.toMatch(/files\[\d+\]/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 6.1: diffMetadata — pure function
+// ---------------------------------------------------------------------------
+
+function makeConfig(overrides: Partial<WizardConfig> = {}): WizardConfig {
+  return {
+    name: 'my-skill',
+    version: '1.0.0',
+    description: 'A test skill',
+    author: 'Test Author',
+    repositoryUrl: '',
+    license: 'MIT',
+    skillDir: 'skill/',
+    isMultiSkill: false,
+    skillsParentDirs: [],
+    removePrivate: false,
+    generateClaudePlugin: false,
+    generateGeminiPlugin: false,
+    ...overrides,
+  };
+}
+
+describe('diffMetadata', () => {
+  it('returns an empty result when nothing changed', () => {
+    const detected = makeDetected({
+      name: 'my-skill',
+      version: '1.0.0',
+      description: 'A test skill',
+      author: 'Test Author',
+      license: 'MIT',
+    });
+    const config = makeConfig({
+      name: 'my-skill',
+      version: '1.0.0',
+      description: 'A test skill',
+      author: 'Test Author',
+      license: 'MIT',
+    });
+
+    expect(diffMetadata(detected, config)).toEqual([]);
+  });
+
+  it('returns only the description field when just description differs', () => {
+    const detected = makeDetected({
+      name: 'my-skill',
+      version: '1.0.0',
+      description: 'Old description',
+      author: 'Test Author',
+      license: 'MIT',
+    });
+    const config = makeConfig({
+      name: 'my-skill',
+      version: '1.0.0',
+      description: 'New description',
+      author: 'Test Author',
+      license: 'MIT',
+    });
+
+    expect(diffMetadata(detected, config)).toEqual([
+      { field: 'description', current: 'Old description', next: 'New description' },
+    ]);
+  });
+
+  it('returns both version and license when both differ', () => {
+    const detected = makeDetected({
+      name: 'my-skill',
+      version: '1.0.0',
+      description: 'A test skill',
+      author: 'Test Author',
+      license: 'MIT',
+    });
+    const config = makeConfig({
+      name: 'my-skill',
+      version: '2.0.0',
+      description: 'A test skill',
+      author: 'Test Author',
+      license: 'Apache-2.0',
+    });
+
+    expect(diffMetadata(detected, config)).toEqual([
+      { field: 'version', current: '1.0.0', next: '2.0.0' },
+      { field: 'license', current: 'MIT', next: 'Apache-2.0' },
+    ]);
+  });
+
+  it('includes name and author fields in the comparison', () => {
+    const detected = makeDetected({
+      name: 'old-name',
+      version: '1.0.0',
+      description: 'A test skill',
+      author: 'Old Author',
+      license: 'MIT',
+    });
+    const config = makeConfig({
+      name: 'new-name',
+      version: '1.0.0',
+      description: 'A test skill',
+      author: 'New Author',
+      license: 'MIT',
+    });
+
+    expect(diffMetadata(detected, config)).toEqual([
+      { field: 'name', current: 'old-name', next: 'new-name' },
+      { field: 'author', current: 'Old Author', next: 'New Author' },
+    ]);
   });
 });
