@@ -421,9 +421,12 @@ describe('executeScaffold — multi-skill mode', () => {
     await executeScaffold(config);
 
     const allArgs = getPkgSetArgs();
+    // Embedded double quotes in the JSON-stringified value are backslash-escaped
+    // by runSync so the wrapping shell quotes aren't prematurely closed (see the
+    // .npmignore/bin.cli.js overwrite-guard fix — runSync escapes all `"` in args).
     expect(
       allArgs.some(
-        (a) => a.includes('skillet.skills=') && a.includes('"core"') && a.includes('"exp"'),
+        (a) => a.includes('skillet.skills=') && a.includes('\\"core\\"') && a.includes('\\"exp\\"'),
       ),
     ).toBe(true);
     expect(allArgs.some((a) => a.includes('skillet.skillDir='))).toBe(false);

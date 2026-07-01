@@ -65,10 +65,10 @@ All implementation tasks follow test-driven development: write/extend the failin
 
 ## 8. README: replace the doc-only "expand your skill" content
 
-- [ ] 8.1 Update `packages/create/README.md`'s "Expanding your skill" section (or add one if absent) to describe the actual intent-menu-driven flow (add directory, add/convert skill, reconfigure, check) and explicitly state what each quick flow never touches, removing any manual `npm pkg set` / array-index instructions inherited from prior attempts.
+- [x] 8.1 Update `packages/create/README.md`'s "Expanding your skill" section (or add one if absent) to describe the actual intent-menu-driven flow (add directory, add/convert skill, reconfigure, check) and explicitly state what each quick flow never touches, removing any manual `npm pkg set` / array-index instructions inherited from prior attempts.
 
 ## 9. Full verification
 
-- [ ] 9.1 Run the full `packages/create` test suite (`pnpm --filter create-skillet test` or equivalent) and confirm all tests pass, including the full existing suite (no regressions).
-- [ ] 9.2 Run lint/typecheck for `packages/create` and confirm clean.
-- [ ] 9.3 Manually smoke-test the bare `create-skillet` command against a fixture directory with an existing `package.json` containing `skillet.skillDir`, confirming the intent menu appears and each of the four options behaves as specced.
+- [x] 9.1 Run the full `packages/create` test suite (`pnpm --filter create-skillet test` or equivalent) and confirm all tests pass, including the full existing suite (no regressions).
+- [x] 9.2 Run lint/typecheck for `packages/create` and confirm clean.
+- [x] 9.3 Manually smoke-test the bare `create-skillet` command against a fixture directory with an existing `package.json` containing `skillet.skillDir`, confirming the intent menu appears and each of the four options behaves as specced.

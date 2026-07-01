@@ -99,6 +99,13 @@ async function handleAddSkill(detected: DetectionResult): Promise<void> {
     ['pkg', 'set', '--json', `files=${JSON.stringify(plan.files)}`],
     'npm pkg set files',
   );
+  if (plan.convertedFromSingleSkill) {
+    // @skillet-cli/core treats skillet.skillDir as taking precedence over
+    // skillet.skills (see packages/core/src/marker.ts), so a stale skillDir
+    // left behind after converting to multi-skill would silently shadow the
+    // newly-set skills array at runtime — delete it.
+    runSync('npm', ['pkg', 'delete', 'skillet.skillDir'], 'npm pkg delete skillet.skillDir');
+  }
 
   process.stdout.write('\npackage.json updated.\n');
 }

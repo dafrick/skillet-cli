@@ -60,6 +60,17 @@ npx your-package-name install
 
 See [`@skillet-cli/core`](https://www.npmjs.com/package/@skillet-cli/core) for the full skill author guide.
 
+## Expanding your skill
+
+Re-run the bare command (`npm create skillet` / `npx create-skillet`) in a directory that's already been scaffolded, and the wizard recognizes it — it detects `skillet.skillDir` or `skillet.skills` in your `package.json` and shows an intent menu instead of walking the full configuration wizard again:
+
+- **Add a directory to the published package** — prompts only for the directory path, then shows the resulting `files[]` array and asks for a single confirmation before running `npm pkg set` for `files` only. Never touches `name`, `version`, `description`, `author`, or `license`.
+- **Add another skill / convert to multi-skill** — prompts only for the new skill's directory. If your package is currently single-skill, this converts it to `skillet.skills` (combining the original skill's directory with the new one); if it's already multi-skill, the new directory is appended to the existing list. Shows the resulting directories and a single confirmation before writing `skillet.skills` and `files`. Also never touches metadata fields.
+- **Reconfigure everything** — runs the full wizard (name, version, description, author, license, repository URL, layout) as on a first-time setup. If any of `name`, `version`, `description`, `author`, or `license` would change from what's currently published, a "Changes to published metadata:" block shows each field as `current → new` before the existing confirmation — no extra prompt, just visibility before anything is overwritten.
+- **Just check what would be published** — delegates straight to the same read-only check as `create-skillet check`, with no writes.
+
+The wizard also protects files it generated on your behalf from silent re-runs: `.npmignore` is only written if it doesn't already exist yet (so triage edits made via `create-skillet check`'s interactive flow survive a re-run), and `bin/cli.js` is only overwritten without asking when its content still matches what `create-skillet` would generate — if you've customized it, the wizard warns and asks before replacing it.
+
 ## Subcommands
 
 ### `create-skillet check`
