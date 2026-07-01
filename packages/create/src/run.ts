@@ -6,7 +6,7 @@ import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
 import { runCheck } from './check.js';
 import { type DetectionResult, detectEnvironment } from './detect.js';
-import { computeAddDirectoryPlan } from './expansion.js';
+import { computeAddDirectoryPlan, computeAddSkillPlan } from './expansion.js';
 import { collectConfig } from './prompts.js';
 import { executeScaffold, runSync } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
@@ -59,12 +59,48 @@ async function handleAddDirectory(detected: DetectionResult): Promise<void> {
 }
 
 /**
- * Placeholder for the "Add another skill / convert to multi-skill" quick flow.
- * TODO(task group 5): prompt for the new skill's directory, compute the plan via
- * computeAddSkillPlan, show it, confirm, and run `npm pkg set` for `skillet.skills`/`files`.
+ * "Add another skill / convert to multi-skill" quick flow: prompts only for
+ * the new skill's directory, computes the resulting `skillet.skills`/`files[]`
+ * plan, shows it, and on confirmation writes only those two fields via
+ * `npm pkg set`. Never collects or writes name/version/description/author/license.
  */
-async function handleAddSkill(_detected: DetectionResult): Promise<void> {
-  process.stdout.write('\nAdding another skill is not yet implemented.\n');
+async function handleAddSkill(detected: DetectionResult): Promise<void> {
+  const newSkillDir = await input({
+    message: "New skill's directory:",
+  });
+
+  const plan = computeAddSkillPlan(detected, newSkillDir);
+
+  const verb = plan.convertedFromSingleSkill
+    ? 'Will convert to multi-skill'
+    : 'Will add another skill';
+  const dirList = plan.skills.map((dir) => `\`${dir}\``).join(', ');
+  process.stdout.write(`\n${verb}: ${dirList}\n`);
+  process.stdout.write(`  skillet.skills: ${JSON.stringify(plan.skills)}\n`);
+  process.stdout.write(`  files: ${JSON.stringify(plan.files)}\n\n`);
+
+  const proceed = await confirm({
+    message: 'Proceed?',
+    default: true,
+  });
+
+  if (!proceed) {
+    process.stdout.write(`${CANCEL_MESSAGE}\n`);
+    return;
+  }
+
+  runSync(
+    'npm',
+    ['pkg', 'set', '--json', `skillet.skills=${JSON.stringify(plan.skills)}`],
+    'npm pkg set skillet.skills',
+  );
+  runSync(
+    'npm',
+    ['pkg', 'set', '--json', `files=${JSON.stringify(plan.files)}`],
+    'npm pkg set files',
+  );
+
+  process.stdout.write('\npackage.json updated.\n');
 }
 
 export function skillMdStatus(detected: DetectionResult): string {

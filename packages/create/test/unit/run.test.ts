@@ -708,3 +708,85 @@ describe('run.ts — add-directory flow (tasks 4.3–4.4)', () => {
     expect(mockRunSync).not.toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tasks 5.3–5.4: add-skill / convert-to-multi-skill quick flow
+// ---------------------------------------------------------------------------
+
+describe('run.ts — add-skill flow (tasks 5.3–5.4)', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+  let writtenLines: string[];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    writtenLines = [];
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+    mockRunCheck.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('prompts only for the new skill directory, shows a plan naming the resulting directories, confirms once, and runs npm pkg set for skillet.skills and files only', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({
+        isExistingSkilletPackage: true,
+        skillDir: 'skill/',
+        files: ['bin', 'skill/'],
+      }),
+    );
+    mockSelect.mockResolvedValue('add-skill');
+    mockInput.mockResolvedValue('skills/debugging');
+    // Early gate confirm, then the single add-skill confirm — both accepted.
+    mockConfirm.mockResolvedValue(true);
+
+    await invokeRunAction();
+
+    // Only one input() prompt (the new skill's directory) — no metadata prompts.
+    expect(mockInput).toHaveBeenCalledTimes(1);
+    expect(mockCollectConfig).not.toHaveBeenCalled();
+
+    const allOutput = writtenLines.join('');
+    expect(allOutput).toContain('`skill/`');
+    expect(allOutput).toContain('`skills/`');
+    expect(allOutput).not.toMatch(/files\[\d+\]/);
+
+    expect(mockRunSync).toHaveBeenCalledTimes(2);
+    expect(mockRunSync).toHaveBeenCalledWith(
+      'npm',
+      ['pkg', 'set', '--json', 'skillet.skills=["skill/","skills/"]'],
+      expect.any(String),
+    );
+    expect(mockRunSync).toHaveBeenCalledWith(
+      'npm',
+      ['pkg', 'set', '--json', 'files=["bin","skill/","skills/"]'],
+      expect.any(String),
+    );
+  });
+
+  it('does not call npm pkg set when the add-skill confirmation is declined', async () => {
+    mockDetectEnvironment.mockReturnValue(
+      makeFakeDetected({
+        isExistingSkilletPackage: true,
+        skillDir: 'skill/',
+        files: ['bin', 'skill/'],
+      }),
+    );
+    mockSelect.mockResolvedValue('add-skill');
+    mockInput.mockResolvedValue('skills/debugging');
+    // Early gate confirm: true; add-skill confirm: false.
+    mockConfirm.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await invokeRunAction();
+
+    expect(mockRunSync).not.toHaveBeenCalled();
+  });
+});
