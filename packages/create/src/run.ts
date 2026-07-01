@@ -1,13 +1,14 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
-import { confirm, select } from '@inquirer/prompts';
+import { confirm, input, select } from '@inquirer/prompts';
 import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
 import { runCheck } from './check.js';
 import { type DetectionResult, detectEnvironment } from './detect.js';
+import { computeAddDirectoryPlan } from './expansion.js';
 import { collectConfig } from './prompts.js';
-import { executeScaffold } from './scaffold.js';
+import { executeScaffold, runSync } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
 
 /**
@@ -27,12 +28,34 @@ const INTENT_MENU_CHOICES: Array<{ name: string; value: WizardIntent }> = [
 ];
 
 /**
- * Placeholder for the "Add a directory to the published package" quick flow.
- * TODO(task group 4): prompt for a directory, compute the plan via
- * computeAddDirectoryPlan, show it, confirm, and run `npm pkg set` for `files`.
+ * "Add a directory to the published package" quick flow: prompts only for
+ * the directory path, computes the resulting `files[]` plan, shows it, and
+ * on confirmation writes only the updated `files` field via `npm pkg set`.
+ * Never collects or writes name/version/description/author/license.
  */
-async function handleAddDirectory(_detected: DetectionResult): Promise<void> {
-  process.stdout.write('\nAdding a directory is not yet implemented.\n');
+async function handleAddDirectory(detected: DetectionResult): Promise<void> {
+  const newDir = await input({
+    message: 'Directory to add to the published package:',
+  });
+
+  const plan = computeAddDirectoryPlan(detected.files, newDir);
+
+  process.stdout.write(`\nWill add \`${plan.directory}\` to the published package.\n`);
+  process.stdout.write(`  files: ${JSON.stringify(plan.files)}\n\n`);
+
+  const proceed = await confirm({
+    message: 'Proceed?',
+    default: true,
+  });
+
+  if (!proceed) {
+    process.stdout.write(`${CANCEL_MESSAGE}\n`);
+    return;
+  }
+
+  runSync('npm', ['pkg', 'set', '--json', `files=${JSON.stringify(plan.files)}`], 'npm pkg set');
+
+  process.stdout.write('\npackage.json updated.\n');
 }
 
 /**
