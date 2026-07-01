@@ -5,6 +5,10 @@ vi.mock('node:child_process', () => ({
   spawnSync: vi.fn(),
 }));
 
+vi.mock('@inquirer/prompts', () => ({
+  confirm: vi.fn(),
+}));
+
 const mockSpinnerStart = vi.fn();
 const mockSpinnerSucceed = vi.fn();
 const mockSpinnerFail = vi.fn();
@@ -17,6 +21,21 @@ vi.mock('@skillet-cli/ui', () => ({
   })),
 }));
 
+// Default fallback for the bin/cli.js content comparison: matches
+// buildBinCliJs()'s output exactly, so pre-existing tests that blanket-mock
+// existsSync(...) to always return true (and therefore make binPath "exist")
+// see a byte-identical match and take the silent-rewrite path rather than
+// unexpectedly hitting the confirm() prompt. Kept as a literal string (not a
+// call into buildBinCliJs()) to avoid a circular import through the mocked
+// 'node:fs' module during test module resolution.
+const DEFAULT_BIN_CLI_JS_FIXTURE = `#!/usr/bin/env node
+import { createRequire } from 'node:module';
+import { run } from '@skillet-cli/core';
+
+const pkg = createRequire(import.meta.url)('../package.json');
+await run({ pkg });
+`;
+
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
   return {
@@ -25,6 +44,18 @@ vi.mock('node:fs', async (importOriginal) => {
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
     chmodSync: vi.fn(),
+    readFileSync: vi.fn((p: unknown) => {
+      if (typeof p === 'string' && p.endsWith('cli.js')) {
+        return `#!/usr/bin/env node
+import { createRequire } from 'node:module';
+import { run } from '@skillet-cli/core';
+
+const pkg = createRequire(import.meta.url)('../package.json');
+await run({ pkg });
+`;
+      }
+      return '';
+    }),
   };
 });
 
@@ -40,12 +71,15 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 
 import { spawnSync } from 'node:child_process';
 import * as fsp from 'node:fs/promises';
+import { confirm } from '@inquirer/prompts';
 import type { WizardConfig } from '../../src/prompts.js';
 import { buildBinCliJs, executeScaffold } from '../../src/scaffold.js';
 
 const mockSpawnSync = vi.mocked(spawnSync);
 const mockFsExistsSync = vi.mocked(fs.existsSync);
+const mockFsReadFileSync = vi.mocked(fs.readFileSync);
 const mockFspWriteFile = vi.mocked(fsp.writeFile);
+const mockConfirm = vi.mocked(confirm);
 
 function makeSuccessResult() {
   return { status: 0, stdout: Buffer.from(''), stderr: Buffer.from('') } as ReturnType<
@@ -196,6 +230,13 @@ describe('buildBinCliJs — generated bin/cli.js content', () => {
     const result = buildBinCliJs();
     expect(result).toContain("from '@skillet-cli/core'");
     expect(result).toContain('run');
+  });
+
+  // Task 7.1: a literal byte-identical assertion, not just substring checks —
+  // this is the exact content that was previously written inline by
+  // executeScaffold and is now produced by the extracted buildBinCliJs().
+  it('produces byte-identical output to the previously hardcoded bin/cli.js content', () => {
+    expect(buildBinCliJs()).toBe(DEFAULT_BIN_CLI_JS_FIXTURE);
   });
 });
 
@@ -803,5 +844,121 @@ describe('executeScaffold — postpublish script (task 27)', () => {
     });
     const pkgSetArgs = getPkgSetArgs();
     expect(pkgSetArgs.some((a) => a.includes('scripts.postpublish'))).toBe(false);
+  });
+});
+
+describe('executeScaffold — bin/cli.js overwrite guard (tasks 7.2–7.5)', () => {
+  const modifiedBinCliJs = '#!/usr/bin/env node\n// hand-edited by the author\n';
+
+  function getBinCliJsWriteCall() {
+    return mockFspWriteFile.mock.calls.find(
+      (c) => typeof c[0] === 'string' && (c[0] as string).endsWith('cli.js'),
+    );
+  }
+
+  function getBinCliJsChmodCall() {
+    return vi
+      .mocked(fsp.chmod)
+      .mock.calls.find((c) => typeof c[0] === 'string' && (c[0] as string).endsWith('cli.js'));
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSpawnSync.mockReturnValue(makeSuccessResult());
+    // package.json and .npmignore already exist by default in these tests —
+    // only bin/cli.js existence/content is varied per test.
+    mockFsExistsSync.mockImplementation((p) => !(typeof p === 'string' && p.endsWith('cli.js')));
+  });
+
+  // Task 7.2: no existing bin/cli.js — written unconditionally, no prompt.
+  it('writes bin/cli.js unconditionally with no comparison or prompt when it does not already exist', async () => {
+    mockFsExistsSync.mockReturnValue(true);
+    mockFsExistsSync.mockImplementation((p) => !(typeof p === 'string' && p.endsWith('cli.js')));
+
+    await executeScaffold(baseConfig);
+
+    const writeCall = getBinCliJsWriteCall();
+    expect(writeCall).toBeDefined();
+    expect(String(writeCall![1])).toBe(buildBinCliJs());
+    expect(getBinCliJsChmodCall()).toBeDefined();
+    expect(mockConfirm).not.toHaveBeenCalled();
+  });
+
+  // Task 7.3: existing content matches buildBinCliJs() output exactly —
+  // rewritten silently, no warning or prompt.
+  it('rewrites bin/cli.js silently with no warning or prompt when existing content matches buildBinCliJs() exactly', async () => {
+    mockFsExistsSync.mockReturnValue(true);
+    mockFsReadFileSync.mockImplementation((p: unknown) => {
+      if (typeof p === 'string' && p.endsWith('cli.js')) return DEFAULT_BIN_CLI_JS_FIXTURE;
+      return '';
+    });
+    const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    await executeScaffold(baseConfig);
+
+    const writeCall = getBinCliJsWriteCall();
+    expect(writeCall).toBeDefined();
+    expect(String(writeCall![1])).toBe(buildBinCliJs());
+    expect(mockConfirm).not.toHaveBeenCalled();
+    const allOutput = stdoutSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(allOutput).not.toContain('modified');
+
+    stdoutSpy.mockRestore();
+  });
+
+  // Task 7.4: existing content differs — warns and asks for confirmation
+  // before overwriting.
+  it('warns and asks for confirmation before overwriting when existing bin/cli.js content differs from buildBinCliJs()', async () => {
+    mockFsExistsSync.mockReturnValue(true);
+    mockFsReadFileSync.mockImplementation((p: unknown) => {
+      if (typeof p === 'string' && p.endsWith('cli.js')) return modifiedBinCliJs;
+      return '';
+    });
+    mockConfirm.mockResolvedValueOnce(true);
+    const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+
+    await executeScaffold(baseConfig);
+
+    expect(mockConfirm).toHaveBeenCalledTimes(1);
+    const allOutput = stdoutSpy.mock.calls.map((c) => String(c[0])).join('');
+    expect(allOutput.toLowerCase()).toContain('modified');
+
+    // Accepting the prompt still results in the file being replaced.
+    const writeCall = getBinCliJsWriteCall();
+    expect(writeCall).toBeDefined();
+    expect(String(writeCall![1])).toBe(buildBinCliJs());
+    expect(getBinCliJsChmodCall()).toBeDefined();
+
+    stdoutSpy.mockRestore();
+  });
+
+  // Task 7.5: declining the confirmation leaves the existing file untouched
+  // and the wizard continues with the remaining steps.
+  it('leaves the existing bin/cli.js untouched and continues the wizard when the overwrite confirmation is declined', async () => {
+    mockFsExistsSync.mockReturnValue(true);
+    mockFsReadFileSync.mockImplementation((p: unknown) => {
+      if (typeof p === 'string' && p.endsWith('cli.js')) return modifiedBinCliJs;
+      return '';
+    });
+    mockConfirm.mockResolvedValueOnce(false);
+    const stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+
+    await executeScaffold(baseConfig);
+
+    expect(mockConfirm).toHaveBeenCalledTimes(1);
+    expect(getBinCliJsWriteCall()).toBeUndefined();
+    expect(getBinCliJsChmodCall()).toBeUndefined();
+
+    // The wizard continues with the remaining steps (e.g. npm install),
+    // rather than aborting the whole scaffold.
+    const cmds = mockSpawnSync.mock.calls.map((c) => String(c[0]));
+    expect(cmds.some((c) => c.includes('npm install') && c.includes('@skillet-cli/core'))).toBe(
+      true,
+    );
+    expect(exitSpy).not.toHaveBeenCalled();
+
+    stdoutSpy.mockRestore();
+    exitSpy.mockRestore();
   });
 });
