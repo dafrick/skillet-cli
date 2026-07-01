@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
-import { confirm } from '@inquirer/prompts';
+import { confirm, select } from '@inquirer/prompts';
 import { generateWordmark, renderFullHeader } from '@skillet-cli/ui';
 import { Command } from 'commander';
 import { runCheck } from './check.js';
@@ -9,6 +9,40 @@ import { type DetectionResult, detectEnvironment } from './detect.js';
 import { collectConfig } from './prompts.js';
 import { executeScaffold } from './scaffold.js';
 import { setupSkillDir } from './skill-dir.js';
+
+/**
+ * Intent-menu option values, in menu display order.
+ * Extended/implemented by later task groups (4: add-directory, 5: add-skill).
+ */
+type WizardIntent = 'add-directory' | 'add-skill' | 'reconfigure' | 'check';
+
+const INTENT_MENU_CHOICES: Array<{ name: string; value: WizardIntent }> = [
+  { name: 'Add a directory to the published package', value: 'add-directory' },
+  { name: 'Add another skill / convert to multi-skill', value: 'add-skill' },
+  {
+    name: 'Reconfigure everything (name, version, description, author, license, layout)',
+    value: 'reconfigure',
+  },
+  { name: 'Just check what would be published', value: 'check' },
+];
+
+/**
+ * Placeholder for the "Add a directory to the published package" quick flow.
+ * TODO(task group 4): prompt for a directory, compute the plan via
+ * computeAddDirectoryPlan, show it, confirm, and run `npm pkg set` for `files`.
+ */
+async function handleAddDirectory(_detected: DetectionResult): Promise<void> {
+  process.stdout.write('\nAdding a directory is not yet implemented.\n');
+}
+
+/**
+ * Placeholder for the "Add another skill / convert to multi-skill" quick flow.
+ * TODO(task group 5): prompt for the new skill's directory, compute the plan via
+ * computeAddSkillPlan, show it, confirm, and run `npm pkg set` for `skillet.skills`/`files`.
+ */
+async function handleAddSkill(_detected: DetectionResult): Promise<void> {
+  process.stdout.write('\nAdding another skill is not yet implemented.\n');
+}
 
 export function skillMdStatus(detected: DetectionResult): string {
   if (detected.hasSkillMd) return 'found';
@@ -120,6 +154,30 @@ program
       process.stdout.write('  npm install @skillet-cli/core\n');
       process.exit(0);
       return;
+    }
+
+    // Step 3b: Intent menu — only shown when re-running against an existing
+    // skillet package; first-time setup goes straight into the full wizard.
+    if (detected.isExistingSkilletPackage) {
+      const intent = await select({
+        message: 'What would you like to do?',
+        choices: INTENT_MENU_CHOICES,
+      });
+
+      switch (intent) {
+        case 'add-directory':
+          await handleAddDirectory(detected);
+          return;
+        case 'add-skill':
+          await handleAddSkill(detected);
+          return;
+        case 'check':
+          await runCheck({ interactive: true });
+          return;
+        case 'reconfigure':
+          // Fall through into the existing full wizard below.
+          break;
+      }
     }
 
     // Step 4: Collect config via prompts

@@ -47,7 +47,7 @@ vi.mock('@skillet-cli/ui', () => ({
 // Imports — after mocks
 // ---------------------------------------------------------------------------
 
-import { confirm } from '@inquirer/prompts';
+import { confirm, select } from '@inquirer/prompts';
 import { runCheck } from '../../src/check.js';
 import type { DetectionResult } from '../../src/detect.js';
 import { detectEnvironment } from '../../src/detect.js';
@@ -58,6 +58,7 @@ import { executeScaffold } from '../../src/scaffold.js';
 import { setupSkillDir } from '../../src/skill-dir.js';
 
 const mockConfirm = vi.mocked(confirm);
+const mockSelect = vi.mocked(select);
 const mockDetectEnvironment = vi.mocked(detectEnvironment);
 const mockCollectConfig = vi.mocked(collectConfig);
 const mockExecuteScaffold = vi.mocked(executeScaffold);
@@ -558,5 +559,79 @@ describe('run.ts — Commander routing (task 7.6)', () => {
 
     expect(mockDetectEnvironment).toHaveBeenCalledWith('mypackage');
     expect(mockRunCheck).not.toHaveBeenCalledWith({ interactive: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tasks 3.1–3.3: intent menu on re-run against an existing skillet package
+// ---------------------------------------------------------------------------
+
+const INTENT_MENU_OPTION_NAMES = [
+  'Add a directory to the published package',
+  'Add another skill / convert to multi-skill',
+  'Reconfigure everything (name, version, description, author, license, layout)',
+  'Just check what would be published',
+];
+
+describe('run.ts — intent menu on re-run (tasks 3.1–3.3)', () => {
+  let stdoutSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    stdoutSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    mockConfirm.mockResolvedValue(true);
+    mockExecuteScaffold.mockResolvedValue(undefined);
+    mockSetupSkillDir.mockResolvedValue(undefined);
+    mockRunCheck.mockResolvedValue(undefined);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+  });
+
+  it('calls select() with the four intent options when isExistingSkilletPackage is true, instead of proceeding directly into collectConfig()', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isExistingSkilletPackage: true }));
+    // Pick an option other than "reconfigure" so collectConfig is never reached.
+    mockSelect.mockResolvedValue('check');
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+    try {
+      await invokeRunAction();
+    } finally {
+      exitSpy.mockRestore();
+    }
+
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+    const selectArg = mockSelect.mock.calls[0][0];
+    const choiceNames = selectArg.choices.map((c) => (c as { name: string }).name);
+    expect(choiceNames).toEqual(INTENT_MENU_OPTION_NAMES);
+    expect(mockCollectConfig).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call select() when isExistingSkilletPackage is false, and proceeds directly into collectConfig()', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isExistingSkilletPackage: false }));
+    mockCollectConfig.mockResolvedValue(makeFakeConfig());
+
+    await invokeRunAction();
+
+    expect(mockSelect).not.toHaveBeenCalled();
+    expect(mockCollectConfig).toHaveBeenCalled();
+  });
+
+  it('invokes runCheck (interactive: true) and exits without calling executeScaffold when "Just check what would be published" is selected', async () => {
+    mockDetectEnvironment.mockReturnValue(makeFakeDetected({ isExistingSkilletPackage: true }));
+    mockSelect.mockResolvedValue('check');
+
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as () => never);
+    try {
+      await invokeRunAction();
+    } finally {
+      exitSpy.mockRestore();
+    }
+
+    expect(mockRunCheck).toHaveBeenCalledWith({ interactive: true });
+    expect(mockExecuteScaffold).not.toHaveBeenCalled();
   });
 });
