@@ -679,7 +679,12 @@ describe('executeScaffold — .npmignore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSpawnSync.mockReturnValue(makeSuccessResult());
-    mockFsExistsSync.mockReturnValue(true);
+    mockFsExistsSync.mockImplementation((p) => {
+      const pathStr = String(p);
+      if (pathStr.endsWith('package.json')) return true;
+      if (pathStr.endsWith('.npmignore')) return false;
+      return true;
+    });
   });
 
   it('writes a .npmignore containing **/node_modules to prevent nested node_modules from being published', async () => {
@@ -690,6 +695,17 @@ describe('executeScaffold — .npmignore', () => {
     );
     expect(npmignoreCall).toBeDefined();
     expect(String(npmignoreCall![1])).toContain('**/node_modules');
+  });
+
+  it('does not overwrite .npmignore when it already exists', async () => {
+    mockFsExistsSync.mockImplementation(() => true);
+
+    await executeScaffold(baseConfig);
+
+    const npmignoreCall = mockFspWriteFile.mock.calls.find(
+      (c) => typeof c[0] === 'string' && (c[0] as string).endsWith('.npmignore'),
+    );
+    expect(npmignoreCall).toBeUndefined();
   });
 });
 
